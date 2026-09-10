@@ -13,13 +13,15 @@ Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy c
 
 ## Những gì đang chạy
 
+- Trang sảnh tối giản `/`: chọn cổng bệnh viện, góc nhìn bệnh nhân, khung điện thoại, dữ liệu hoặc yêu cầu chỉnh sửa trước khi vào hồ sơ.
 - Cổng bệnh viện `/editor`: 5 bệnh nhân giả lập, thêm/sửa hồ sơ chung và từng lần khám đầy đủ.
-- Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích thuật ngữ và tự cập nhật khi portal thay đổi.
+- Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích bệnh và xét nghiệm bằng lời dễ hiểu, gồm ảnh hưởng, mục tiêu theo dõi, ăn uống/sinh hoạt và dấu hiệu cần chú ý.
 - Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
 - Chế độ **Chú thích giao diện**: chọn vùng bằng chuột/chạm, ghim comment vào đúng bệnh nhân/lần khám và mở lại ở `/feedback`.
 - Giao diện responsive và khung thử điện thoại `/mobile` ở 360/390/430 px.
 - Chế độ Sáng/Tối dùng chung cho desktop và điện thoại; lựa chọn được lưu trong trình duyệt.
 - Mỗi lần khám là một card gồm lý do, triệu chứng, chẩn đoán/chú giải, vital signs, labs, thuốc, dịch vụ, kế hoạch và bác sĩ.
+- Chú giải y khoa hiện bao phủ 5 bệnh nền mẫu và 6 xét nghiệm chính. App chỉ ghép đúng thuật ngữ đã được kiểm duyệt, dùng khoảng tham chiếu trên chính phiếu xét nghiệm và không tự đoán thuật ngữ lạ.
 - Dashboard tổng quan theo một bệnh nhân hư cấu thống nhất.
 - 5 loại hồ sơ: Allergy, Condition, Medication, Lab Result và Encounter.
 - Thêm, đọc, sửa và soft-delete dữ liệu.

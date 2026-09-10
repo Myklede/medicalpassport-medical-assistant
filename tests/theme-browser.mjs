@@ -12,9 +12,23 @@ const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 
 try {
-  await page.goto(base + '/signin-with-chatgpt?return_to=/editor');
+  await page.goto(base + '/signin-with-chatgpt?return_to=/');
+  await page.goto(base + '/');
+  await page.locator('.mp-lobby').waitFor({ timeout: 60000 });
+  assert.equal(await page.locator('.mp-lobby-choice').count(), 2);
+  assert.equal(await page.locator('.mp-lobby-links a').count(), 3);
+  assert.equal(await page.getByRole('link', { name: /Cổng bệnh viện/ }).getAttribute('href'), '/editor');
+  assert.equal(await page.getByRole('link', { name: /Góc nhìn bệnh nhân/ }).getAttribute('href'), '/patient');
+  await page.screenshot({ path: 'outputs/qa/lobby.png', fullPage: true });
+
   await page.goto(base + '/editor');
   await page.locator('.mp-patient-row').first().waitFor({ timeout: 60000 });
+  await page.locator('.mp-patient-row').nth(1).click();
+  await page.locator('.mp-education').first().waitFor();
+  assert.match(await page.locator('.mp-education-simple').first().innerText(), /NÓI ĐƠN GIẢN/);
+  await page.locator('.mp-lab-verdict').first().waitFor();
+  assert.match(await page.locator('.mp-lab-plain-grid').first().innerText(), /Vì sao cần chú ý\?/);
+  assert.match(await page.locator('.mp-lab-plain-grid').first().innerText(), /Ăn uống & sinh hoạt/);
   await page.evaluate(() => localStorage.removeItem('medipass-theme'));
   await page.reload();
   await page.locator('.mp-patient-row').first().waitFor();

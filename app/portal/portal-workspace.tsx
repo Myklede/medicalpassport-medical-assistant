@@ -5,12 +5,14 @@ import Link from '@/components/app-link';
 import { Activity, ArrowLeftRight, ChevronDown, ChevronRight, ClipboardPlus, Database, FileHeart, FileText, HeartPulse, History, MessageSquare, Pencil, Pill, Plus, Printer, RefreshCw, Search, ShieldCheck, Stethoscope, Users, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import type { PortalData, Patient, Encounter } from '@/lib/portal-types';
+import type { PortalData, Patient, Encounter, Condition } from '@/lib/portal-types';
 import { currentMedicines } from '@/lib/lab-interpretation';
+import { educationForCondition } from '@/lib/patient-education';
 import { api, Busy, ErrorBox, age, formatDate, sexLabels, SectionHeading, severityLabels } from './portal-ui';
 import { PatientForm, blankPatient } from './patient-form';
 import { EncounterForm, blankEncounter } from './encounter-form';
 import { EncounterDetail } from './encounter-detail';
+import { PatientEducation } from './patient-education';
 
 export function PortalWorkspace({ mode }: { mode: 'hospital' | 'patient' }) {
   const hospital = mode === 'hospital';
@@ -122,7 +124,7 @@ export function PortalWorkspace({ mode }: { mode: 'hospital' | 'patient' }) {
     <main className="mp-record"><div className="mp-breadcrumb">{hospital ? 'Danh sách bệnh nhân' : 'Góc nhìn bệnh nhân'}<ChevronRight size={13} />{patient?.medical_record_number || 'Hồ sơ'}</div>{notice && <output className="mp-success">{notice}<button aria-label="Ẩn thông báo" onClick={() => setNotice('')}><X size={16} /></button></output>}
       {patient ? <><section data-annotate="patient-heading" data-annotation-label="Thông tin bệnh nhân" className="mp-patient-heading"><div><p className="mp-eyebrow">{hospital ? 'HỒ SƠ BỆNH NHÂN' : 'THÔNG TIN SỨC KHỎE'}</p><h2>{patient.display_name}</h2><p>{sexLabels[patient.sex]} <span>·</span> {age(patient.birth_date)} tuổi <span>·</span> {formatDate(patient.birth_date)} <span>·</span> Nhóm máu {patient.blood_type || 'chưa rõ'}</p></div>{hospital && <Button variant="outline" onClick={() => setEditPatient(patient)}><Pencil />Sửa thông tin chung</Button>}</section>
       <div className="mp-summary-line"><span><FileText />{encounters.length} lần khám</span><span><Pill />{medicines.length} thuốc ghi nhận đang dùng</span><span><History />Gần nhất: {encounters[0] ? formatDate(encounters[0].visit_date) : 'Chưa có'}</span></div>
-      <div className="mp-shared-panels"><section data-annotate="patient-conditions" data-annotation-label="Bệnh nền và tiền sử" className="mp-baseline"><div className="mp-panel-label"><FileHeart size={17} />Bệnh nền & tiền sử chung</div>{patient.conditions.length ? patient.conditions.map(c => <div key={c.id}><strong>{c.name}</strong>{c.status === 'resolved' && <span className="mp-badge">Tiền sử</span>}<p>{c.clinical_term}{c.since ? ` · Từ ${c.since}` : ''}</p>{c.note && <p className="mp-preserve">{c.note}</p>}</div>) : <p className="mp-muted">Chưa ghi nhận bệnh nền.</p>}</section><section data-annotate="patient-allergies" data-annotation-label="Dị ứng" className={`mp-baseline ${patient.allergies.length ? 'mp-allergy-panel' : ''}`}><div className="mp-panel-label"><ShieldCheck size={17} />Dị ứng cần lưu ý</div>{patient.allergies.length ? patient.allergies.map(a => <div key={a.id}><strong>{a.substance}</strong><p>{a.reaction || 'Chưa ghi phản ứng'} · {severityLabels[a.severity]}</p>{a.note && <p className="mp-preserve">{a.note}</p>}</div>) : <p className="mp-muted">Chưa có dị ứng được ghi nhận trong hồ sơ.</p>}</section></div>
+      <div className="mp-shared-panels"><section data-annotate="patient-conditions" data-annotation-label="Bệnh nền và tiền sử" className="mp-baseline"><div className="mp-panel-label"><FileHeart size={17} />Bệnh nền & tiền sử chung</div>{patient.conditions.length ? patient.conditions.map(c => <ConditionSummary key={c.id} condition={c} educationOpen={!hospital} />) : <p className="mp-muted">Chưa ghi nhận bệnh nền.</p>}</section><section data-annotate="patient-allergies" data-annotation-label="Dị ứng" className={`mp-baseline ${patient.allergies.length ? 'mp-allergy-panel' : ''}`}><div className="mp-panel-label"><ShieldCheck size={17} />Dị ứng cần lưu ý</div>{patient.allergies.length ? patient.allergies.map(a => <div key={a.id}><strong>{a.substance}</strong><p>{a.reaction || 'Chưa ghi phản ứng'} · {severityLabels[a.severity]}</p>{a.note && <p className="mp-preserve">{a.note}</p>}</div>) : <p className="mp-muted">Chưa có dị ứng được ghi nhận trong hồ sơ.</p>}</section></div>
       <Tabs value={tab} onValueChange={v => setTab(String(v))}><TabsList variant="line" className="mp-record-tabs"><TabsTrigger value="visits">Lịch sử khám</TabsTrigger><TabsTrigger value="medicines">Thuốc đang dùng</TabsTrigger><TabsTrigger value="profile">Thông tin chung</TabsTrigger></TabsList>
         <TabsContent value="visits"><SectionHeading title="Mỗi lần khám, một hồ sơ" note="Mở từng lần khám để xem đầy đủ xét nghiệm, thuốc và hướng dẫn.">{hospital && <Button size="lg" onClick={() => setEditEncounter(blankEncounter(patient, data.clinicians[0]))}><ClipboardPlus />Thêm lần khám</Button>}</SectionHeading>
           {encounters.length > 2 && <label className="mp-search mp-visit-search"><Search size={16} /><input aria-label="Tìm lần khám" placeholder="Tìm lý do khám, bác sĩ hoặc ngày…" value={visitSearch} onChange={e => setVisitSearch(e.target.value)} /></label>}
@@ -137,3 +139,7 @@ export function PortalWorkspace({ mode }: { mode: 'hospital' | 'patient' }) {
   </div>;
 }
 function FlaskIcon() { return <Activity size={14} />; }
+function ConditionSummary({ condition: c, educationOpen }: { condition: Condition; educationOpen: boolean }) {
+  const education = educationForCondition(c.name, c.clinical_term);
+  return <div><strong>{c.name}</strong>{c.status === 'resolved' && <span className="mp-badge">Tiền sử</span>}<p>{c.clinical_term}{c.since ? ` · Từ ${c.since}` : ''}</p>{c.note && <p className="mp-preserve">{c.note}</p>}{education && <PatientEducation education={education} defaultOpen={educationOpen} />}</div>;
+}

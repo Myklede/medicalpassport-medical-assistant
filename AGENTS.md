@@ -9,8 +9,9 @@ Read these files before changing the project:
 
 ## Current implementation
 
+- `/` is a minimal lobby. It gives explicit entry points to the hospital portal, patient view, mobile preview, Supabase explorer and visual-feedback list; it does not open a patient record immediately.
 - `/editor` is the hospital portal. It can add/edit five seeded patients and complete encounter cards.
-- `/patient` is a read-only patient view of the same portal data.
+- `/patient` is a read-only patient view of the same portal data. Known sample conditions and labs include reviewed plain-language summaries, impact, monitoring context and food/lifestyle guidance.
 - `/feedback` lists visual review comments. The global **Chú thích giao diện** mode lets the owner click a real UI region, save an anchored comment and reopen it later.
 - `/mobile` is an interactive responsive web preview at 360/390/430 px. It is not a native iOS/Android app.
 - A persistent light/dark switch is rendered by the root layout on every route. It stores `medipass-theme` in browser local storage and synchronizes same-origin desktop/phone-preview contexts.
@@ -32,6 +33,7 @@ Read these files before changing the project:
 - Use `@/components/app-link` for app navigation. `next/link` caused broken client navigation in the deployed Vinext build.
 - Stable visual-comment targets use `data-annotate`, `data-annotation-label` and, for visit cards, `data-encounter-id`.
 - Shared conditions and allergies live on the patient; labs, medications, procedures, plan and clinician snapshot live on an encounter.
+- Condition education is an exact alias lookup in `lib/patient-education.ts`. Lab education is in `lib/lab-interpretation.ts`. Add medical content only with an authoritative source, never infer an explanation for an unknown label, and continue using the reference range supplied by the lab record.
 - Patient selection is kept in the `?patient=` query parameter across hospital, patient and mobile views.
 - Do not silently fall back and claim a Supabase save. The UI must show the active storage provider.
 
@@ -45,6 +47,6 @@ npx --yes node@24 scripts/pre-push-check.mjs
 
 For a stable local demo URL, run `pnpm run demo` and use `http://localhost:3001/editor`. See `docs/RUN_APP_VI.md` for Chrome and same-Wi-Fi phone access.
 
-Focused light/dark QA uses `tests/theme-browser.mjs` against the local dev server and does not mutate medical data. Full browser QA additionally needs the local Playwright package under ignored `outputs/qa/node_modules`; set `MEDIPASS_TEST_PRODUCTION=1` only when targeting a production-style local Worker. For remote storage verification, also set `MEDIPASS_VERIFY_SUPABASE=1`. The remote QA identity is isolated and its fixtures are deleted by the test; never point the helper at an owner workspace.
+Focused lobby, patient-education and light/dark QA uses `tests/theme-browser.mjs` against the local dev server and does not mutate medical data. Full browser QA additionally needs the local Playwright package under ignored `outputs/qa/node_modules`; local development uses its own fresh sign-in context. Set `MEDIPASS_TEST_PRODUCTION=1` only when targeting a production-style local Worker. For remote storage verification, also set `MEDIPASS_VERIFY_SUPABASE=1`; that path sends the isolated `browser-qa` identity and deletes its remote fixtures. Never point the helper at an owner workspace.
 
 The intended GitHub remote is `https://github.com/Myklede/medipass-medical-assistant-demo.git`. Do not push or deploy unless the user asks. GitHub push and Sites deployment are separate operations.

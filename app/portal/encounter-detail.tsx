@@ -20,9 +20,10 @@ export function EncounterDetail({ encounter: e }: { encounter: Encounter }) {
       const source = lab.source_url || (guide && !lab.explanation ? guide.source_url : '');
       return <article data-annotate={`visit-${e.id}-lab-${lab.id}`} data-annotation-label={`Xét nghiệm: ${lab.name}`} className={`mp-lab mp-lab-${reading.status}`} key={lab.id}>
         <div className="mp-lab-top"><div><h4>{plainName || lab.name}</h4>{plainName && <p className="mp-clinical-term">{lab.name}</p>}</div><div className="mp-lab-result"><strong>{lab.value}</strong> <span>{lab.unit}</span><span className={`mp-result-tag ${reading.status}`}>{reading.label}</span></div></div>
-        <div className="mp-lab-reference"><span>Khoảng trên phiếu: <b>{referenceLabel(lab)}</b></span>{reading.percent !== null && <div className="mp-range" aria-hidden="true"><i style={{ left: `${reading.percent}%` }} /></div>}</div>
+        <div className="mp-lab-reference"><span>Mức thường gặp trên phiếu: <b>{referenceLabel(lab)}</b></span>{reading.percent !== null && <div className="mp-range" aria-hidden="true"><i style={{ left: `${reading.percent}%` }} /></div>}</div>
         {lab.reference_text && (lab.reference_low !== null || lab.reference_high !== null) && <p className="mp-footnote mp-preserve">{lab.reference_text}</p>}
-        {explanation && <p className="mp-lab-explanation">{explanation}</p>}<p className="mp-lab-explanation mp-muted">{reading.explanation}</p>
+        <div className={`mp-lab-verdict ${reading.status}`}><b>Kết luận nhanh</b><p>{reading.explanation}</p></div>
+        {(explanation || guide?.impact || guide?.habits) && <div className="mp-lab-plain-grid">{explanation && <div><b>Xét nghiệm này là gì?</b><p>{explanation}</p></div>}{guide?.impact && <div><b>Vì sao cần chú ý?</b><p>{guide.impact}</p></div>}{guide?.habits && <div className="mp-lab-plain-wide"><b>Ăn uống & sinh hoạt</b><p>{guide.habits}</p></div>}</div>}
         {lab.clinician_note && <div className="mp-clinician-note"><b>Bác sĩ giải thích</b><p className="mp-preserve">{lab.clinician_note}</p></div>}
         {source && <a className="mp-source" href={source} target="_blank" rel="noreferrer">Tìm hiểu xét nghiệm ↗</a>}
       </article>;

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { interpretLab, currentMedicines, referenceLabel, glossaryForLab } from '../lib/lab-interpretation.ts';
+import { educationForCondition } from '../lib/patient-education.ts';
 import { validatePatient, validateEncounter, validateFeedback } from '../lib/portal-validation.ts';
 import { demoEncounters, demoPatients } from '../lib/portal-seed.ts';
 import type { Lab } from '../lib/portal-types.ts';
@@ -22,8 +23,26 @@ void test('does not invent interpretation for missing or qualitative reference d
 void test('one-sided ranges and glossary preserve the original measurement meaning', () => {
   assert.equal(referenceLabel({ ...lab, reference_low: null }), '≤ 99 mg/dL');
   assert.equal(referenceLabel({ ...lab, reference_high: null }), '≥ 70 mg/dL');
-  assert.equal(glossaryForLab('  Hemoglobin (Hb)  ')?.plain_name, 'Chất vận chuyển oxy trong máu');
+  assert.equal(glossaryForLab('  Hemoglobin (Hb)  ')?.plain_name, 'Chất giúp máu mang oxy');
   assert.equal(glossaryForLab('Glucose tolerance test'), undefined);
+});
+void test('patient explanations cover known conditions without guessing unknown diagnoses', () => {
+  const asthma = educationForCondition('Hen phế quản', 'Asthma');
+  assert.ok(asthma);
+  assert.match(asthma.simple, /đường thở/i);
+  assert.match(asthma.impact, /nguy hiểm/i);
+  assert.match(asthma.habits, /khói thuốc/i);
+  assert.ok(asthma.sources.every(source => source.url.startsWith('https://')));
+  for (const patient of demoPatients()) {
+    for (const condition of patient.conditions) assert.ok(educationForCondition(condition.name, condition.clinical_term), condition.name);
+  }
+  assert.equal(educationForCondition('Tên bệnh chưa được kiểm duyệt'), undefined);
+});
+void test('lab glossary includes plain impact and daily habit guidance', () => {
+  const hba1c = glossaryForLab('HbA1c');
+  assert.ok(hba1c);
+  assert.match(hba1c.impact, /tim, thận, mắt/i);
+  assert.match(hba1c.habits, /hạn chế nước ngọt/i);
 });
 void test('later discontinuation replaces earlier active medicine without duplicate cards', () => {
   const visits = demoEncounters().filter(e => e.patient_id === 'patient-linh');

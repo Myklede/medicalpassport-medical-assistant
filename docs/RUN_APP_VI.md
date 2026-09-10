@@ -10,6 +10,7 @@ Bản demo đã phát hành có địa chỉ cố định:
 
 Các đường dẫn chính:
 
+- Trang sảnh: `/`
 - Cổng bệnh viện: `/editor`
 - Góc nhìn bệnh nhân: `/patient`
 - Khung thử điện thoại: `/mobile`

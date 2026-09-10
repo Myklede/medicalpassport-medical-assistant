@@ -124,15 +124,17 @@ export function FeedbackWidget() {
         if (!target?.getClientRects().length || !rect) return;
         const anchorLeft = rect.left + rect.width * request.annotation!.x;
         const anchorTop = rect.top + rect.height * request.annotation!.y;
-        const origin = Math.min(window.innerWidth - 18, Math.max(18, anchorLeft));
+        const originLeft = Math.min(window.innerWidth - 18, Math.max(18, anchorLeft));
+        const originTop = Math.min(window.innerHeight - 18, Math.max(18, anchorTop));
         // Fan nearby pins out on a 36px grid so every comment remains clickable.
-        // Keep the original anchor to draw a leader back to the selected spot.
+        // Clamp pins to the viewport while keeping the original anchor for the leader.
         for (let radius = 0; radius <= visible.length; radius++) {
           for (let dy = -radius; dy <= radius; dy++) {
             for (let dx = -radius; dx <= radius; dx++) {
               if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
-              const left = origin + dx * 36, top = anchorTop + dy * 36;
+              const left = originLeft + dx * 36, top = originTop + dy * 36;
               if (left < 18 || left > window.innerWidth - 18) continue;
+              if (top < 18 || top > window.innerHeight - 18) continue;
               if (positioned.some(p => Math.abs(p.left - left) < 34 && Math.abs(p.top - top) < 34)) continue;
               positioned.push({ request, number: i + 1, left, top, anchorLeft, anchorTop });
               return;

@@ -8,8 +8,14 @@ const production = process.env.MEDIPASS_TEST_PRODUCTION === '1';
 const remote = supabaseBrowserStore();
 assert.ok(!remote || production, 'Supabase QA uses the isolated localhost production identity');
 let legacyPatientId;
+const qaHeaders = { 'oai-authenticated-user-id': 'browser-qa', 'oai-authenticated-user-email': 'browser-qa@sites.test' };
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, permissions: ['camera'], ...(production ? { extraHTTPHeaders: { 'oai-authenticated-user-id': 'browser-qa', 'oai-authenticated-user-email': 'browser-qa@sites.test' } } : {}) });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, permissions: ['camera'], ...(production ? { extraHTTPHeaders: qaHeaders } : {}) });
+// Exercise the UI state deterministically; physical camera availability belongs to manual device QA.
+await context.addInitScript(() => {
+  Object.defineProperty(navigator.mediaDevices, 'getUserMedia', { configurable: true, value: async () => new MediaStream() });
+  Object.defineProperty(HTMLMediaElement.prototype, 'play', { configurable: true, value: async () => undefined });
+});
 const page = await context.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(e.message));
@@ -51,7 +57,7 @@ try {
   const selectedId = new URL(page.url()).searchParams.get('patient');
   if(remote) assert.equal((await remote.read()).patients.find(p=>p.id===selectedId).general_note,comment);
   // A second device (separate browser context) must refresh an already-open view.
-  const observerContext = await browser.newContext({viewport:{width:390,height:844}, ...(production ? {extraHTTPHeaders:{'oai-authenticated-user-id':'browser-qa','oai-authenticated-user-email':'browser-qa@sites.test'}} : {})});
+  const observerContext = await browser.newContext({viewport:{width:390,height:844}, ...(production ? {extraHTTPHeaders:qaHeaders} : {})});
   if(!production) await observerContext.addCookies(await context.cookies());
   const observer = await observerContext.newPage();
   observer.on('pageerror',e=>errors.push(e.message));
@@ -183,6 +189,11 @@ try {
       console.log('PASS wound image upload, save, history reload and protected image readback');
     }
     if(link === 'Motion Lab') {
+      await page.getByRole('button',{name:'Giao diện điện thoại',exact:true}).waitFor();
+      await page.evaluate(() => {
+        Object.defineProperty(navigator.mediaDevices, 'getUserMedia', { configurable: true, value: async () => new MediaStream() });
+        Object.defineProperty(HTMLMediaElement.prototype, 'play', { configurable: true, value: async () => undefined });
+      });
       await page.getByLabel('Exercise protocol').selectOption('knee-extension');
       await page.getByRole('button',{name:'Preview camera',exact:true}).click();
       await page.getByRole('button',{name:'Stop',exact:true}).waitFor();

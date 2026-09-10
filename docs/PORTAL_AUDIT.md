@@ -4,6 +4,7 @@ Yêu cầu mới của chủ dự án về portal và Supabase thay thế các g
 
 | Yêu cầu | Kết quả trong bản nâng cấp |
 | --- | --- |
+| Không mở thẳng vào hồ sơ bệnh nhân | `/` là trang sảnh tối giản với hai lựa chọn chính và ba lối tắt; không hiển thị thông tin bệnh nhân trước khi người dùng chọn góc nhìn |
 | 5 bệnh nhân giả lập, có lịch sử khám | 5 bệnh nhân, mỗi người 2 lần khám; 3 bác sĩ giả lập |
 | Bệnh viện thêm/sửa bệnh nhân | `/editor`: hồ sơ chung, bệnh nền, dị ứng, liên hệ |
 | Nhập/sửa trọn lần khám | Ngày, lý do, triệu chứng, chẩn đoán và giải thích, chỉ số, labs, thuốc, dịch vụ, kế hoạch, hẹn khám và bác sĩ |
@@ -11,6 +12,7 @@ Yêu cầu mới của chủ dự án về portal và Supabase thay thế các g
 | Mỗi lần khám một khung | Thẻ mở/thu gọn, trang đầy đủ và In/Lưu PDF qua hộp thoại in |
 | Chuyển sang góc nhìn từng bệnh nhân | Giữ đúng bệnh nhân trong URL khi đổi góc nhìn; patient view chỉ đọc |
 | Chú giải xét nghiệm | Giữ tên chuyên môn; tên dễ hiểu, lời bác sĩ, nguồn MedlinePlus; phân loại theo khoảng trên phiếu, không suy diễn chẩn đoán |
+| Giải thích bệnh và xét nghiệm dễ hiểu hơn | 5 bệnh mẫu và 6 xét nghiệm chính có tóm tắt, ảnh hưởng, mục tiêu/mức trên phiếu, ăn uống-sinh hoạt và cảnh báo phù hợp; thuật ngữ lạ không được app tự đoán |
 | Rà soát thuốc đang dùng | Tổng hợp theo tên/liều/đường dùng; có nút lấy vào lần khám mới để đánh dấu tiếp tục/ngừng/hoàn tất |
 | Góp ý trực tiếp trên web | Bật Chú thích giao diện, di chuột chọn vùng, bấm để ghim bình luận; lưu selector, tọa độ tương đối, trích đoạn, bệnh nhân và lần khám. Các ghim trùng điểm được tách ra để bấm từng bình luận |
 | Nút điều hướng không hoạt động | Thay điều hướng client gây lỗi runtime Vinext bằng liên kết tải trang; đã thử cả 5 bệnh nhân, feedback, data, records, Wound Lab và Motion Lab trên build production |
@@ -43,11 +45,13 @@ Khi namespace Supabase của người dùng còn mới, bootstrap chuyển hồ 
 - API local: 5 bệnh nhân, lưu/đọc Unicode tiếng Việt, trọn lần khám, xung đột phiên bản, chặn đổi bệnh nhân của lần khám, CSRF, data explorer và các trang portal. Khôi phục nội dung mẫu sau kiểm tra.
 - PostgreSQL độc lập bằng PGlite: chạy thật các migration, bootstrap 5 bệnh nhân/10 lần khám, thêm người thứ 6 trong bộ nhớ, sửa hồ sơ, rollback khi lỗi ở mục con, quyền truy cập, tách workspace, giữ góp ý và không seed trùng. **Không phải xác nhận kết nối Supabase từ xa.**
 - Browser QA trên `http://localhost:3001` (Wrangler chạy build production): PASS toàn bộ. Chuyển cả 5 bệnh nhân; mở các tab nhập; chọn vùng bằng chuột, lưu hai ghim cùng điểm, tải lại và mở riêng từng bình luận; bật khung điện thoại; các liên kết module; tải ảnh PNG giả lập, lưu Wound Lab và đọc lại ảnh/lịch sử; bật/tắt camera giả lập; viewport 390px không tràn ngang. Không có lỗi JavaScript chưa xử lý.
-- TypeScript và production build: PASS. Unit tests portal/wound: 15 PASS.
+- TypeScript và production build: PASS. Unit tests portal/wound: 17 PASS, gồm kiểm tra đủ chú giải cho cả 5 bệnh mẫu và không tự đoán thuật ngữ lạ.
 - QA mở rộng với Supabase từ xa: PASS lưu/sửa ghi chú chung; tạo trọn lần khám có labs/thuốc/dịch vụ/bác sĩ; đọc trực tiếp RPC để đối chiếu; cửa sổ bệnh nhân 390px riêng tự nhận ghi chú và lần khám mới; ghim tại thẻ ghi chú trên mobile rồi tải lại/mở bình luận; annotation đọc trực tiếp từ `mp_feedback`. Không có lỗi JavaScript chưa xử lý. Đã dọn đúng vùng `browser-qa` và hồ sơ cũ của QA; hồ sơ của chủ dự án giữ nguyên.
 - Sửa nhãn trường nhập để tên truy cập không lẫn nội dung textarea hoặc lời gợi ý. Các nhãn ổn định giúp thao tác nhập và kiểm thử chính xác.
 
 Lỗi phát hiện khi tiếp tục phiên: QA ban đầu thất bại vì các ghim cùng điểm che nhau. Đã sửa bố trí ghim, giữ đường chỉ tới điểm gốc; thêm regression với hai bình luận cùng tọa độ và dọn bình luận của mỗi lượt QA cả khi thất bại.
+
+QA ngày 10/09/2026 còn xác nhận trang sảnh có đúng hai lựa chọn chính và ba lối tắt, các khối giải thích bệnh/xét nghiệm xuất hiện trong Chrome, chế độ tối và mobile vẫn hoạt động. Ghim chú thích được chặn trong biên viewport để vẫn bấm được khi phần tử gốc nằm ngoài vùng đang nhìn. Full browser QA dùng phiên đăng nhập local mới; khi kiểm tra Supabase từ xa mới dùng danh tính `browser-qa` riêng và dọn fixture sau kiểm tra.
 
 `tests/portal-api.mjs` chỉ gọi localhost. `tests/portal-supabase.mjs` dùng PGlite tạm từ npm exec và không sửa dependency của app.
 
