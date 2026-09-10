@@ -4,7 +4,7 @@ import { chromium } from '../outputs/qa/node_modules/playwright/index.mjs';
 import { supabaseBrowserStore } from './supabase-browser-store.mjs';
 const base = process.env.MEDIPASS_TEST_URL || 'http://localhost:3000';
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname));
-const production = new URL(base).port !== '3000';
+const production = process.env.MEDIPASS_TEST_PRODUCTION === '1';
 const remote = supabaseBrowserStore();
 assert.ok(!remote || production, 'Supabase QA uses the isolated localhost production identity');
 let legacyPatientId;
@@ -20,6 +20,15 @@ try {
   await page.goto(base + '/editor');
   await page.locator('.mp-patient-row').first().waitFor({ timeout: 60000 });
   assert.equal(await page.locator('.mp-patient-row').count(), 5);
+  await page.locator('.mp-theme-toggle').click();
+  assert.ok(await page.locator('html').evaluate(element => element.classList.contains('dark')));
+  assert.equal(await page.evaluate(() => localStorage.getItem('medipass-theme')), 'dark');
+  await page.reload();
+  await page.locator('html.dark').waitFor();
+  await page.locator('.mp-patient-row').first().waitFor();
+  await page.locator('.mp-theme-toggle').click();
+  assert.ok(await page.locator('html').evaluate(element => !element.classList.contains('dark')));
+  console.log('PASS desktop theme toggle and saved preference');
   if (remote) assert.equal((await (await page.request.get(base+'/api/portal')).json()).storage.provider,'supabase','QA must use Supabase, not the D1 fallback');
   for(let i=0;i<5;i++) {
     await page.locator('.mp-patient-row').nth(i).click();
@@ -126,6 +135,12 @@ try {
   const phone = page.frameLocator('iframe[title="MediPass trên điện thoại"]');
   await phone.locator('.mp-patient-row').first().waitFor({timeout:60000});
   assert.equal(await phone.locator('.mp-patient-row').count(),5);
+  await page.locator('.mp-theme-toggle').click();
+  await phone.locator('html.dark').waitFor();
+  assert.equal(await phone.locator('body').evaluate(() => localStorage.getItem('medipass-theme')), 'dark');
+  await phone.locator('.mp-theme-toggle').click();
+  await page.locator('html:not(.dark)').waitFor();
+  console.log('PASS theme sync between desktop shell and phone preview');
   await phone.getByRole('link',{name:'Xem phía bệnh nhân',exact:true}).click();
   await phone.getByRole('heading',{name:'Sổ sức khỏe',exact:true}).waitFor();
   await phone.locator('.mp-visit-card').first().waitFor();
@@ -201,8 +216,9 @@ try {
 } catch(error) { await page.screenshot({path:'outputs/qa/failure.png'}).catch(() => {}); console.log('FAILURE_URL',page.url()); throw error; } finally {
   // Clean only this run's fixtures, including after a failure.
   try {
-    const list = await (await page.request.get(base + '/api/feedback')).json();
-    for (const r of list.requests.filter(r => [comment,comment+' (cùng vị trí)',comment+' (mobile)'].includes(r.description))) {
+    const listResponse = await page.request.get(base + '/api/feedback');
+    const list = listResponse.ok() ? await listResponse.json() : { requests: [] };
+    for (const r of (Array.isArray(list.requests) ? list.requests : []).filter(r => [comment,comment+' (cùng vị trí)',comment+' (mobile)'].includes(r.description))) {
       const response = await page.request.post(base + '/api/feedback', { headers: { Origin: base }, data: { ...r, status: 'done', resolution: 'Bình luận kiểm thử tự động.' } });
       assert.ok(response.ok(), 'QA comment cleanup');
     }

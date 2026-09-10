@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "vinext dev",
+    "demo": "vinext dev --host 0.0.0.0 --port 3001",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
@@ -14,6 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "test:wound": "node --experimental-strip-types --test tests/wound-safety.test.ts",
     "test:portal": "node --experimental-strip-types --test tests/portal.test.ts",
+    "test:theme-ui": "node tests/theme-browser.mjs",
     "check:push": "node scripts/pre-push-check.mjs"
   },
   "dependencies": {

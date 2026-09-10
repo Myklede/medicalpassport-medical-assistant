@@ -7,6 +7,8 @@ MediPass là bản demo hoạt động được của một **patient-controlled
 
 Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
 
+Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy cập từ điện thoại: [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
+
 > **Giới hạn bắt buộc:** đây là research/startup prototype, không phải thiết bị y tế, không chẩn đoán, không tư vấn điều trị và chưa được tuyên bố HIPAA compliant. Chỉ dùng dữ liệu giả hoặc đã de-identify.
 
 ## Những gì đang chạy
@@ -16,6 +18,7 @@ Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https:
 - Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
 - Chế độ **Chú thích giao diện**: chọn vùng bằng chuột/chạm, ghim comment vào đúng bệnh nhân/lần khám và mở lại ở `/feedback`.
 - Giao diện responsive và khung thử điện thoại `/mobile` ở 360/390/430 px.
+- Chế độ Sáng/Tối dùng chung cho desktop và điện thoại; lựa chọn được lưu trong trình duyệt.
 - Mỗi lần khám là một card gồm lý do, triệu chứng, chẩn đoán/chú giải, vital signs, labs, thuốc, dịch vụ, kế hoạch và bác sĩ.
 - Dashboard tổng quan theo một bệnh nhân hư cấu thống nhất.
 - 5 loại hồ sơ: Allergy, Condition, Medication, Lab Result và Encounter.
@@ -218,12 +221,13 @@ Không dùng database vận hành chứa định danh làm thẳng training data
 
 Yêu cầu Node.js `>=22.13` và pnpm.
 
-```bash
-pnpm install
-pnpm run dev
+```powershell
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run demo
 ```
 
-Mở `http://localhost:3000`.
+Mở `http://localhost:3001/editor`. Có thể dùng Chrome, Edge, Safari hoặc trình duyệt điện thoại; server không phụ thuộc trình duyệt. Xem hướng dẫn đầy đủ tại [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
 
 Kiểm tra build và schema:
 

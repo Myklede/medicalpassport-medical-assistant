@@ -13,6 +13,7 @@ Read these files before changing the project:
 - `/patient` is a read-only patient view of the same portal data.
 - `/feedback` lists visual review comments. The global **Chú thích giao diện** mode lets the owner click a real UI region, save an anchored comment and reopen it later.
 - `/mobile` is an interactive responsive web preview at 360/390/430 px. It is not a native iOS/Android app.
+- A persistent light/dark switch is rendered by the root layout on every route. It stores `medipass-theme` in browser local storage and synchronizes same-origin desktop/phone-preview contexts.
 - `/data` explains and displays the portal data structure.
 - `/records` is the older medical-record module.
 - `/wounds` stores longitudinal wound captures and rule-based safety review. It does not analyze image pixels with an AI model.
@@ -42,6 +43,8 @@ Use Node.js 22.13 or newer. Before a GitHub push, run:
 npx --yes node@24 scripts/pre-push-check.mjs
 ```
 
-Full browser QA additionally needs the local Playwright package under ignored `outputs/qa/node_modules`, a production Worker on port 3001 and, for remote storage verification, `MEDIPASS_VERIFY_SUPABASE=1`. The remote QA identity is isolated and its fixtures are deleted by the test; never point the helper at an owner workspace.
+For a stable local demo URL, run `pnpm run demo` and use `http://localhost:3001/editor`. See `docs/RUN_APP_VI.md` for Chrome and same-Wi-Fi phone access.
+
+Focused light/dark QA uses `tests/theme-browser.mjs` against the local dev server and does not mutate medical data. Full browser QA additionally needs the local Playwright package under ignored `outputs/qa/node_modules`; set `MEDIPASS_TEST_PRODUCTION=1` only when targeting a production-style local Worker. For remote storage verification, also set `MEDIPASS_VERIFY_SUPABASE=1`. The remote QA identity is isolated and its fixtures are deleted by the test; never point the helper at an owner workspace.
 
 The intended GitHub remote is `https://github.com/Myklede/medipass-medical-assistant-demo.git`. Do not push or deploy unless the user asks. GitHub push and Sites deployment are separate operations.

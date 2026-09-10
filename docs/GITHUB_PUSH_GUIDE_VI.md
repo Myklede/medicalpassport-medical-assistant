@@ -79,7 +79,7 @@ cd medipass-medical-assistant-demo
 corepack enable
 pnpm install --frozen-lockfile
 Copy-Item .env.example .env.local
-pnpm run dev
+pnpm run demo
 ```
 
-Điền cấu hình riêng vào `.env.local`; không gửi khóa qua chat và không commit file này. Website Sites đang phát hành có secret runtime riêng, nên push GitHub không tự cập nhật website đang chạy.
+Mở `http://localhost:3001/editor`. Điền cấu hình riêng vào `.env.local`; không gửi khóa qua chat và không commit file này. Website Sites đang phát hành có secret runtime riêng, nên push GitHub không tự cập nhật website đang chạy. Hướng dẫn chi tiết nằm tại `docs/RUN_APP_VI.md`.
