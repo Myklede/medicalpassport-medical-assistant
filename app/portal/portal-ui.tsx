@@ -1,5 +1,5 @@
 'use client';
-import type { ReactNode, InputHTMLAttributes } from 'react';
+import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode, type InputHTMLAttributes } from 'react';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -10,7 +10,8 @@ export async function api<T>(path: string, body?: unknown, signal?: AbortSignal)
   return data as T;
 }
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return <label className="mp-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>;
+  const labelId = useId();
+  return <label className="mp-field"><span id={labelId}>{label}</span>{isValidElement(children) ? cloneElement(children as ReactElement<{ 'aria-labelledby'?: string }>, { 'aria-labelledby': labelId }) : children}{hint && <small>{hint}</small>}</label>;
 }
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) { return <input className="mp-input" {...props} />; }
 export function SectionHeading({ title, note, children }: { title: string; note?: string; children?: ReactNode }) {

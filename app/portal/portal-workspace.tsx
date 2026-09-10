@@ -15,6 +15,7 @@ import { EncounterDetail } from './encounter-detail';
 export function PortalWorkspace({ mode }: { mode: 'hospital' | 'patient' }) {
   const hospital = mode === 'hospital';
   const visitRequest = useRef(0);
+  const syncChannel = useRef<BroadcastChannel | null>(null);
   const [data, setData] = useState<PortalData | null>(null), [selectedId, setSelectedId] = useState('');
   const [encounters, setEncounters] = useState<Encounter[]>([]), [visitsLoading, setVisitsLoading] = useState(false);
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [visitError, setVisitError] = useState('');
@@ -62,15 +63,39 @@ export function PortalWorkspace({ mode }: { mode: 'hospital' | 'patient' }) {
     return () => window.removeEventListener('medipass-reveal', reveal);
   }, []);
   useEffect(() => {
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === 'visible' && !editPatient && !editEncounter) {
-        void load();
-        void loadVisits(selectedId);
-      }
+    if (!selectedId) return;
+    let cancelled = false, pending = false;
+    const controller = new AbortController();
+    const refreshWhenVisible = async () => {
+      if (pending || document.visibilityState !== 'visible' || editPatient || editEncounter ||
+          document.querySelector('[data-slot="dialog-content"]') || document.body.classList.contains('mp-annotation-mode')) return;
+      pending = true;
+      const requestNumber = visitRequest.current;
+      try {
+        const result = await api<PortalData & { encounters: Encounter[] }>('/api/portal/data', undefined, controller.signal);
+        if (cancelled || requestNumber !== visitRequest.current) return;
+        setData({ patients: result.patients, clinicians: result.clinicians, storage: result.storage, demo: true });
+        const visits = result.encounters.filter(e => e.patient_id === selectedId);
+        setEncounters(visits);
+        setExpanded(current => current && !visits.some(e => e.id === current) ? null : current);
+        setError(''); setVisitError('');
+      } catch (e) { if (!cancelled && (e as Error).name !== 'AbortError') setError((e as Error).message); }
+      finally { pending = false; }
     };
+    // Broadcast contains no medical data. Other devices refresh while visible.
+    const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('medipass-portal');
+    syncChannel.current = channel;
+    if (channel) channel.onmessage = () => { void refreshWhenVisible(); };
+    const interval = window.setInterval(() => { void refreshWhenVisible(); }, 5000);
     window.addEventListener('focus', refreshWhenVisible);
-    return () => window.removeEventListener('focus', refreshWhenVisible);
-  }, [load, loadVisits, selectedId, editPatient, editEncounter]);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      cancelled = true; controller.abort(); window.clearInterval(interval); channel?.close();
+      if (syncChannel.current === channel) syncChannel.current = null;
+      window.removeEventListener('focus', refreshWhenVisible);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [selectedId, editPatient, editEncounter]);
   const patient = data?.patients.find(p => p.id === selectedId);
   const patients = useMemo(() => (data?.patients ?? []).filter(p => `${p.display_name} ${p.medical_record_number}`.toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(search.toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))), [data, search]);
   const medicines = useMemo(() => currentMedicines(encounters), [encounters]);
@@ -78,10 +103,12 @@ export function PortalWorkspace({ mode }: { mode: 'hospital' | 'patient' }) {
   function select(id: string) { if (id === selectedId) return; ++visitRequest.current; setEncounters([]); setExpanded(null); setVisitsLoading(true); setVisitError(""); setSelectedId(id); setNotice(''); setTab('visits'); }
   async function refresh() { await load(); await loadVisits(selectedId); }
   function patientSaved(saved: Patient) {
+    ++visitRequest.current; syncChannel.current?.postMessage('changed');
     setData(old => old ? { ...old, patients: [...old.patients.filter(p => p.id !== saved.id), saved].sort((a,b) => a.medical_record_number.localeCompare(b.medical_record_number)) } : old);
     setSelectedId(saved.id); setEditPatient(null); setNotice(data?.storage.provider === 'supabase' ? 'Đã lưu hồ sơ chung vào Supabase.' : 'Đã lưu vào bộ lưu demo. CHƯA ghi vào Supabase của bạn.');
   }
   function encounterSaved(saved: Encounter) {
+    ++visitRequest.current; syncChannel.current?.postMessage('changed');
     setEncounters(old => [...old.filter(e => e.id !== saved.id), saved].sort((a,b) => b.visit_date.localeCompare(a.visit_date) || b.created_at.localeCompare(a.created_at)));
     setExpanded(saved.id); setEditEncounter(null); setTab('visits'); setNotice(data?.storage.provider === 'supabase' ? 'Đã lưu toàn bộ lần khám vào Supabase. Góc nhìn bệnh nhân đã cập nhật.' : 'Đã lưu lần khám trong demo. CHƯA ghi vào Supabase của bạn.'); void load();
   }

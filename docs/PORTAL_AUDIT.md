@@ -1,4 +1,4 @@
-# Đối chiếu yêu cầu portal — 09/09/2026
+# Đối chiếu yêu cầu portal — cập nhật 10/09/2026
 
 Yêu cầu mới của chủ dự án về portal và Supabase thay thế các giới hạn MVP cũ trong PLAN.md.
 
@@ -17,7 +17,8 @@ Yêu cầu mới của chủ dự án về portal và Supabase thay thế các g
 | Giao diện điện thoại | Web responsive và nút Giao diện điện thoại với khung tương tác 360/390/430px; trở lại desktop giữ bệnh nhân. Chưa có ứng dụng native iOS/Android |
 | Dữ liệu trực quan | `/data`: lọc bệnh nhân, xem dữ liệu thực theo 9 nhóm, mở lại hồ sơ; cấu trúc Supabase thu gọn bên dưới |
 | Supabase có category rõ ràng | SQL tạo 11 bảng gồm workspace, 9 nhóm nghiệp vụ và nhật ký; lưu lần khám trong một transaction |
-| Kết nối project Supabase thật của chủ dự án | Project đã xác nhận: `gsllxxdewmksjbcnxgvp`. **Chưa hoàn tất**: cần chạy SQL và thêm `SUPABASE_SECRET_KEY` vào runtime Sites |
+| Kết nối project Supabase thật của chủ dự án | **Đã kết nối và kiểm chứng ghi/đọc thật** tại `gsllxxdewmksjbcnxgvp`; đủ 5 bệnh nhân, 10 lần khám, 3 bác sĩ, 12 kết quả xét nghiệm, 10 mục thuốc và 4 dịch vụ |
+| Patient view đang mở nhận thay đổi | Thông báo giữa các cửa sổ cùng trình duyệt sau khi lưu; thiết bị khác kiểm tra lại mỗi 5 giây khi trang hiển thị. Tạm dừng lúc đang nhập biểu mẫu/chú thích; giữ bệnh nhân, tab và trạng thái mở thẻ |
 
 ## Kết nối Supabase
 
@@ -30,7 +31,9 @@ Chạy bốn migration theo thứ tự trong project đã xác nhận:
 
 Endpoint `/api/portal/schema` tải gộp cả bốn. Dùng Project URL và secret key phía máy chủ trong cấu hình Sites. Không đưa secret key vào mã client, Git hay chat.
 
-Kiểm tra lại ngày 09/09/2026: `.env.local` chưa có secret key; runtime Sites chưa có biến môi trường. Vì vậy dữ liệu đang lưu ở D1 của demo, **chưa ghi vào project Supabase từ xa**. Giao diện và thông báo lưu hiện ghi rõ trạng thái này. Thiết lập key chỉ trong `.env.local` chưa đủ cho website đã phát hành; cần thiết lập runtime Sites rồi triển khai lại.
+Đã chạy cả bốn migration thành công trong SQL Editor của project, xác nhận quyền server `service_role`, cấu hình `SUPABASE_URL` và `SUPABASE_SECRET_KEY` dạng secret trong runtime Sites (revision 1), triển khai và tải lại website. Portal tự chuyển dữ liệu demo hiện có của chủ dự án từ D1 sang Supabase; đã đọc trực tiếp bằng `mp_portal_read` để kiểm đếm và đối chiếu. File `.env.local` và khóa không nằm trong Git.
+
+Đã lưu lại hồ sơ chung và một lần khám từ website đang phát hành; đọc ngược từ Supabase xác nhận phiên bản tăng và toàn bộ nội dung lâm sàng, xét nghiệm, thuốc, dịch vụ và bác sĩ được giữ nguyên. `outputs/supabase-verify.mjs verify` đã PASS với bản đối chiếu trước khi lưu. Số lần khám của chủ dự án là **10**, không phải 18.
 
 Khi namespace Supabase của người dùng còn mới, bootstrap chuyển hồ sơ/ghi chú/góp ý hiện có từ bộ lưu D1, hoặc tạo dữ liệu mẫu nếu chưa có. Đây là nhập một lần, không đồng bộ hai chiều và không ghi đè namespace Supabase đã có. Hồ sơ D1 gốc được giữ. Không tự chuyển nhóm `medipass_*` của app cũ sang portal; nhóm này vẫn ở `/records`.
 
@@ -41,12 +44,16 @@ Khi namespace Supabase của người dùng còn mới, bootstrap chuyển hồ 
 - PostgreSQL độc lập bằng PGlite: chạy thật các migration, bootstrap 5 bệnh nhân/10 lần khám, thêm người thứ 6 trong bộ nhớ, sửa hồ sơ, rollback khi lỗi ở mục con, quyền truy cập, tách workspace, giữ góp ý và không seed trùng. **Không phải xác nhận kết nối Supabase từ xa.**
 - Browser QA trên `http://localhost:3001` (Wrangler chạy build production): PASS toàn bộ. Chuyển cả 5 bệnh nhân; mở các tab nhập; chọn vùng bằng chuột, lưu hai ghim cùng điểm, tải lại và mở riêng từng bình luận; bật khung điện thoại; các liên kết module; tải ảnh PNG giả lập, lưu Wound Lab và đọc lại ảnh/lịch sử; bật/tắt camera giả lập; viewport 390px không tràn ngang. Không có lỗi JavaScript chưa xử lý.
 - TypeScript và production build: PASS. Unit tests portal/wound: 15 PASS.
+- QA mở rộng với Supabase từ xa: PASS lưu/sửa ghi chú chung; tạo trọn lần khám có labs/thuốc/dịch vụ/bác sĩ; đọc trực tiếp RPC để đối chiếu; cửa sổ bệnh nhân 390px riêng tự nhận ghi chú và lần khám mới; ghim tại thẻ ghi chú trên mobile rồi tải lại/mở bình luận; annotation đọc trực tiếp từ `mp_feedback`. Không có lỗi JavaScript chưa xử lý. Đã dọn đúng vùng `browser-qa` và hồ sơ cũ của QA; hồ sơ của chủ dự án giữ nguyên.
+- Sửa nhãn trường nhập để tên truy cập không lẫn nội dung textarea hoặc lời gợi ý. Các nhãn ổn định giúp thao tác nhập và kiểm thử chính xác.
 
 Lỗi phát hiện khi tiếp tục phiên: QA ban đầu thất bại vì các ghim cùng điểm che nhau. Đã sửa bố trí ghim, giữ đường chỉ tới điểm gốc; thêm regression với hai bình luận cùng tọa độ và dọn bình luận của mỗi lượt QA cả khi thất bại.
 
 `tests/portal-api.mjs` chỉ gọi localhost. `tests/portal-supabase.mjs` dùng PGlite tạm từ npm exec và không sửa dependency của app.
 
-`tests/browser.mjs` cần Playwright ở `outputs/qa/node_modules`. Chạy PowerShell: `$env:MEDIPASS_TEST_URL='http://localhost:3001'`, sau đó `npx --yes node@24 tests/browser.mjs`. Danh tính giả của QA chỉ được dùng ở localhost. Wound Lab có lưu ảnh và đánh giá theo quy tắc; Motion Lab có camera preview. Các mô hình AI phân tích ảnh/chuyển động chưa được tích hợp.
+`tests/browser.mjs` cần Playwright ở `outputs/qa/node_modules`. Chạy PowerShell: `$env:MEDIPASS_TEST_URL='http://localhost:3001'`, sau đó `npx --yes node@24 tests/browser.mjs`. Thêm `$env:MEDIPASS_VERIFY_SUPABASE='1'` để buộc kiểm tra Supabase thật bằng helper `tests/supabase-browser-store.mjs`. Wrangler cần secret trong `.dev.vars` cạnh file cấu hình Worker; chỉ `--env-file` không đủ để biến chúng thành Worker bindings. File secret QA nằm trong `dist/server`, bị Git bỏ qua và phải loại khỏi gói phát hành. Danh tính giả của QA chỉ được dùng ở localhost.
+
+Wound Lab có lưu ảnh và đánh giá theo quy tắc; Motion Lab có camera preview. Ảnh/tệp vẫn ở kho riêng R2, dữ liệu Wound Lab vẫn ở D1. Các mô hình AI phân tích ảnh/chuyển động chưa được tích hợp. Đồng bộ tự động portal dùng kiểm tra định kỳ qua server, không cấp khóa service_role cho trình duyệt và không dùng WebSocket Supabase Realtime.
 
 ## Đọc góp ý trong phiên làm việc tiếp theo
 
