@@ -12,7 +12,7 @@ import {
   Square,
   VideoOff,
 } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/app-link';
 import { useEffect, useRef, useState } from 'react';
 
 import { therapyPoseStatus } from '@/lib/vision/therapy-pose';

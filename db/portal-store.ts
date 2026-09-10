@@ -12,12 +12,12 @@ function configuration() {
   const url = env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = env.SUPABASE_SECRET_KEY?.trim();
   if (url && !/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(url)) throw new PortalError('SUPABASE_URL phải là Project URL https://<project-ref>.supabase.co.', 503);
-  if (Boolean(url) !== Boolean(key)) throw new PortalError('Kết nối Supabase thiếu Project URL hoặc Secret key.', 503);
+  if (key && !url) throw new PortalError('Kết nối Supabase thiếu Project URL.', 503);
   return url && key ? { url, key } : null;
 }
 export function storageStatus(): StorageStatus {
   const config = configuration();
-  return { provider: config ? 'supabase' : 'd1', connected: !!config, project_url: config?.url ?? null, label: config ? 'Đã kết nối Supabase' : 'Lưu demo · chưa kết nối Supabase', schema_version: 2 };
+  return { provider: config ? 'supabase' : 'd1', connected: !!config, project_url: config?.url ?? env.SUPABASE_URL ?? 'https://gsllxxdewmksjbcnxgvp.supabase.co', label: config ? 'Đã kết nối Supabase' : 'Hồ sơ demo · chưa lưu vào Supabase', schema_version: 3 };
 }
 async function rpc<T>(name: string, body: unknown): Promise<T> {
   const config = configuration();

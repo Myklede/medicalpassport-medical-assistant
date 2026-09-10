@@ -21,10 +21,12 @@ export type Encounter = {
   clinician: Clinician; labs: Lab[]; medications: Medicine[]; procedures: Procedure[];
   created_at: string; updated_at: string;
 };
+export type Annotation = { selector: string; quote: string; x: number; y: number; viewport_width: number; viewport_height: number };
 export type Feedback = {
   id: string; version: number; title: string; description: string; category: string; priority: string;
   status: string; page_path: string; section: string; patient_id: string; encounter_id: string;
   resolution: string; created_at: string; updated_at: string;
+  annotation?: Annotation | null;
 };
 export type StorageStatus = { provider: 'supabase' | 'd1'; connected: boolean; project_url: string | null; label: string; schema_version: number };
 export type PortalData = { patients: Patient[]; clinicians: Clinician[]; storage: StorageStatus; demo: true };

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/app-link';
 import { ArrowLeft, HeartPulse, Printer } from 'lucide-react';
 import type { Encounter, Patient, PortalData } from '@/lib/portal-types';
 import { Button } from '@/components/ui/button';

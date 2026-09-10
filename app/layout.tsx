@@ -1,8 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import './portal/portal.css';
-import { FeedbackWidget } from './portal/feedback-widget';
+import { FeedbackWidget } from './portal/review-widget';
+
+export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

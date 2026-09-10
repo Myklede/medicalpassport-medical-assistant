@@ -58,3 +58,9 @@ void test('feedback validation allows page context but rejects external redirect
   assert.throws(() => validateFeedback({ ...feedback, page_path: '/\\malicious.test' }));
   assert.throws(() => validateFeedback({ ...feedback, description: '' }));
 });
+void test('visual comments preserve element, quote and relative position, and reject invalid coordinates', () => {
+  const annotation = { selector: '[data-annotate="general-note"]', quote: 'Ghi chú chung', x: 0.3, y: 0.6, viewport_width: 390, viewport_height: 844 };
+  const comment = { id: 'pin-test', version: 0, title: 'Ghi chú', description: 'Thu gọn thẻ', page_path: '/patient', annotation };
+  assert.deepEqual(validateFeedback(comment).annotation, annotation);
+  for (const x of [-1, 1.1, Infinity, '0.5']) assert.throws(() => validateFeedback({ ...comment, annotation: { ...annotation, x } }));
+});

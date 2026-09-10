@@ -10,7 +10,7 @@ assert.ok(modulePath, 'Supply @electric-sql/pglite with npm exec');
 const { PGlite } = await import(pathToFileURL(modulePath).href);
 const db = new PGlite();
 await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-for (const file of ['20260909000000_medipass_portal.sql', '20260909010000_preserve_portal_demo.sql']) {
+for (const file of ['20260905000000_medipass_core.sql', '20260909000000_medipass_portal.sql', '20260909010000_preserve_portal_demo.sql', '20260909020000_visual_annotations.sql']) {
   await db.exec(readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'));
 }
 async function rpc(name, args) {
@@ -36,6 +36,13 @@ try {
   const repeat = await rpc('mp_portal_bootstrap', ['workspace-a', seed]);
   assert.equal(repeat.patients[0].general_note, 'Lưu vào PostgreSQL');
   assert.equal(repeat.feedback.length, 1);
+  const pin = { selector: '[data-annotate="general-note"]', quote: 'Ghi chú chung', x: 0.25, y: 0.5, viewport_width: 390, viewport_height: 844 };
+  const note = repeat.feedback[0];
+  const pinned = await rpc('mp_portal_save', ['workspace-a', 'feedback', { ...note, annotation: pin }, note.version]);
+  const checkedPin = (await rpc('mp_portal_read', ['workspace-a'])).feedback[0];
+  assert.deepEqual(checkedPin.annotation, pin);
+  await rpc('mp_portal_save', ['workspace-a', 'feedback', { ...pinned, annotation: { ...pin, x: 0.75 } }, pinned.version]);
+  assert.equal((await rpc('mp_portal_read', ['workspace-a'])).feedback[0].annotation.x, 0.75);
   assert.deepEqual((await rpc('mp_portal_read', ['workspace-b'])).patients, []);
   const newcomer = { ...patient, id: 'new-patient', medical_record_number: 'MP-0006', display_name: 'Bệnh nhân thêm mới' };
   await rpc('mp_portal_save', ['workspace-a', 'patient', newcomer, 0]);

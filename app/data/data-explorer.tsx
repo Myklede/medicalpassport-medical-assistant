@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/app-link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Patient, Encounter, Clinician, Feedback } from '@/lib/portal-types';
 import { feedbackStatuses } from '@/lib/portal-types';
