@@ -1,6 +1,6 @@
 # MediPass — Medical Assistant demo
 
-> Cập nhật portal 09/09/2026: xem [đối chiếu yêu cầu và trạng thái Supabase](docs/PORTAL_AUDIT.md). Các mục bên dưới mô tả thêm bản hồ sơ cũ, hiện truy cập tại /records.
+> Bắt đầu cho AI/cộng tác viên mới: đọc [`AGENTS.md`](AGENTS.md), [đối chiếu tính năng và Supabase](docs/PORTAL_AUDIT.md), rồi [tầm nhìn/whitepaper do chủ dự án cung cấp](docs/PROJECT_VISION_WHITEPAPER_VI.md).
 
 
 MediPass là bản demo hoạt động được của một **patient-controlled medical record**: người dùng xem, tìm, thêm, sửa và soft-delete lịch sử y tế; tải ảnh/PDF riêng tư; và tạo một “Medical Passport” cô đọng cho lần khám tiếp theo.
@@ -11,6 +11,12 @@ Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https:
 
 ## Những gì đang chạy
 
+- Cổng bệnh viện `/editor`: 5 bệnh nhân giả lập, thêm/sửa hồ sơ chung và từng lần khám đầy đủ.
+- Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích thuật ngữ và tự cập nhật khi portal thay đổi.
+- Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
+- Chế độ **Chú thích giao diện**: chọn vùng bằng chuột/chạm, ghim comment vào đúng bệnh nhân/lần khám và mở lại ở `/feedback`.
+- Giao diện responsive và khung thử điện thoại `/mobile` ở 360/390/430 px.
+- Mỗi lần khám là một card gồm lý do, triệu chứng, chẩn đoán/chú giải, vital signs, labs, thuốc, dịch vụ, kế hoạch và bác sĩ.
 - Dashboard tổng quan theo một bệnh nhân hư cấu thống nhất.
 - 5 loại hồ sơ: Allergy, Condition, Medication, Lab Result và Encounter.
 - Thêm, đọc, sửa và soft-delete dữ liệu.
@@ -22,7 +28,9 @@ Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https:
 - Ownership check phía server và audit log cho read/write/upload/download.
 - Responsive cho desktop/mobile, keyboard shortcut `Cmd/Ctrl + K`, loading/error/empty states.
 
-Các module Insurance AI, wound monitoring, physical therapy và medication matching được ghi rõ là roadmap; demo không giả kết quả AI chưa tồn tại.
+Wound Lab hiện có lưu ảnh/lịch sử và safety review theo quy tắc; Motion Lab có camera preview. Computer Vision, pose model, Insurance AI và medication matching vẫn là roadmap; demo không giả kết quả AI chưa tồn tại.
+
+Hướng dẫn để tự đưa các commit lên GitHub: [`docs/GITHUB_PUSH_GUIDE_VI.md`](docs/GITHUB_PUSH_GUIDE_VI.md).
 
 ## Kiến trúc bản demo
 
@@ -61,11 +69,11 @@ Frontend không được truy cập database trực tiếp. Mỗi request resolv
 
 Migration Drizzle nằm trong `drizzle/`. Schema nguồn nằm trong `db/schema.ts`; runtime initialization idempotent nằm trong `db/runtime.ts` để local demo có thể chạy ngay.
 
-## Có nên dùng Supabase không?
+## Trạng thái Supabase
 
-**Có — Supabase là lựa chọn tốt cho MVP nhiều người dùng và đường lên production**, đặc biệt khi dự án cần PostgreSQL, Auth, Row-Level Security, private Storage và `pgvector`. Bản hiện tại dùng D1/R2 vì nó được deploy trực tiếp cùng website demo mà không cần lấy credential tài khoản Supabase của bạn.
+Portal hiện đã kết nối Supabase project `gsllxxdewmksjbcnxgvp`. Các bảng `mp_*` lưu bệnh nhân, bệnh nền, dị ứng, bác sĩ, lần khám, labs, thuốc, dịch vụ, audit và comment giao diện. Backend dùng server secret; client không nhận key. Dữ liệu `/records`, Wound Lab và file riêng tư vẫn có phần dùng D1/R2 như mô tả trong tài liệu audit.
 
-Khi chuyển sang Supabase:
+Các bước production còn lại cho Supabase:
 
 1. Đổi D1 thành PostgreSQL và giữ các bảng quan hệ hiện có.
 2. Dùng Supabase Auth; tạo `patient_memberships` cho owner/patient/caregiver.
