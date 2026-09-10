@@ -15,7 +15,7 @@ Yêu cầu mới của chủ dự án về portal và Supabase thay thế các g
 | Góp ý trực tiếp trên web | Nút toàn website, vị trí trang/lần khám, loại, ưu tiên, danh sách, trạng thái và ghi chú xử lý |
 | Dữ liệu trực quan | `/data`: lọc bệnh nhân, xem dữ liệu thực theo 9 nhóm, mở lại hồ sơ; cấu trúc Supabase thu gọn bên dưới |
 | Supabase có category rõ ràng | SQL tạo 11 bảng gồm workspace, 9 nhóm nghiệp vụ và nhật ký; lưu lần khám trong một transaction |
-| Kết nối project Supabase thật của chủ dự án | **Chưa hoàn tất**: runtime Sites chưa có SUPABASE_URL/SUPABASE_SECRET_KEY; link project được cung cấp chưa xác định được đúng project |
+| Kết nối project Supabase thật của chủ dự án | Project đã xác nhận: `gsllxxdewmksjbcnxgvp`. **Chưa hoàn tất**: cần chạy SQL và thêm `SUPABASE_SECRET_KEY` vào runtime Sites |
 
 ## Kết nối Supabase
 
