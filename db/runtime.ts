@@ -4,6 +4,7 @@ export type PatientContext = {
   userId: string;
   patientId: string;
   userDisplayName: string;
+  role: 'owner' | 'patient' | 'caregiver';
   patient: {
     id: string;
     display_name: string;
@@ -228,12 +229,26 @@ export async function getPatientContext(
     .first<{ total: number }>();
   if (!count?.total) await seedDemoRecords(user.id, patient.id);
 
+  const membership = await env.DB.prepare(
+    `SELECT role FROM patient_memberships
+     WHERE patient_id = ? AND user_id = ? AND status = 'active'
+     LIMIT 1`,
+  )
+    .bind(patient.id, user.id)
+    .first<{ role: PatientContext['role'] }>();
+  if (!membership) throw new Error('No active patient access was found.');
+
   return {
     userId: user.id,
     patientId: patient.id,
     userDisplayName: user.display_name,
+    role: membership.role,
     patient,
   };
+}
+
+export function canManagePatient(context: Pick<PatientContext, 'role'>) {
+  return context.role === 'owner' || context.role === 'caregiver';
 }
 
 type DemoSeed = {

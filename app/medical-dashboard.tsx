@@ -4,6 +4,7 @@ import {
   Activity,
   AlertCircle,
   Bell,
+  Camera,
   Check,
   ChevronRight,
   CircleUserRound,
@@ -32,6 +33,7 @@ import {
   UploadCloud,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
 import {
   forwardRef,
   useCallback,
@@ -86,6 +88,7 @@ type HealthRecord = {
 type DashboardData = {
   patient: Patient;
   user: { display_name: string };
+  access: { role: 'owner' | 'patient' | 'caregiver'; can_write: boolean };
   records: HealthRecord[];
   persistence: string;
 };
@@ -109,6 +112,7 @@ type FormState = {
 };
 
 type ViewMode = 'overview' | 'records' | 'insurance';
+type PortalMode = 'editor' | 'patient';
 
 const typeMeta = {
   allergy: {
@@ -385,7 +389,7 @@ function titleForView(view: ViewMode, filter: RecordType | 'all') {
   return filter === 'all' ? 'All medical records' : typeMeta[filter].plural;
 }
 
-export function MedicalDashboard() {
+export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -404,6 +408,7 @@ export function MedicalDashboard() {
   const [toast, setToast] = useState('');
   const [mobileNav, setMobileNav] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const canEdit = portal === 'editor' && (data?.access.can_write ?? true);
 
   const loadRecords = useCallback(async () => {
     setError('');
@@ -490,6 +495,7 @@ export function MedicalDashboard() {
   }
 
   function openCreate(recordType: RecordType = 'condition') {
+    if (!canEdit) return;
     setEditing(null);
     setForm(blankForm(recordType));
     setFile(null);
@@ -498,6 +504,7 @@ export function MedicalDashboard() {
   }
 
   function openEdit(record: HealthRecord) {
+    if (!canEdit) return;
     setSelected(null);
     setEditing(record);
     setForm(formFromRecord(record));
@@ -625,6 +632,24 @@ export function MedicalDashboard() {
       action: () => showRecords('lab'),
     },
     {
+      label: 'Wound monitoring',
+      icon: Camera,
+      badge: 'Research',
+      active: false,
+      action: () => {
+        window.location.href = '/wounds';
+      },
+    },
+    {
+      label: 'Physical therapy',
+      icon: Activity,
+      badge: 'Scaffold',
+      active: false,
+      action: () => {
+        window.location.href = '/therapy';
+      },
+    },
+    {
       label: 'Insurance',
       icon: ShieldCheck,
       badge: 'Soon',
@@ -683,6 +708,26 @@ export function MedicalDashboard() {
               ⌘ K
             </kbd>
           </label>
+          <div className="hidden items-center rounded-xl border border-slate-200 bg-slate-50 p-1 md:flex" aria-label="Portal switcher">
+            <Link
+              href="/patient"
+              className={cx(
+                'rounded-lg px-3 py-2 text-xs font-semibold transition',
+                portal === 'patient' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500 hover:text-slate-900',
+              )}
+            >
+              Patient view
+            </Link>
+            <Link
+              href="/editor"
+              className={cx(
+                'rounded-lg px-3 py-2 text-xs font-semibold transition',
+                portal === 'editor' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900',
+              )}
+            >
+              Care team
+            </Link>
+          </div>
           <button
             type="button"
             onClick={() => setToast("You're all caught up — no demo notifications.")}
@@ -699,12 +744,22 @@ export function MedicalDashboard() {
               <p className="truncate text-xs font-semibold text-slate-800">
                 {data?.patient.display_name ?? 'Demo patient'}
               </p>
-              <p className="text-[10px] text-slate-500">Patient workspace</p>
+              <p className="text-[10px] text-slate-500">
+                {portal === 'editor' ? 'Care team editor' : 'Patient · read only'}
+              </p>
             </div>
           </div>
         </div>
         {mobileNav && (
           <nav className="border-t border-slate-100 bg-white p-3 shadow-lg lg:hidden" aria-label="Mobile navigation">
+            <div className="mb-2 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-1 md:hidden">
+              <Link href="/patient" className={cx('rounded-lg px-3 py-2 text-center text-xs font-semibold', portal === 'patient' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500')}>
+                Patient view
+              </Link>
+              <Link href="/editor" className={cx('rounded-lg px-3 py-2 text-center text-xs font-semibold', portal === 'editor' ? 'bg-slate-950 text-white' : 'text-slate-500')}>
+                Care team
+              </Link>
+            </div>
             <div className="grid gap-1 sm:grid-cols-2">
               {navItems.map(({ label, icon: Icon, active, action, badge }) => (
                 <button
@@ -780,6 +835,30 @@ export function MedicalDashboard() {
               </div>
             </div>
 
+            <div className={cx(
+              'mb-5 flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between',
+              portal === 'editor' ? 'border-sky-200 bg-sky-50' : 'border-teal-200 bg-teal-50',
+            )}>
+              <div>
+                <p className={cx('text-xs font-bold uppercase tracking-[0.12em]', portal === 'editor' ? 'text-sky-800' : 'text-teal-800')}>
+                  {portal === 'editor' ? 'Care team editor portal' : 'Patient portal · read only'}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  {portal === 'editor'
+                    ? canEdit
+                      ? 'Authorized staff can add, update, and remove records. Changes are written by the server and appear in the patient portal.'
+                      : 'Your account is not authorized to change this patient record.'
+                    : 'This view can search, open, print, and download saved information, but it cannot change the medical record.'}
+                </p>
+              </div>
+              <Link
+                href={portal === 'editor' ? '/patient' : '/editor'}
+                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                {portal === 'editor' ? 'Preview patient view' : 'Open care team portal'}
+              </Link>
+            </div>
+
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <Badge className="mb-3 border-teal-200 bg-teal-50 text-teal-800" variant="outline">
@@ -796,7 +875,7 @@ export function MedicalDashboard() {
                       : `${filteredRecords.length} saved ${filteredRecords.length === 1 ? 'record' : 'records'} in this view.`}
                 </p>
               </div>
-              {view !== 'insurance' && (
+              {view !== 'insurance' && canEdit && (
                 <Button
                   type="button"
                   onClick={() => openCreate(filter === 'all' ? 'condition' : filter)}
@@ -827,6 +906,29 @@ export function MedicalDashboard() {
               <>
                 {view === 'overview' && (
                   <>
+                    <Link
+                      href="/wounds"
+                      className="mt-7 grid gap-5 overflow-hidden rounded-3xl bg-slate-950 p-5 text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-teal-400/15 text-teal-300">
+                          <Camera className="size-5" />
+                        </span>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-teal-300">New research workflow</p>
+                            <Badge className="border-white/10 bg-white/10 text-slate-200">RGB capture</Badge>
+                          </div>
+                          <h2 className="mt-2 font-heading text-xl font-semibold tracking-tight">Follow a wound over time</h2>
+                          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
+                            Save repeat photos, report warning signs, and review relevant health-history factors without presenting an untrained model as a diagnosis.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-slate-950">
+                        Open Wound Lab <ChevronRight className="size-4" />
+                      </span>
+                    </Link>
                     <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                       <StatCard
                         label="Known allergies"
@@ -900,7 +1002,7 @@ export function MedicalDashboard() {
                       </article>
                     </div>
 
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                    {canEdit && <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-teal-700">Quick add</p>
@@ -917,7 +1019,7 @@ export function MedicalDashboard() {
                           })}
                         </div>
                       </div>
-                    </div>
+                    </div>}
                   </>
                 )}
 
@@ -979,7 +1081,7 @@ export function MedicalDashboard() {
         </section>
       </div>
 
-      <RecordFormDialog
+      {canEdit && <RecordFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         form={form}
@@ -992,11 +1094,12 @@ export function MedicalDashboard() {
         onUpdate={updateForm}
         onUpdateDetail={updateDetail}
         onSubmit={saveRecord}
-      />
+      />}
 
       <RecordDetailDialog
         record={selected}
         deleting={deleting}
+        canEdit={canEdit}
         onClose={() => setSelected(null)}
         onEdit={openEdit}
         onDelete={deleteRecord}
@@ -1453,12 +1556,14 @@ function placeholderForType(type: RecordType) {
 function RecordDetailDialog({
   record,
   deleting,
+  canEdit,
   onClose,
   onEdit,
   onDelete,
 }: {
   record: HealthRecord | null;
   deleting: boolean;
+  canEdit: boolean;
   onClose: () => void;
   onEdit: (record: HealthRecord) => void;
   onDelete: (record: HealthRecord) => void;
@@ -1527,14 +1632,14 @@ function RecordDetailDialog({
           <p className="text-[11px] text-slate-400">Last updated {formatDate(record.updated_at, true)} · audit event recorded</p>
         </div>
 
-        <DialogFooter>
+        {canEdit && <DialogFooter>
           <Button type="button" variant="destructive" disabled={deleting} onClick={() => onDelete(record)}>
             {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />} Remove
           </Button>
           <Button type="button" variant="outline" onClick={() => onEdit(record)}>
             <PenLine className="size-4" /> Edit
           </Button>
-        </DialogFooter>
+        </DialogFooter>}
       </DialogContent>
     </Dialog>
   );

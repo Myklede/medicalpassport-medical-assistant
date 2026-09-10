@@ -1,4 +1,10 @@
-import { index, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from 'drizzle-orm/sqlite-core';
 
 export const appUsers = sqliteTable('app_users', {
   id: text('id').primaryKey(),
@@ -96,6 +102,102 @@ export const healthRecords = sqliteTable(
   ],
 );
 
+export const woundCases = sqliteTable(
+  'wound_cases',
+  {
+    id: text('id').primaryKey(),
+    patientId: text('patient_id')
+      .notNull()
+      .references(() => patients.id),
+    label: text('label').notNull(),
+    bodyLocation: text('body_location').notNull(),
+    woundType: text('wound_type').notNull(),
+    onsetDate: text('onset_date'),
+    status: text('status').notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => appUsers.id),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+  },
+  (table) => [
+    index('idx_wound_cases_patient_status').on(table.patientId, table.status),
+  ],
+);
+
+export const woundAssessments = sqliteTable(
+  'wound_assessments',
+  {
+    id: text('id').primaryKey(),
+    woundCaseId: text('wound_case_id')
+      .notNull()
+      .references(() => woundCases.id),
+    patientId: text('patient_id')
+      .notNull()
+      .references(() => patients.id),
+    imageObjectId: text('image_object_id')
+      .notNull()
+      .references(() => storageObjects.id),
+    capturedAt: text('captured_at').notNull(),
+    painScore: integer('pain_score').notNull(),
+    symptomsJson: text('symptoms_json').notNull(),
+    captureJson: text('capture_json').notNull(),
+    notes: text('notes'),
+    triageLevel: text('triage_level').notNull(),
+    triageReasonsJson: text('triage_reasons_json').notNull(),
+    historyFactorsJson: text('history_factors_json').notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => appUsers.id),
+    createdAt: text('created_at').notNull(),
+    deletedAt: text('deleted_at'),
+  },
+  (table) => [
+    index('idx_wound_assessments_case_date').on(
+      table.woundCaseId,
+      table.capturedAt,
+    ),
+    index('idx_wound_assessments_patient_date').on(
+      table.patientId,
+      table.capturedAt,
+    ),
+  ],
+);
+
+export const aiInferences = sqliteTable(
+  'ai_inferences',
+  {
+    id: text('id').primaryKey(),
+    patientId: text('patient_id')
+      .notNull()
+      .references(() => patients.id),
+    woundCaseId: text('wound_case_id')
+      .notNull()
+      .references(() => woundCases.id),
+    woundAssessmentId: text('wound_assessment_id')
+      .notNull()
+      .references(() => woundAssessments.id),
+    task: text('task').notNull(),
+    modelName: text('model_name').notNull(),
+    modelVersion: text('model_version').notNull(),
+    status: text('status').notNull(),
+    outputJson: text('output_json').notNull(),
+    confidenceJson: text('confidence_json').notNull(),
+    inputManifestJson: text('input_manifest_json').notNull(),
+    requiresReview: integer('requires_review', { mode: 'boolean' })
+      .notNull()
+      .default(true),
+    reviewedByUserId: text('reviewed_by_user_id').references(() => appUsers.id),
+    reviewedAt: text('reviewed_at'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_ai_inferences_assessment').on(table.woundAssessmentId),
+    index('idx_ai_inferences_patient_date').on(table.patientId, table.createdAt),
+  ],
+);
+
 export const auditEvents = sqliteTable(
   'audit_events',
   {
@@ -110,3 +212,29 @@ export const auditEvents = sqliteTable(
   },
   (table) => [index('idx_audit_patient_date').on(table.patientId, table.createdAt)],
 );
+
+// Local/private demo staging. Supabase uses normalized clinical tables; these
+// documents preserve edits until the user connects their Supabase project.
+export const portalSpaces = sqliteTable('portal_spaces', {
+  id: text('id').primaryKey(),
+  seededAt: text('seeded_at').notNull(),
+});
+
+export const portalDocuments = sqliteTable('portal_documents', {
+  workspaceId: text('workspace_id').notNull().references(() => portalSpaces.id),
+  kind: text('kind').notNull(),
+  id: text('id').notNull(),
+  version: integer('version').notNull(),
+  payload: text('payload').notNull(),
+  mutationId: text('mutation_id').notNull(),
+  updatedAt: text('updated_at').notNull(),
+}, table => [primaryKey({ columns: [table.workspaceId, table.kind, table.id] })]);
+
+export const portalChanges = sqliteTable('portal_changes', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull().references(() => portalSpaces.id),
+  kind: text('kind').notNull(),
+  resourceId: text('resource_id').notNull(),
+  action: text('action').notNull(),
+  createdAt: text('created_at').notNull(),
+}, table => [index('idx_portal_changes_workspace_date').on(table.workspaceId, table.createdAt)]);

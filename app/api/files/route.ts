@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 
-import { getPatientContext, writeAudit } from '@/db/runtime';
+import { canManagePatient, getPatientContext, writeAudit } from '@/db/runtime';
 
 const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
 const maxBytes = 8 * 1024 * 1024;
@@ -13,6 +13,9 @@ function safeFilename(value: string) {
 export async function POST(request: Request) {
   try {
     const context = await getPatientContext(request);
+    if (!canManagePatient(context)) {
+      return Response.json({ error: 'This patient account has read-only access.' }, { status: 403 });
+    }
     const formData = await request.formData();
     const file = formData.get('file');
     if (!(file instanceof File)) {
@@ -116,6 +119,9 @@ export async function GET(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const context = await getPatientContext(request);
+    if (!canManagePatient(context)) {
+      return Response.json({ error: 'This patient account has read-only access.' }, { status: 403 });
+    }
     const body = (await request.json()) as { id?: string };
     const id = typeof body.id === 'string' ? body.id.trim().slice(0, 80) : '';
     if (!id) return Response.json({ error: 'File id is required.' }, { status: 400 });

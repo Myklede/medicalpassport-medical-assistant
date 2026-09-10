@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import './portal/portal.css';
+import { FeedbackWidget } from './portal/feedback-widget';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -13,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 const siteUrl = new URL(
-  'https://medipass-medical-assistant-demo.cloudy-song-3021.chatgpt.site',
+  'https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site',
 );
 const socialImageUrl = new URL('/og.png', siteUrl).toString();
 
@@ -54,9 +56,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
+        <FeedbackWidget />
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
-import { MedicalDashboard } from './medical-dashboard';
+import { PortalWorkspace } from './portal/portal-workspace';
 
 export const dynamic = 'force-dynamic';
 
 export default function Home() {
-  return <MedicalDashboard />;
+  return <PortalWorkspace mode="patient" />;
 }

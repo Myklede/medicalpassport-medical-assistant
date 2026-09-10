@@ -1,8 +1,11 @@
 # MediPass — Medical Assistant demo
 
+> Cập nhật portal 09/09/2026: xem [đối chiếu yêu cầu và trạng thái Supabase](docs/PORTAL_AUDIT.md). Các mục bên dưới mô tả thêm bản hồ sơ cũ, hiện truy cập tại /records.
+
+
 MediPass là bản demo hoạt động được của một **patient-controlled medical record**: người dùng xem, tìm, thêm, sửa và soft-delete lịch sử y tế; tải ảnh/PDF riêng tư; và tạo một “Medical Passport” cô đọng cho lần khám tiếp theo.
 
-Private demo: [medipass-medical-assistant-demo.cloudy-song-3021.chatgpt.site](https://medipass-medical-assistant-demo.cloudy-song-3021.chatgpt.site)
+Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
 
 > **Giới hạn bắt buộc:** đây là research/startup prototype, không phải thiết bị y tế, không chẩn đoán, không tư vấn điều trị và chưa được tuyên bố HIPAA compliant. Chỉ dùng dữ liệu giả hoặc đã de-identify.
 
@@ -231,3 +234,13 @@ pnpm run lint
 5. Refresh: dữ liệu vẫn còn; mở lại attachment.
 6. Sửa record rồi soft-delete; giải thích audit trail và ownership check.
 7. Mở Insurance để kể roadmap source-grounded RAG, wound monitoring, PT pose và cross-country medication mapping.
+
+## Wound Lab và Motion Lab hiện tại
+
+- `/wounds` đã có luồng chụp/ chọn ảnh, xóa EXIF bằng cách tái mã hóa trong trình duyệt, lưu ảnh riêng tư vào R2 và nhóm các lần đánh giá theo một `wound_case` để theo dõi dọc theo thời gian.
+- Safety review hiện chỉ dùng triệu chứng người dùng khai báo và bệnh lý/thuốc đang có trong hồ sơ. Nó **không phân tích pixel ảnh, không chẩn đoán và không giả làm AI**.
+- Ba bảng D1 mới là `wound_cases`, `wound_assessments` và `ai_inferences`. Bảng `ai_inferences` được dành sẵn cho model thật và mặc định bắt buộc human review.
+- `/therapy` là scaffold camera chạy tại thiết bị; video không được ghi hoặc upload. Rep count, range of motion và form deviation để trống cho tới khi pose model thật được nối.
+- Code huấn luyện, weights và preprocessing tương lai vẫn nằm riêng trong `aimedic/`. Web app chỉ phụ thuộc vào contract versioned trong `lib/vision/`.
+
+Chi tiết kiến trúc, nguyên tắc an toàn và workflow cộng tác GitHub nằm tại [`docs/WOUND_RESEARCH_ARCHITECTURE.md`](docs/WOUND_RESEARCH_ARCHITECTURE.md).
