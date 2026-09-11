@@ -16,9 +16,11 @@ Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy c
 - Trang sảnh tối giản `/`: chọn cổng bệnh viện, góc nhìn bệnh nhân, khung điện thoại, dữ liệu hoặc yêu cầu chỉnh sửa trước khi vào hồ sơ.
 - Cổng bệnh viện `/editor`: 5 bệnh nhân giả lập, thêm/sửa hồ sơ chung và từng lần khám đầy đủ.
 - Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích bệnh và xét nghiệm bằng lời dễ hiểu, gồm ảnh hưởng, mục tiêu theo dõi, ăn uống/sinh hoạt và dấu hiệu cần chú ý.
+- Từ hồ sơ đang chọn ở `/editor` hoặc `/patient`, nút **Xuất IPS** tạo PDF song ngữ dễ đọc và FHIR R4 document Bundle theo HL7 International Patient Summary 2.0.1. PDF đính kèm chính JSON Bundle. Dữ liệu thiếu dùng Data Absent Reason/`unavailable`, không biến mảng rỗng thành “không có bệnh, dị ứng hay thuốc”; bản xuất luôn ghi rõ sơ bộ và chưa được clinician ký/xác nhận.
 - Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
 - Chế độ **Chú thích giao diện**: chọn vùng bằng chuột/chạm, ghim comment vào đúng bệnh nhân/lần khám và mở lại ở `/feedback`.
 - Giao diện responsive và khung thử điện thoại `/mobile` ở 360/390/430 px.
+- Demo `/medications` đối chiếu 20 nhóm thuốc giữa Việt Nam, Ấn Độ, Mỹ và Trung Quốc theo hoạt chất chuẩn, hàm lượng, dạng dùng và Rx/OTC; luôn yêu cầu pharmacist/người kê đơn xác nhận và không tuyên bố tự động tương đương điều trị.
 - Chế độ Sáng/Tối dùng chung cho desktop và điện thoại; lựa chọn được lưu trong trình duyệt.
 - Mỗi lần khám là một card gồm lý do, triệu chứng, chẩn đoán/chú giải, vital signs, labs, thuốc, dịch vụ, kế hoạch và bác sĩ.
 - Chú giải y khoa hiện bao phủ 5 bệnh nền mẫu và 6 xét nghiệm chính. App chỉ ghép đúng thuật ngữ đã được kiểm duyệt, dùng khoảng tham chiếu trên chính phiếu xét nghiệm và không tự đoán thuật ngữ lạ.
@@ -33,7 +35,7 @@ Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy c
 - Ownership check phía server và audit log cho read/write/upload/download.
 - Responsive cho desktop/mobile, keyboard shortcut `Cmd/Ctrl + K`, loading/error/empty states.
 
-Wound Lab hiện có lưu ảnh/lịch sử và safety review theo quy tắc; Motion Lab có camera preview. Computer Vision, pose model, Insurance AI và medication matching vẫn là roadmap; demo không giả kết quả AI chưa tồn tại.
+Wound Lab hiện có lưu ảnh/lịch sử và safety review theo quy tắc; Motion Lab có camera preview. Computer Vision, pose model, Insurance AI và hệ thống medication matching dựa trên catalog thời gian thực vẫn là roadmap; `/medications` hiện chỉ là bộ dữ liệu demo có tuyển chọn và không giả kết quả xác minh dược sĩ.
 
 Hướng dẫn để tự đưa các commit lên GitHub: [`docs/GITHUB_PUSH_GUIDE_VI.md`](docs/GITHUB_PUSH_GUIDE_VI.md).
 
@@ -71,6 +73,8 @@ Frontend không được truy cập database trực tiếp. Mỗi request resolv
 | `/api/files` | POST | Upload tệp vào R2 và lưu metadata vào D1 |
 | `/api/files?id=...` | GET | Mở tệp sau khi kiểm tra quyền sở hữu |
 | `/api/files` | DELETE | Xóa object và soft-delete metadata |
+| `/api/portal/ips?patient_id=...&format=pdf` | GET | Xuất PDF IPS sau ownership check; PDF chứa FHIR JSON attachment |
+| `/api/portal/ips?patient_id=...&format=json` | GET | Xuất riêng FHIR R4 document Bundle |
 
 Migration Drizzle nằm trong `drizzle/`. Schema nguồn nằm trong `db/schema.ts`; runtime initialization idempotent nằm trong `db/runtime.ts` để local demo có thể chạy ngay.
 
@@ -116,7 +120,7 @@ QR share chỉ chứa opaque one-time token; database chỉ lưu token hash. Tok
 
 Mã y khoa lưu bộ ba `code_system`, `code`, `display`: ICD-10-CM, SNOMED CT, LOINC, RxNorm và UCUM. UI không bắt người dùng phổ thông nhập code; code nằm trong Advanced details hoặc được map khi import.
 
-FHIR là chuẩn trao đổi, không phải security protocol. Mục tiêu interoperability hợp lý là export/import FHIR và một [International Patient Summary](https://www.hl7.org/fhir/uv/ips/en/) trước; đồng bộ bệnh viện thật còn cần SMART/OAuth, consent, patient matching, terminology mapping và thỏa thuận tích hợp. Tham khảo [FHIR overview](https://hl7.org/fhir/overview.html), [US Core](https://www.hl7.org/fhir/us/core/) và [FHIR security](https://hl7.org/fhir/R4/security.html).
+FHIR là chuẩn trao đổi, không phải security protocol. Demo đã có export sơ bộ theo [International Patient Summary 2.0.1](https://hl7.org/fhir/uv/ips/en/): Bundle dạng `document`, Composition đứng đầu, Patient và ba section bắt buộc Problem List, Allergies/Intolerances, Medication Summary; section trống dùng `emptyReason=unavailable`. Tám fixture tổng hợp đã đạt 0 error/0 warning với HL7 FHIR Validator 6.9.12, FHIR R4 4.0.1, package IPS 2.0.1 và `tx.fhir.org`; đây là kiểm định profile của fixture, không phải chứng nhận sản phẩm hay clinician attestation. Import, kiểm thử với hệ thống nhận độc lập và đồng bộ bệnh viện thật vẫn cần SMART/OAuth, consent, patient matching, terminology mapping và thỏa thuận tích hợp. Tham khảo [FHIR overview](https://hl7.org/fhir/overview.html), [US Core](https://www.hl7.org/fhir/us/core/) và [FHIR security](https://hl7.org/fhir/R4/security.html).
 
 ## Roadmap bốn nhóm tính năng
 
@@ -125,7 +129,7 @@ FHIR là chuẩn trao đổi, không phải security protocol. Mục tiêu inter
 **MVP kế tiếp**
 
 - Patient profile, caregiver membership, consent và time-limited share link.
-- FHIR Bundle import/export; IPS summary.
+- **Đã có bản demo:** FHIR IPS document Bundle export + PDF có JSON đính kèm; tám fixture bất lợi đã qua HL7 Validator. Bước production tiếp theo là release gate tự động, kiểm thử với consumer độc lập, clinician attestation/signature, import và provenance chi tiết.
 - Provenance hiển thị rõ: self-reported, provider document, imported, verified.
 - Medication reconciliation và clinician view riêng.
 - Không tự kết luận bệnh; mọi alert quan trọng cần clinical rules engine đã được thẩm định.
@@ -211,7 +215,7 @@ Không dùng database vận hành chứa định danh làm thẳng training data
 
 1. **Đã hoàn thành:** responsive frontend, database, private files, per-user ownership, CRUD, timeline, search/filter, demo seed.
 2. Supabase production schema + RLS tests + consent/share/audit.
-3. FHIR/IPS import/export và clinician read-only share flow.
+3. Nâng bản FHIR/IPS export demo thành luồng đã validate/ký; thêm import và clinician read-only share flow.
 4. Insurance PDF ingestion + cited retrieval.
 5. Wound longitudinal data collection/annotation; IRB/consent trước khi lấy dữ liệu người thật.
 6. Segmentation model + research validation; không gắn diagnostic claim.

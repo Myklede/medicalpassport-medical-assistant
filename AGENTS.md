@@ -12,11 +12,13 @@ Read these files before changing the project:
 - `/` is a minimal lobby. It gives explicit entry points to the hospital portal, patient view, mobile preview, Supabase explorer and visual-feedback list; it does not open a patient record immediately.
 - `/editor` is the hospital portal. It can add/edit five seeded patients and complete encounter cards.
 - `/patient` is a read-only patient view of the same portal data. Known sample conditions and labs include reviewed plain-language summaries, impact, monitoring context and food/lifestyle guidance.
+- The selected portal patient can be exported from `/editor` or `/patient` as a preliminary IPS 2.0.1 FHIR R4 document Bundle or as a bilingual PDF containing that JSON Bundle as an attachment. Eight synthetic fixtures pass the configured HL7 Validator gate; the export is not product-certified, digitally signed or clinician-attested.
 - `/feedback` lists visual review comments. The global **Chú thích giao diện** mode lets the owner click a real UI region, save an anchored comment and reopen it later.
 - `/mobile` is an interactive responsive web preview at 360/390/430 px. It is not a native iOS/Android app.
 - A persistent light/dark switch is rendered by the root layout on every route. It stores `medipass-theme` in browser local storage and synchronizes same-origin desktop/phone-preview contexts.
 - `/data` explains and displays the portal data structure.
 - `/records` is the older medical-record module.
+- `/medications` is a curated 20-item, four-country medication-name comparison demo. It matches candidate products by active ingredient and surfaces strength/form, Rx/OTC and excipient-review differences; it never claims automatic therapeutic substitution.
 - `/wounds` stores longitudinal wound captures and rule-based safety review. It does not analyze image pixels with an AI model.
 - `/therapy` has local camera preview only. Pose estimation and rep counting are not connected.
 

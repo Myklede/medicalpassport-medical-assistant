@@ -41,7 +41,7 @@ assert.deepEqual(suspicious, [], `Possible secrets found in tracked files: ${sus
 
 run('Git whitespace and patch integrity', 'git', ['diff', '--check', 'HEAD']);
 run('TypeScript', process.execPath, ['node_modules/typescript/bin/tsc', '--noEmit']);
-run('Portal and wound unit tests', process.execPath, ['--test', 'tests/portal.test.ts', 'tests/wound-safety.test.ts']);
+run('Portal, IPS, medication and wound unit tests', process.execPath, ['--test', 'tests/portal.test.ts', 'tests/ips-export.test.ts', 'tests/medication-exchange.test.ts', 'tests/wound-safety.test.ts']);
 run('Production build', process.execPath, ['node_modules/vinext/dist/cli.js', 'build']);
 
 console.log(`\nREADY TO PUSH\nRemote: ${expectedRemote}\nBranch: ${capture('git', ['branch', '--show-current'])}`);

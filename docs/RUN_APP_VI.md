@@ -13,9 +13,11 @@ Các đường dẫn chính:
 - Trang sảnh: `/`
 - Cổng bệnh viện: `/editor`
 - Góc nhìn bệnh nhân: `/patient`
+- Xuất IPS: chọn bệnh nhân ở `/editor` hoặc `/patient`, bấm **Xuất IPS**, rồi tải PDF hoặc FHIR JSON. PDF có sẵn JSON Bundle đính kèm nhưng một số trình đọc PDF có thể ẩn attachment.
 - Khung thử điện thoại: `/mobile`
 - Dữ liệu và Supabase: `/data`
 - Yêu cầu chỉnh sửa: `/feedback`
+- Đối chiếu thuốc quốc tế: `/medications`
 - Wound Lab: `/wounds`
 - Motion Lab: `/therapy`
 
