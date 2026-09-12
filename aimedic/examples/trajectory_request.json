@@ -1,0 +1,12 @@
+{
+  "patient_data": {
+    "patient_id": "TRAJECTORY-DEMO", "synthetic": true,
+    "age": 68, "blood_type": "O+", "hba1c_level": 9.6,
+    "has_diabetes_type_2": true, "hypertension": true
+  },
+  "visits": [
+    {"day": 1, "tissue_metrics": {"necrotic": 10, "slough": 30, "granulation": 60}, "area_cm2": 5},
+    {"day": 3, "tissue_metrics": {"necrotic": 12, "slough": 33, "granulation": 55}, "area_cm2": 4.9},
+    {"day": 10, "tissue_metrics": {"necrotic": 11, "slough": 26, "granulation": 63}, "area_cm2": 4.8}
+  ]
+}

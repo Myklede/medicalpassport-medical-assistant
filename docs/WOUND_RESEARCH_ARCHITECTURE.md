@@ -1,12 +1,44 @@
 # MediPass wound and rehabilitation research architecture
 
 This document is the collaboration boundary between the MediPass web product and
-future computer-vision work in `aimedic/`. The current web build does **not**
-contain or pretend to run a trained wound or pose model.
+computer-vision work in `aimedic/`. The web analyzer now calls the local synthetic
+wound model through FastAPI. No trained pose model is connected.
+
+As of 2026-09-11, `aimedic/` contains a separate runnable four-script synthetic
+research pipeline (data generation, late-fusion model, training and longitudinal
+JSON tracker). See [`aimedic/README.md`](../aimedic/README.md) for commands, tensor
+contracts, verification and limits. It is integrated through `/wounds` and
+`/wound-analyzer`, but has not been validated on clinical images. Its review rules are invented demo
+thresholds, not validated medical triage criteria.
 
 ## What works now
 
-### Wound Lab (`/wounds`)
+### Wound Lab analyzer (`/wounds`, `/wound-analyzer`)
+
+- Shared client component `components/wound-analyzer.tsx` and multipart service
+  `lib/wound-api.ts` call `http://127.0.0.1:8000/api/analyze-wound`.
+- Patient Mode fixes one simulated signed-in profile and displays upload/friendly
+  summary only. Developer Mode selects five mock profiles and adds structured
+  tissue estimates, simulation score, quality, context and provenance.
+- Optional `pipeline_visuals` contains Base64 raw input, U-Net isolated foreground
+  and tissue overlay. `aimedic/visual_pipeline.py` loads the supplied binary
+  `outputs/wound_unet_fusd.pt` via SMP U-Net/ResNet34 on CPU (ImageNet, 256×256,
+  sigmoid >0.35). Masks return at original dimensions; the separate synthetic
+  tissue classifier colors only inside them. Binary training provenance/clinical
+  performance have not been verified here. The tissue classifier and learned risk
+  head now receive a masked crop. Tissue percentages count only mask pixels;
+  unclassified mask pixels remain in the denominator. This is not feature attribution.
+- v2 briefs preserve existing fields and add latest deltas, baseline-aware rules,
+  uncalibrated risk/uncertainty and evidence provenance. Missing models or failed
+  quality withhold unavailable measurements.
+- The web uploader analyzes one image without accumulating history. New backend
+  session endpoints persist ordered captures in local SQLite and recompute multi-day
+  briefs; JSON `/api/analyze-trajectory` also accepts reported metrics. See
+  [trajectory contracts and limits](WOUND_TRAJECTORY_ENGINE.md).
+- Python CLI still handles training and multi-visit trajectory analysis.
+- See [integration and startup guide](WOUND_AI_INTEGRATION.md).
+
+### Wound history (`/wounds/history`)
 
 - Starts a wound case or adds a follow-up assessment to an existing case.
 - Captures a JPEG/PNG from the rear phone camera or file picker.
@@ -19,7 +51,7 @@ contain or pretend to run a trained wound or pose model.
 - Produces a conservative rules-based safety review from **reported data only**.
 - Shows a longitudinal case history and records audit events.
 
-The safety review is not an AI inference and does not inspect image pixels. The
+The stored safety review is not an AI inference and does not inspect image pixels. The
 UI and API expose this limitation directly.
 
 ### Motion Lab (`/therapy`)
@@ -42,7 +74,12 @@ Phone/browser
      + explicitly saved active medical records
   -> patient-scoped timeline + audit event
 
-Future:
+Current local analyzer (separate from capture storage):
+  -> PNG/JPEG + baseline + day through lib/wound-api.ts
+  -> FastAPI -> inference_tracker -> trained synthetic checkpoint
+  -> Clinical Brief rendered in browser; temporary API files removed
+
+Future storage integration:
   -> asynchronous call to model service implemented from aimedic/
   -> versioned segmentation / quality / tissue / trajectory response
   -> immutable ai_inferences row
@@ -149,4 +186,3 @@ TensorFlow.js implementation should:
   requests that change stored model input or output.
 - Do not merge a UI that displays confidence as certainty. Always show data
   quality, uncertainty, model version, and human-review status together.
-

@@ -1,4 +1,4 @@
-# Đối chiếu yêu cầu portal — cập nhật 10/09/2026
+# Đối chiếu yêu cầu portal — cập nhật 11/09/2026
 
 Yêu cầu mới của chủ dự án về portal và Supabase thay thế các giới hạn MVP cũ trong PLAN.md.
 
@@ -17,6 +17,7 @@ Yêu cầu mới của chủ dự án về portal và Supabase thay thế các g
 | Góp ý trực tiếp trên web | Bật Chú thích giao diện, di chuột chọn vùng, bấm để ghim bình luận; lưu selector, tọa độ tương đối, trích đoạn, bệnh nhân và lần khám. Các ghim trùng điểm được tách ra để bấm từng bình luận |
 | Nút điều hướng không hoạt động | Thay điều hướng client gây lỗi runtime Vinext bằng liên kết tải trang; đã thử cả 5 bệnh nhân, feedback, data, records, Wound Lab và Motion Lab trên build production |
 | Giao diện điện thoại | Web responsive và nút Giao diện điện thoại với khung tương tác 360/390/430px; trở lại desktop giữ bệnh nhân. Chưa có ứng dụng native iOS/Android |
+| Wound Lab gọi AI thật | `/wounds` và `/wound-analyzer` mở chung giao diện tải PNG/JPEG + hồ sơ nền, gọi FastAPI cục bộ cổng 8000, hiển thị Clinical Brief có cấu trúc. Có mẫu giả lập để thử ngay. Lịch sử/chụp/lưu ảnh cũ ở `/wounds/history`; không tự lưu kết quả AI vào hồ sơ |
 | Dữ liệu trực quan | `/data`: lọc bệnh nhân, xem dữ liệu thực theo 9 nhóm, mở lại hồ sơ; cấu trúc Supabase thu gọn bên dưới |
 | Đối chiếu thuốc xuyên quốc gia | `/medications`: 20 nhóm thuốc demo giữa Việt Nam, Ấn Độ, Mỹ và Trung Quốc; chuẩn hóa theo INN/ATC, so hàm lượng, dạng dùng và Rx/OTC, luôn đánh dấu tá dược chưa xác nhận và yêu cầu pharmacist/người kê đơn kiểm tra. Đây không phải catalog lưu hành thời gian thực hay kết luận tương đương điều trị |
 | Xuất Hộ chiếu Y tế Quốc tế | Nút **Xuất IPS** trên `/editor` và `/patient` tạo PDF song ngữ cùng FHIR R4 document Bundle theo IPS 2.0.1. PDF đính kèm đúng Bundle JSON; API kiểm tra ownership, không cache, không tự chia sẻ. Ba section bắt buộc luôn có narrative; danh sách nguồn trống dùng `emptyReason=unavailable`, không tự khẳng định `nilknown`. Tên/DOB thiếu dùng Data Absent Reason, lab có performer unknown/DAR, status/time không có trong schema không bị gán `final` hay giờ UTC giả. INN/WHO ATC chỉ xuất khi tên thuốc khớp chính xác catalog demo; tên chưa khớp được giữ nguyên, không suy đoán mã |
@@ -60,7 +61,31 @@ QA ngày 10/09/2026 còn xác nhận trang sảnh có đúng hai lựa chọn ch
 
 `tests/browser.mjs` cần Playwright ở `outputs/qa/node_modules`. Chạy PowerShell: `$env:MEDIPASS_TEST_URL='http://localhost:3001'`, sau đó `npx --yes node@24 tests/browser.mjs`. Thêm `$env:MEDIPASS_VERIFY_SUPABASE='1'` để buộc kiểm tra Supabase thật bằng helper `tests/supabase-browser-store.mjs`. Wrangler cần secret trong `.dev.vars` cạnh file cấu hình Worker; chỉ `--env-file` không đủ để biến chúng thành Worker bindings. File secret QA nằm trong `dist/server`, bị Git bỏ qua và phải loại khỏi gói phát hành. Danh tính giả của QA chỉ được dùng ở localhost.
 
-Wound Lab có lưu ảnh và đánh giá theo quy tắc; Motion Lab có camera preview. Ảnh/tệp vẫn ở kho riêng R2, dữ liệu Wound Lab vẫn ở D1. Các mô hình AI phân tích ảnh/chuyển động chưa được tích hợp. Đồng bộ tự động portal dùng kiểm tra định kỳ qua server, không cấp khóa service_role cho trình duyệt và không dùng WebSocket Supabase Realtime.
+Wound Lab mới gọi mô hình ảnh + hồ sơ nền đã huấn luyện trên dữ liệu giả lập qua API Python cục bộ. Một yêu cầu chỉ có một ảnh, không tự tạo chuỗi theo thời gian và chưa được xác nhận lâm sàng. Luồng lịch sử ở `/wounds/history` vẫn lưu ảnh trong R2, dữ liệu trong D1 và dùng đánh giá theo quy tắc; kết quả AI không tự lưu vào các kho này hoặc Supabase. Motion Lab vẫn chỉ có camera preview. Đồng bộ portal vẫn kiểm tra định kỳ qua server, không dùng WebSocket Supabase Realtime.
+
+QA tích hợp AI ngày 11/09/2026: **39 unit tests PASS**, TypeScript và production build PASS. Chrome gọi API thật trên cổng 8000 thành công; kiểm tra tải ảnh, loading/khóa form, kết quả có cấu trúc, HTTP 422, lỗi kết nối, thiếu ước tính do chất lượng ảnh, xóa kết quả cũ khi sửa form, mẫu SYN000014, giao diện tối 390px không tràn ngang, liên kết và trường nhập của màn hình lịch sử đều PASS. Đây là kiểm tra local, không triển khai site và không huấn luyện bằng ảnh bệnh nhân thật. Xem [`WOUND_AI_INTEGRATION.md`](WOUND_AI_INTEGRATION.md) để chạy lại.
+
+Cập nhật Wound Lab Patient/Developer Mode (11/09/2026): **41 frontend unit tests và
+30 Python tests PASS**, TypeScript/build PASS. Patient Mode cố định SYN000014 và
+ẩn metadata/lớp ảnh; Developer Mode chọn 5 hồ sơ giả lập và gọi API với
+`include_pipeline_visuals=true`. U-Net phụ đã huấn luyện 5 epoch trên mask giả lập
+với background augmentation, mean IoU test giả lập 0.9346; không phải xác nhận
+phân vùng ảnh lâm sàng hay giải thích feature importance của mô hình late fusion.
+API giữ nguyên Clinical Brief, dùng null khi lớp ảnh phụ không sẵn sàng.
+Chrome QA PASS cả hai mode, 5 lựa chọn hồ sơ, nhận ảnh Base64 thật, khóa/khôi phục
+đúng bệnh nhân, chặn response sai bệnh nhân, lỗi 422/mất kết nối, ảnh không đạt,
+backend cũ thiếu visuals, dark/mobile và đường dẫn lịch sử. Không có lỗi JavaScript
+chưa xử lý hoặc tràn ngang ở viewport 390px.
+
+## Wound backend follow-up — 2026-09-11
+
+Latest verification: 69 Python tests passed, including persisted image sessions,
+masked classifier inputs/percentages, multi-day deltas, baseline-dependent rules,
+scab qualifications and uncertainty. New session storage is local SQLite, separate
+from Supabase and the original D1/R2 history. The existing web uploader remains
+single-image; the new multi-day endpoints are usable through Swagger/API.
+See [contracts, source links and handoff](WOUND_TRAJECTORY_ENGINE.md).
+Earlier QA counts above describe previous versions.
 
 ## Đọc góp ý trong phiên làm việc tiếp theo
 

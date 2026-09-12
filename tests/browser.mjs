@@ -167,6 +167,7 @@ try {
       if(remote) assert.ok(records.persistence.includes('Supabase'));
     }
     if(link === 'Wound Lab') {
+      await page.getByRole('link',{name:'Lịch sử & ghi nhận',exact:true}).click();
       await page.getByLabel('Observation notes').fill('QA input works');
       await page.getByRole('slider').fill('3');
       await page.getByLabel('Fever or feeling seriously unwell').check();

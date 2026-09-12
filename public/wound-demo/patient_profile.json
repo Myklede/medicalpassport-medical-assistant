@@ -1,0 +1,9 @@
+{
+  "patient_id": "SYN000014",
+  "synthetic": true,
+  "age": 20,
+  "blood_type": "A-",
+  "has_diabetes_type_2": true,
+  "hba1c_level": 9.6,
+  "hypertension": false
+}
