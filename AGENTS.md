@@ -18,6 +18,7 @@ Read these files before changing the project:
 - A persistent light/dark switch is rendered by the root layout on every route. It stores `medipass-theme` in browser local storage and synchronizes same-origin desktop/phone-preview contexts.
 - `/data` explains and displays the portal data structure.
 - `/records` is the older medical-record module.
+- `/insurance` is a working SBC policy-checker demo. It stores private PDFs in R2, document metadata and saved analyses in patient-scoped D1 tables, lets a user reuse/download an uploaded SBC, extracts searchable PDF text, and estimates in-network/out-of-network cost sharing for the described service. Source citations are shown when extraction succeeds; unreadable/scanned PDFs are explicitly labeled as using a synthetic fallback profile. Results are estimates, not coverage determinations, live eligibility checks, claims, or final bills.
 - `/medications` is a curated 20-item, four-country medication-name comparison demo. It matches candidate products by active ingredient and surfaces strength/form, Rx/OTC and excipient-review differences; it never claims automatic therapeutic substitution.
 - `/wounds` and `/wound-analyzer` share the local AI analyzer. **Patient Mode** defaults to fixed `PATIENT_MODE_PROFILE` (simulated sign-in), upload and friendly summary only. **Developer Mode** selects from five immutable profiles in `lib/wound-patients.ts`, requests `include_pipeline_visuals=true`, and shows input/U-Net isolation/tissue overlay/fused baseline panels. Mode/profile changes clear the old upload/result. This UI mode is not real authentication or a Supabase patient connection.
 - `aimedic/visual_pipeline.py` loads supplied binary weights `outputs/wound_unet_fusd.pt` through SMP U-Net/ResNet34 on CPU (ImageNet normalization, 256×256, sigmoid >0.35, original-size mask). Tissue inference now receives only the masked crop; percentages count all wound-mask pixels, including an explicit unclassified fraction. The API brief uses those counts. The learned risk head receives the isolated crop; architecture/training are unchanged. Overrides: `MEDIPASS_VISUAL_MODEL_PATH` (binary), `MEDIPASS_TISSUE_MODEL_PATH` (tissue). Missing weights/quality failures withhold unavailable estimates. These visuals are not feature attribution.
@@ -31,7 +32,7 @@ Read these files before changing the project:
 
 - The hospital portal, patient view and visual comments use Supabase project ref `gsllxxdewmksjbcnxgvp` through server-only RPCs and normalized `mp_*` tables.
 - Never commit or print `SUPABASE_SECRET_KEY`. Local secrets belong in `.env.local`; hosted secrets belong in the Sites runtime.
-- Legacy `/records` data is mirrored to `medipass_*` Supabase tables when configured. Private files, wound images and wound metadata still use Cloudflare R2/D1.
+- Legacy `/records` data is mirrored to `medipass_*` Supabase tables when configured. Private files, insurance SBCs/analyses, wound images and wound metadata still use Cloudflare R2/D1.
 - Portal views refresh after a same-browser save and poll every five seconds while visible for changes made on another device. This is not a Supabase Realtime/WebSocket subscription.
 - Use synthetic or de-identified data only. The demo is not a medical device and has not been established as HIPAA compliant.
 

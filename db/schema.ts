@@ -198,6 +198,65 @@ export const aiInferences = sqliteTable(
   ],
 );
 
+export const insuranceDocuments = sqliteTable(
+  'insurance_documents',
+  {
+    id: text('id').primaryKey(),
+    patientId: text('patient_id')
+      .notNull()
+      .references(() => patients.id),
+    storageObjectId: text('storage_object_id')
+      .notNull()
+      .unique()
+      .references(() => storageObjects.id),
+    planName: text('plan_name').notNull(),
+    extractionStatus: text('extraction_status').notNull(),
+    pageCount: integer('page_count').notNull(),
+    benefitsJson: text('benefits_json').notNull(),
+    uploadedByUserId: text('uploaded_by_user_id')
+      .notNull()
+      .references(() => appUsers.id),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_insurance_documents_patient_date').on(
+      table.patientId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const insuranceAnalyses = sqliteTable(
+  'insurance_analyses',
+  {
+    id: text('id').primaryKey(),
+    patientId: text('patient_id')
+      .notNull()
+      .references(() => patients.id),
+    documentId: text('document_id')
+      .notNull()
+      .references(() => insuranceDocuments.id),
+    conditionText: text('condition_text').notNull(),
+    networkStatus: text('network_status').notNull(),
+    estimatedCostCents: integer('estimated_cost_cents'),
+    resultJson: text('result_json').notNull(),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => appUsers.id),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_insurance_analyses_patient_date').on(
+      table.patientId,
+      table.createdAt,
+    ),
+    index('idx_insurance_analyses_document_date').on(
+      table.documentId,
+      table.createdAt,
+    ),
+  ],
+);
+
 export const auditEvents = sqliteTable(
   'audit_events',
   {

@@ -24,11 +24,12 @@ Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy c
 - Trang sảnh tối giản `/`: chọn cổng bệnh viện, góc nhìn bệnh nhân, khung điện thoại, dữ liệu hoặc yêu cầu chỉnh sửa trước khi vào hồ sơ.
 - Cổng bệnh viện `/editor`: 5 bệnh nhân giả lập, thêm/sửa hồ sơ chung và từng lần khám đầy đủ.
 - Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích bệnh và xét nghiệm bằng lời dễ hiểu, gồm ảnh hưởng, mục tiêu theo dõi, ăn uống/sinh hoạt và dấu hiệu cần chú ý.
-- Từ hồ sơ đang chọn ở `/editor` hoặc `/patient`, nút **Xuất IPS** tạo PDF song ngữ dễ đọc và FHIR R4 document Bundle theo HL7 International Patient Summary 2.0.1. PDF đính kèm chính JSON Bundle. Dữ liệu thiếu dùng Data Absent Reason/`unavailable`, không biến mảng rỗng thành “không có bệnh, dị ứng hay thuốc”; bản xuất luôn ghi rõ sơ bộ và chưa được clinician ký/xác nhận.
+- Từ hồ sơ đang chọn ở `/editor` hoặc `/patient`, nút **Xuất IPS** tạo PDF song ngữ dễ đọc và FHIR R4 document Bundle theo HL7 International Patient Summary 2.0.1. PDF dùng trang đầu ưu tiên nhận diện người bệnh, dị ứng/bệnh/thuốc, sinh hiệu và kế hoạch; các trang sau trình bày chi tiết lâm sàng, provenance và lưu ý sử dụng an toàn. PDF đính kèm chính JSON Bundle. Dữ liệu thiếu dùng Data Absent Reason/`unavailable`, không biến mảng rỗng thành “không có bệnh, dị ứng hay thuốc”; bản xuất luôn ghi rõ sơ bộ và chưa được clinician ký/xác nhận.
 - Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
 - Chế độ **Chú thích giao diện**: chọn vùng bằng chuột/chạm, ghim comment vào đúng bệnh nhân/lần khám và mở lại ở `/feedback`.
 - Giao diện responsive và khung thử điện thoại `/mobile` ở 360/390/430 px.
 - Demo `/medications` đối chiếu 20 nhóm thuốc giữa Việt Nam, Ấn Độ, Mỹ và Trung Quốc theo hoạt chất chuẩn, hàm lượng, dạng dùng và Rx/OTC; luôn yêu cầu pharmacist/người kê đơn xác nhận và không tuyên bố tự động tương đương điều trị.
+- `/insurance` lưu SBC PDF riêng tư để người dùng chọn lại hoặc tải xuống, trích xuất văn bản, nhận mô tả tình trạng/dịch vụ và tạo ước tính deductible, copay/coinsurance, network, prior authorization, phần plan trả và phần người dùng trả. Kết quả cùng lịch sử được lưu theo patient trong D1; PDF nằm trong R2. PDF scan/không đọc được chỉ dùng hồ sơ quyền lợi mô phỏng và được gắn nhãn rõ.
 - Chế độ Sáng/Tối dùng chung cho desktop và điện thoại; lựa chọn được lưu trong trình duyệt.
 - Mỗi lần khám là một card gồm lý do, triệu chứng, chẩn đoán/chú giải, vital signs, labs, thuốc, dịch vụ, kế hoạch và bác sĩ.
 - Chú giải y khoa hiện bao phủ 5 bệnh nền mẫu và 6 xét nghiệm chính. App chỉ ghép đúng thuật ngữ đã được kiểm duyệt, dùng khoảng tham chiếu trên chính phiếu xét nghiệm và không tự đoán thuật ngữ lạ.
@@ -43,7 +44,7 @@ Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy c
 - Ownership check phía server và audit log cho read/write/upload/download.
 - Responsive cho desktop/mobile, keyboard shortcut `Cmd/Ctrl + K`, loading/error/empty states.
 
-Wound Lab có AI cục bộ học từ ảnh giả lập, Patient/Developer Mode, lớp phân vùng U-Net nghiên cứu và luồng lưu ảnh/lịch sử riêng. Computer Vision đã xác nhận lâm sàng, pose model, Insurance AI và catalog thuốc thời gian thực vẫn là roadmap; Motion Lab hiện có camera preview, `/medications` dùng bộ dữ liệu demo có tuyển chọn.
+Wound Lab có AI cục bộ học từ ảnh giả lập, Patient/Developer Mode, lớp phân vùng U-Net nghiên cứu và luồng lưu ảnh/lịch sử riêng. Computer Vision đã xác nhận lâm sàng, pose model, insurance eligibility/EDI thời gian thực và catalog thuốc thời gian thực vẫn là roadmap; Motion Lab hiện có camera preview, `/insurance` dùng bộ phân tích điều khoản có quy tắc và `/medications` dùng bộ dữ liệu demo có tuyển chọn.
 
 Hướng dẫn để tự đưa các commit lên GitHub: [`docs/GITHUB_PUSH_GUIDE_VI.md`](docs/GITHUB_PUSH_GUIDE_VI.md).
 
@@ -144,6 +145,8 @@ FHIR là chuẩn trao đổi, không phải security protocol. Demo đã có exp
 
 ### 2. Insurance Policy Checker
 
+**Đã có bản demo:** `/insurance` tải SBC PDF vào R2, lưu metadata/phân tích trong D1, cho chọn lại và tải xuống tài liệu, trích xuất văn bản bằng PDF parser chạy trong Worker, rồi ước tính cost sharing theo dịch vụ mô tả và network. Kết quả giữ citation theo trang khi trích xuất được; nếu không đọc được bảng PDF, giao diện bắt buộc ghi rõ đang dùng dữ liệu mô phỏng. Số deductible đã dùng, allowed amount thực, mã CPT/HCPCS, eligibility và claim chưa được kết nối thời gian thực.
+
 Pipeline nên là:
 
 ```text
@@ -224,7 +227,7 @@ Không dùng database vận hành chứa định danh làm thẳng training data
 1. **Đã hoàn thành:** responsive frontend, database, private files, per-user ownership, CRUD, timeline, search/filter, demo seed.
 2. Supabase production schema + RLS tests + consent/share/audit.
 3. Nâng bản FHIR/IPS export demo thành luồng đã validate/ký; thêm import và clinician read-only share flow.
-4. Insurance PDF ingestion + cited retrieval.
+4. **Đã có demo:** Insurance PDF ingestion + trích điều khoản/citation + lịch sử ước tính; bước production tiếp theo là retrieval theo section, EDI 270/271, CPT/HCPCS và xác minh claim/eligibility.
 5. Wound longitudinal data collection/annotation; IRB/consent trước khi lấy dữ liệu người thật.
 6. Segmentation model + research validation; không gắn diagnostic claim.
 7. On-device physical-therapy proof of concept.
@@ -259,7 +262,7 @@ pnpm run lint
 4. Thêm một lab record hư cấu và đính kèm PDF/ảnh giả.
 5. Refresh: dữ liệu vẫn còn; mở lại attachment.
 6. Sửa record rồi soft-delete; giải thích audit trail và ownership check.
-7. Mở Insurance để kể roadmap source-grounded RAG, wound monitoring, PT pose và cross-country medication mapping.
+7. Mở `/insurance`, chọn SBC đã lưu, nhập tình huống MRI trong network và chỉ rõ phần plan/người dùng dự kiến trả cùng prior authorization và citation.
 
 ## Wound Lab và Motion Lab hiện tại
 

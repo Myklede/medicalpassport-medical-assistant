@@ -652,11 +652,10 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
     {
       label: 'Insurance',
       icon: ShieldCheck,
-      badge: 'Soon',
-      active: view === 'insurance',
+      badge: 'Demo',
+      active: false,
       action: () => {
-        setView('insurance');
-        setMobileNav(false);
+        window.location.href = '/insurance';
       },
     },
   ];

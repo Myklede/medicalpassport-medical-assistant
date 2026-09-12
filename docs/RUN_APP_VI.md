@@ -18,6 +18,7 @@ Các đường dẫn chính:
 - Dữ liệu và Supabase: `/data`
 - Yêu cầu chỉnh sửa: `/feedback`
 - Đối chiếu thuốc quốc tế: `/medications`
+- Kiểm tra chính sách bảo hiểm: `/insurance`
 - Wound Lab: `/wounds`
 - Motion Lab: `/therapy`
 
