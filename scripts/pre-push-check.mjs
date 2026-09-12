@@ -19,8 +19,29 @@ function run(label, command, args) {
 }
 
 assert.equal(capture('git', ['remote', 'get-url', 'origin']), expectedRemote, 'origin points at an unexpected repository');
-const forbiddenTracked = capture('git', ['ls-files', '--', '.env.local', 'dist', 'outputs', '.wrangler']);
-assert.equal(forbiddenTracked, '', `Generated/private files are tracked:\n${forbiddenTracked}`);
+const checkpointPaths = new Set([
+  'outputs/pwc-run/best.pt',
+  'outputs/pwc-visual-run/best.pt',
+  'outputs/wound_unet_fusd.pt',
+]);
+const generatedTracked = capture('git', ['ls-files', '--', '.env.local', 'dist', 'outputs', '.wrangler'])
+  .split(/\r?\n/)
+  .filter(Boolean);
+const forbiddenTracked = generatedTracked.filter(file => !checkpointPaths.has(file));
+assert.deepEqual(forbiddenTracked, [], `Generated/private files are tracked:\n${forbiddenTracked.join('\n')}`);
+for (const checkpoint of checkpointPaths) {
+  assert.ok(generatedTracked.includes(checkpoint), `Required checkpoint is not tracked: ${checkpoint}`);
+  assert.match(
+    capture('git', ['check-attr', 'filter', '--', checkpoint]),
+    /: filter: lfs$/,
+    `Checkpoint must use Git LFS: ${checkpoint}`,
+  );
+  assert.match(
+    capture('git', ['show', `:${checkpoint}`]),
+    /^version https:\/\/git-lfs\.github\.com\/spec\/v1\r?\noid sha256:[a-f0-9]{64}\r?\nsize [1-9][0-9]*$/,
+    `Checkpoint index entry is not a valid Git LFS pointer: ${checkpoint}`,
+  );
+}
 
 const tracked = capture('git', ['ls-files', '-z']).split('\0').filter(Boolean);
 const secretPatterns = [

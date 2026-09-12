@@ -36,7 +36,12 @@ next-env.d.ts
 *.tsbuildinfo
 /dist/
 /.wrangler/
-/outputs/
+/outputs/**
+!/outputs/wound_unet_fusd.pt
+!/outputs/pwc-run/
+!/outputs/pwc-run/best.pt
+!/outputs/pwc-visual-run/
+!/outputs/pwc-visual-run/best.pt
 /output/
 /tmp/
 /.pnpm-store/

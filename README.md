@@ -5,8 +5,8 @@ sessions, multi-day baseline-aware trajectory rules, risk/uncertainty and eviden
 provenance are implemented. Bilingual patient explanations now explain the mechanism,
 possible consequences and safe next steps; **77 Python tests passed.** See
 [trajectory API, runnable example and handoff](docs/WOUND_TRAJECTORY_ENGINE.md).
-The website uploader remains single-image; multi-day sessions can be exercised at
-`http://127.0.0.1:8000/docs`. Scores are uncalibrated research outputs.
+The website uploader supports multi-day wound sessions and renders chronological
+changes in the research dashboard. Scores are uncalibrated research outputs.
 
 > Bắt đầu cho AI/cộng tác viên mới: đọc [`AGENTS.md`](AGENTS.md), [đối chiếu tính năng và Supabase](docs/PORTAL_AUDIT.md), rồi [tầm nhìn/whitepaper do chủ dự án cung cấp](docs/PROJECT_VISION_WHITEPAPER_VI.md).
 

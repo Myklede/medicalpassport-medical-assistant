@@ -153,7 +153,6 @@ explicit unclassified fraction. The risk head receives the isolated crop with th
 existing baseline encoding; the model architecture/weights remain unchanged.
 
 ```powershell
-# Place supplied binary weights at outputs/wound_unet_fusd.pt separately.
 # This command trains ONLY the synthetic tissue companion; use a fresh --out.
 outputs/pwc-venv/Scripts/python.exe -B aimedic/visual_pipeline.py --epochs 5 --out outputs/pwc-visual-run
 outputs/pwc-venv/Scripts/python.exe -B aimedic/main.py
@@ -162,8 +161,19 @@ outputs/pwc-venv/Scripts/python.exe -B aimedic/main.py
 Binary weights default to `outputs/wound_unet_fusd.pt` (`MEDIPASS_VISUAL_MODEL_PATH`
 override). Tissue weights remain `outputs/pwc-visual-run/best.pt`
 (`MEDIPASS_TISSUE_MODEL_PATH` override). Relative paths resolve from the repo root.
-Both are ignored by Git; copy the supplied binary weights separately on another
-laptop. Their training provenance/clinical performance are not verified here.
+The binary, tissue and late-fusion checkpoints are stored in Git LFS. After cloning
+on another laptop, install Git LFS and materialize the files before running the API:
+
+```powershell
+git lfs install
+git lfs pull
+git lfs ls-files
+```
+
+Expected locations and SHA-256 digests are recorded in
+`aimedic/checkpoints.sha256`. If `git lfs pull` is skipped, the `.pt` paths contain
+small LFS pointer text instead of PyTorch weights and model loading will fail.
+Their training provenance/clinical performance are not verified here.
 The following training description applies only to the synthetic tissue companion.
 Training reuses the existing
 patient-level train/validation/test splits and paired synthetic RGB/class masks.
