@@ -40,6 +40,7 @@ export function FeedbackWidget() {
   const [draft, setDraft] = useState<Feedback | null>(null), [saving, setSaving] = useState(false), [error, setError] = useState(''), [success, setSuccess] = useState('');
   const [requests, setRequests] = useState<Feedback[]>([]), [pins, setPins] = useState<Pin[]>([]), [box, setBox] = useState<Box | null>(null), [listOpen, setListOpen] = useState(false);
   const hovered = useRef<HTMLElement | null>(null);
+  const descriptionField = useRef<HTMLTextAreaElement>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reload = useCallback(async () => { try { const result = await api<{ requests: Feedback[] }>('/api/feedback'); setRequests(result.requests); setError(''); } catch (e) { setError((e as Error).message); } }, []);
 
@@ -48,43 +49,47 @@ export function FeedbackWidget() {
     setDraft({ id: uid(), version: 0, title: '', description: '', category: 'interface', priority: 'normal', status: 'open', page_path: window.location.pathname + window.location.search, section: '', patient_id: new URLSearchParams(window.location.search).get('patient') || '', encounter_id: '', resolution: '', created_at: '', updated_at: '', ...context });
   }
   function reveal(request: Feedback) {
-    setDraft(request); setError('');
+    setDraft(request); setError(''); setBox(null);
     if (revealTimer.current) clearTimeout(revealTimer.current);
     let attempts = 0;
-    const find = () => {
+    function find() {
       const target = locate(request);
       if (target?.getClientRects().length) { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
       window.dispatchEvent(new CustomEvent('medipass-reveal', { detail: { encounter_id: request.encounter_id, selector: request.annotation?.selector } }));
       if (++attempts < 30) revealTimer.current = setTimeout(find, 200);
-    };
+    }
     find();
   }
   useEffect(() => () => { if (revealTimer.current) clearTimeout(revealTimer.current); }, []);
   function toggleMode() {
     const next = !enabled;
-    setEnabled(next); setListOpen(false);
+    setEnabled(next); setListOpen(false); setBox(null); setPins([]);
     const url = new URL(window.location.href);
     if (next) { url.searchParams.set('annotate', '1'); void reload(); } else url.searchParams.delete('annotate');
     window.history.replaceState(window.history.state, '', url);
   }
   useEffect(() => {
-    setEmbedded(window.self !== window.top);
-    setMobileShell(window.location.pathname === '/mobile');
-    const query = new URLSearchParams(window.location.search);
-    if (query.get('annotate') === '1' || query.has('review')) { setEnabled(true); void reload(); }
+    const frame = requestAnimationFrame(() => {
+      setEmbedded(window.self !== window.top);
+      setMobileShell(window.location.pathname === '/mobile');
+      const query = new URLSearchParams(window.location.search);
+      if (query.get('annotate') === '1' || query.has('review')) { setEnabled(true); void reload(); }
+    });
     const handler = (event: Event) => { setEnabled(true); open((event as CustomEvent<Partial<Feedback>>).detail ?? {}); };
     window.addEventListener('medipass-feedback', handler);
     window.addEventListener('medipass-feedback-saved', reload);
-    return () => { window.removeEventListener('medipass-feedback', handler); window.removeEventListener('medipass-feedback-saved', reload); };
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('medipass-feedback', handler); window.removeEventListener('medipass-feedback-saved', reload); };
   }, [reload]);
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get('review');
     const request = requests.find(r => r.id === id);
-    if (request && !draft) { reveal(request); const url = new URL(window.location.href); url.searchParams.delete('review'); window.history.replaceState(window.history.state, '', url); }
-  }, [requests]);
+    if (!request || draft) return;
+    const frame = requestAnimationFrame(() => { reveal(request); const url = new URL(window.location.href); url.searchParams.delete('review'); window.history.replaceState(window.history.state, '', url); });
+    return () => cancelAnimationFrame(frame);
+  }, [requests, draft]);
 
   useEffect(() => {
-    if (!enabled || draft) { setBox(null); return; }
+    if (!enabled || draft) return;
     document.body.classList.add('mp-annotation-mode');
     const move = (event: MouseEvent) => {
       hovered.current = targetFrom(event.target);
@@ -103,7 +108,7 @@ export function FeedbackWidget() {
     };
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setEnabled(false); setListOpen(false);
+        setEnabled(false); setListOpen(false); setBox(null); setPins([]);
         const url = new URL(window.location.href); url.searchParams.delete('annotate');
         window.history.replaceState(window.history.state, '', url);
       }
@@ -113,7 +118,7 @@ export function FeedbackWidget() {
   }, [enabled, draft]);
 
   useEffect(() => {
-    if (!enabled) { setPins([]); return; }
+    if (!enabled) return;
     let frame = 0;
     const position = () => {
       frame = 0;
@@ -173,10 +178,10 @@ export function FeedbackWidget() {
     {enabled && !draft && box && <div data-annotation-ui className="mp-annotation-outline" style={box} />}
     {enabled && !draft && <svg data-annotation-ui className="mp-annotation-leaders mp-no-print" aria-hidden="true">{pins.map(pin => <line key={pin.request.id} x1={pin.anchorLeft} y1={pin.anchorTop} x2={pin.left} y2={pin.top} />)}</svg>}
     {enabled && !draft && pins.map(pin => <button data-annotation-ui className="mp-annotation-pin mp-no-print" key={pin.request.id} style={{ left: pin.left, top: pin.top }} onClick={() => reveal(pin.request)} aria-label={`Mở bình luận ${pin.number}: ${pin.request.title}`} title={pin.request.description}>{pin.number}</button>)}
-    {draft && <Dialog open onOpenChange={value => { if (!value) close(); }}><DialogContent data-annotation-ui className="mp-form-dialog sm:max-w-[620px]" showCloseButton={!saving}><DialogTitle>{draft.version ? 'Bình luận đã ghim' : 'Ghim bình luận tại đây'}</DialogTitle><DialogDescription>{draft.section || 'Ghi yêu cầu chỉnh sửa cho trang này.'}</DialogDescription><form onSubmit={submit}><fieldset disabled={saving}>
+    {draft && <Dialog open onOpenChange={value => { if (!value) close(); }}><DialogContent data-annotation-ui className="mp-form-dialog sm:max-w-[620px]" showCloseButton={!saving} initialFocus={descriptionField}><DialogTitle>{draft.version ? 'Bình luận đã ghim' : 'Ghim bình luận tại đây'}</DialogTitle><DialogDescription>{draft.section || 'Ghi yêu cầu chỉnh sửa cho trang này.'}</DialogDescription><form onSubmit={submit}><fieldset disabled={saving}>
       {draft.annotation && <blockquote className="mp-selected-quote">{draft.annotation.quote.slice(0,250)}</blockquote>}
       {!draft.annotation && <Field label="Vị trí / tiêu đề"><Input required maxLength={160} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></Field>}
-      <Field label="Bạn muốn chỉnh sửa thế nào?"><textarea autoFocus className="mp-input" required rows={5} maxLength={8000} placeholder="Ví dụ: Thu gọn thẻ này, đặt ngày khám và bác sĩ cùng một dòng…" value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} /></Field>
+      <Field label="Bạn muốn chỉnh sửa thế nào?"><textarea ref={descriptionField} className="mp-input" required rows={5} maxLength={8000} placeholder="Ví dụ: Thu gọn thẻ này, đặt ngày khám và bác sĩ cùng một dòng…" value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} /></Field>
       <Field label="Mức ưu tiên"><select className="mp-input" value={draft.priority} onChange={e => setDraft({ ...draft, priority: e.target.value })}><option value="normal">Bình thường</option><option value="high">Cần xử lý sớm</option></select></Field>
       {draft.resolution && <p className="mp-clinician-note">Phản hồi: {draft.resolution}</p>}
       <p className="mp-footnote">{draft.page_path} · {draft.annotation ? `Ghim ở giao diện ${draft.annotation.viewport_width}px` : 'Bình luận chung'}</p>

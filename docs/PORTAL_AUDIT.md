@@ -17,7 +17,7 @@ Yêu cầu mới của chủ dự án về portal và Supabase thay thế các g
 | Góp ý trực tiếp trên web | Bật Chú thích giao diện, di chuột chọn vùng, bấm để ghim bình luận; lưu selector, tọa độ tương đối, trích đoạn, bệnh nhân và lần khám. Các ghim trùng điểm được tách ra để bấm từng bình luận |
 | Nút điều hướng không hoạt động | Thay điều hướng client gây lỗi runtime Vinext bằng liên kết tải trang; đã thử cả 5 bệnh nhân, feedback, data, records, Wound Lab và Motion Lab trên build production |
 | Giao diện điện thoại | Web responsive và nút Giao diện điện thoại với khung tương tác 360/390/430px; trở lại desktop giữ bệnh nhân. Chưa có ứng dụng native iOS/Android |
-| Wound Lab gọi AI thật | `/wounds` và `/wound-analyzer` mở chung giao diện tải PNG/JPEG + hồ sơ nền, gọi FastAPI cục bộ cổng 8000, hiển thị Clinical Brief có cấu trúc. Có mẫu giả lập để thử ngay. Lịch sử/chụp/lưu ảnh cũ ở `/wounds/history`; không tự lưu kết quả AI vào hồ sơ |
+| Wound Lab theo dõi ảnh và hồ sơ nền | `/wounds` và `/wound-analyzer` dùng `WoundVisitWorkflow`: đợt SQLite được liệt kê từ máy chủ, ảnh một/nhiều ngày, timeline thumbnail, thêm khi quay lại, xóa ảnh/đợt có xác nhận, kết quả và pipeline từng lần. Một ảnh được phân tích cùng baseline; FPG/tưới máu/cảm giác bổ sung ngữ cảnh diabetes/HbA1c. 20 lần khám giả lập hiển thị đủ trong accordion bốn nhóm. Web proxy cùng origin giúp điện thoại cùng LAN dùng cùng dữ liệu. Ba checkpoint gốc từ `c269a89` đã tải qua Git LFS, xác minh SHA-256 và chạy QA API ảnh đơn/nhiều ảnh thành công. Nếu model tạm thiếu, ảnh vẫn được lưu chờ với phép đo null và nút phân tích lại. Lịch sử R2/D1 riêng vẫn ở `/wounds/history`. |
 | Dữ liệu trực quan | `/data`: lọc bệnh nhân, xem dữ liệu thực theo 9 nhóm, mở lại hồ sơ; cấu trúc Supabase thu gọn bên dưới |
 | Đối chiếu thuốc xuyên quốc gia | `/medications`: 20 nhóm thuốc demo giữa Việt Nam, Ấn Độ, Mỹ và Trung Quốc; chuẩn hóa theo INN/ATC, so hàm lượng, dạng dùng và Rx/OTC, luôn đánh dấu tá dược chưa xác nhận và yêu cầu pharmacist/người kê đơn kiểm tra. Đây không phải catalog lưu hành thời gian thực hay kết luận tương đương điều trị |
 | Kiểm tra chính sách bảo hiểm | `/insurance`: tải SBC PDF tối đa 8 MB, lưu riêng tư trong R2 và metadata/lịch sử phân tích theo patient trong D1; tài liệu đã lưu có thể chọn lại và tải xuống. Bộ đọc PDF trích deductible, out-of-pocket, copay/coinsurance và citation theo trang khi văn bản đủ rõ; người dùng nhập tình trạng/dịch vụ, network và chi phí dự kiến để xem điều kiện cover, prior authorization, phần plan/người dùng ước tính trả. PDF scan/không đọc được bị gắn nhãn dùng dữ liệu mô phỏng. Không phải live eligibility, coverage determination, claim hay hóa đơn cuối cùng. |
@@ -45,6 +45,10 @@ Khi namespace Supabase của người dùng còn mới, bootstrap chuyển hồ 
 
 ## Kiểm tra đã thực hiện
 
+Các kết quả dưới đây ghi lại nhiều phiên bản trước. Bản workflow 12/09/2026 có
+mục riêng ở cuối phần Wound. Việc tải weights gốc từ `c269a89` và kiểm tra API
+với chúng trên macOS được ghi riêng, không suy ra từ QA của môi trường cũ.
+
 - Unit tests: 9 kiểm tra riêng cho IPS gồm document/section/narrative/`unavailable`, Data Absent Reason khi thiếu nhân khẩu học, lab status/time/performer và UCUM, đổi liều rồi ngừng thuốc, không tạo reaction giả, ngày procedure đúng precision, chọn latest vital theo từng loại và PDF nhiều trang có FHIR attachment; cùng các kiểm tra portal, thuốc, xét nghiệm và wound hiện có. Bố cục PDF mới được render kiểm tra từng trang với hồ sơ ngắn 2 trang và hồ sơ dài 3 trang; không thấy chữ bị cắt, chồng lớp hoặc tràn qua header/footer.
 - HL7 FHIR Validator 6.9.12: 8 fixture tổng hợp đạt 0 error/0 warning với FHIR R4 4.0.1, `hl7.fhir.uv.ips#2.0.1`, SNOMED international và `tx.fhir.org`. Kết quả này xác nhận profile của fixture, không thay thế chứng nhận sản phẩm, clinical review hay kiểm thử với hệ thống nhận độc lập.
 - API local: 5 bệnh nhân, lưu/đọc Unicode tiếng Việt, trọn lần khám, xung đột phiên bản, chặn đổi bệnh nhân của lần khám, CSRF, data explorer và các trang portal. Khôi phục nội dung mẫu sau kiểm tra.
@@ -63,7 +67,11 @@ QA ngày 10/09/2026 còn xác nhận trang sảnh có đúng hai lựa chọn ch
 
 `tests/browser.mjs` cần Playwright ở `outputs/qa/node_modules`. Chạy PowerShell: `$env:MEDIPASS_TEST_URL='http://localhost:3001'`, sau đó `npx --yes node@24 tests/browser.mjs`. Thêm `$env:MEDIPASS_VERIFY_SUPABASE='1'` để buộc kiểm tra Supabase thật bằng helper `tests/supabase-browser-store.mjs`. Wrangler cần secret trong `.dev.vars` cạnh file cấu hình Worker; chỉ `--env-file` không đủ để biến chúng thành Worker bindings. File secret QA nằm trong `dist/server`, bị Git bỏ qua và phải loại khỏi gói phát hành. Danh tính giả của QA chỉ được dùng ở localhost.
 
-Wound Lab mới gọi mô hình ảnh + hồ sơ nền đã huấn luyện trên dữ liệu giả lập qua API Python cục bộ. Một yêu cầu chỉ có một ảnh, không tự tạo chuỗi theo thời gian và chưa được xác nhận lâm sàng. Luồng lịch sử ở `/wounds/history` vẫn lưu ảnh trong R2, dữ liệu trong D1 và dùng đánh giá theo quy tắc; kết quả AI không tự lưu vào các kho này hoặc Supabase. Motion Lab vẫn chỉ có camera preview. Đồng bộ portal vẫn kiểm tra định kỳ qua server, không dùng WebSocket Supabase Realtime.
+Ở bản 11/09/2026, Wound Lab gọi một ảnh qua API stateless và chưa tích lũy chuỗi.
+Bản 12/09 đã thay phần tải ảnh bằng phiên SQLite nhiều ngày (xem dưới). Luồng
+`/wounds/history` vẫn lưu R2/D1 và dùng dữ liệu khai báo; kết quả AI không tự ghi
+vào Supabase hoặc hồ sơ clinician. Motion Lab vẫn chỉ có camera preview. Đồng bộ
+portal vẫn kiểm tra định kỳ qua server, không dùng WebSocket Supabase Realtime.
 
 QA tích hợp AI ngày 11/09/2026: **39 unit tests PASS**, TypeScript và production build PASS. Chrome gọi API thật trên cổng 8000 thành công; kiểm tra tải ảnh, loading/khóa form, kết quả có cấu trúc, HTTP 422, lỗi kết nối, thiếu ước tính do chất lượng ảnh, xóa kết quả cũ khi sửa form, mẫu SYN000014, giao diện tối 390px không tràn ngang, liên kết và trường nhập của màn hình lịch sử đều PASS. Đây là kiểm tra local, không triển khai site và không huấn luyện bằng ảnh bệnh nhân thật. Xem [`WOUND_AI_INTEGRATION.md`](WOUND_AI_INTEGRATION.md) để chạy lại.
 
@@ -81,13 +89,101 @@ chưa xử lý hoặc tràn ngang ở viewport 390px.
 
 ## Wound backend follow-up — 2026-09-11
 
-Latest verification: 69 Python tests passed, including persisted image sessions,
+Historical verification: 69 Python tests passed, including persisted image sessions,
 masked classifier inputs/percentages, multi-day deltas, baseline-dependent rules,
 scab qualifications and uncertainty. New session storage is local SQLite, separate
-from Supabase and the original D1/R2 history. The existing web uploader remains
-single-image; the new multi-day endpoints are usable through Swagger/API.
+from Supabase and the original D1/R2 history. At that revision the uploader remained
+single-image; the 12 September workflow below now uses those sessions.
 See [contracts, source links and handoff](WOUND_TRAJECTORY_ENGINE.md).
 Earlier QA counts above describe previous versions.
+
+## Wound workflow hiện tại — 12/09/2026
+
+- Lưu một hoặc nhiều ảnh trong SQLite không tự hết hạn; danh sách đợt lấy từ máy chủ
+  nên tải lại trang, xóa local storage hoặc mở từ điện thoại cùng LAN vẫn tìm được
+  đợt của hồ sơ demo. Thêm tối đa 1.000 lần chụp/đợt, kiểm tra ảnh trùng và thời gian
+  tăng dần; ngày tương đối neo theo thời điểm chụp, không lấy thứ tự file làm ngày.
+- Mỗi lần lưu giữ baseline cố định, ảnh gốc, số đo hoặc trạng thái chờ và dữ liệu
+  pipeline. Xem lại thumbnail/kết quả đến lần chụp đã chọn; xóa ảnh hoặc cả đợt qua
+  hộp xác nhận trên desktop/mobile. API retry dùng lại ảnh đã lưu, không upload lại.
+- Patient Mode đọc đủ bốn bước từ `patient_explanation.locales.vi` và có tùy chọn
+  English. FPG, tưới máu và cảm giác ngoại vi là thông tin ghi trong baseline; không
+  khẳng định tổn thương vi mạch qua ảnh. Alert đình trệ ≥7 ngày với diabetes hoặc
+  HbA1c >8% tách khỏi flag diện tích >7 ngày trước đây. Các ngưỡng là rule nghiên cứu.
+- Năm hồ sơ giữ nguyên thông tin gốc, có tổng cộng 20 lần khám giả lập bất biến.
+  Accordion giữ đủ xét nghiệm/khoảng tham chiếu, số đo/can thiệp, đơn/băng và hẹn
+  khám, tách rõ hồ sơ mẫu với phép đo ảnh mới. `MediPassBrand`/`MediPassBadge` dùng
+  chung biểu tượng khiên sinh trắc/nhịp tim; token Clinical Indigo `#2563EB` và
+  Deep Slate `#0F172A` áp dụng cho shell và workflow. Đây là mô tả implementation;
+  Developer Mode mở pipeline lịch sử, phạm vi QA trình duyệt được ghi riêng.
+- Web gọi `/api/wound-sessions` cùng origin rồi proxy tới Python loopback; điện
+  thoại mở LAN URL cổng 3001. Không triển khai dịch vụ inference hosted hay auth thật.
+- Trước khi tải checkpoint qua Git LFS, 77 Python tests có sẵn và 60 unit tests frontend PASS; TypeScript, toàn bộ
+  `pnpm run lint` và `pnpm build` PASS. Chrome QA dùng session fixture tách biệt
+  đã kiểm tra đủ luồng một/nhiều ảnh, phục hồi không cần localStorage, pipeline
+  lịch sử, bảo toàn nội dung khám, VI/EN, xóa, retry, 390px sáng/tối, hủy chú thích
+  và đồng bộ theme trong iframe. Kiểm tra localhost/SQLite thật với patient QA
+  riêng xác nhận giữ nguyên byte ảnh, readback, bảo toàn ảnh khi retry lỗi,
+  chặn nhầm patient/origin và xóa; fixture QA đã được dọn. Đây là QA workflow trước
+  bước tải weights gốc, không phải kết quả mới cho toàn bộ trang sau pull.
+- Sau khi pull `c269a89`, ba weights gốc đã được materialize bằng Git LFS và đạt
+  `shasum -a 256 -c aimedic/checkpoints.sha256`. Môi trường macOS
+  `outputs/wound-venv/bin/python` chạy lại **77/77 test Python có sẵn PASS**.
+  `scripts/verify-wound-models.py` chạy trực tiếp chính ba model gốc qua API:
+  ảnh đơn ghép baseline, hai lần chụp có delta chính xác, retry ảnh từng lưu chờ,
+  pipeline lịch sử, mask và overlay, đọc lại byte ảnh sau mở lại DB, xóa đúng patient
+  đều PASS trong SQLite tạm. Database người dùng không bị đọc/sửa; fixture tạm được dọn.
+- Ảnh simulator mẫu tạo mask 2.536 pixel: mô hạt 1.656, slough 517, lớp mô sẫm 363;
+  pixel ngoài mask trong overlay được giữ nguyên. Cùng ảnh với baseline khác có
+  điểm model khác nhưng không đổi tissue counts, xác nhận luồng ghép baseline.
+  Ảnh thứ hai trong QA là ảnh mẫu lật ngang, không phải ảnh hồi phục ngoài thực tế;
+  tỉ lệ 10 pixel/cm do script nhập chỉ là dữ liệu thử. Kết quả này kiểm tra tích hợp,
+  không xác nhận độ chính xác lâm sàng hoặc suy ra trạng thái bệnh nhân thật.
+- Test Python và byte checkpoint gốc không bị sửa, không huấn luyện model thay thế.
+  Luồng thiếu model vẫn lưu `pending_model`, phép đo `null`, có thông báo và nút
+  phân tích lại; retry bằng checkpoint gốc đã được kiểm tra thành công.
+
+## Đồng bộ checkpoint và nhận diện — 12/09/2026
+
+- Đã fast-forward tới `c269a89`, giữ và khôi phục đầy đủ thay đổi local. Ba
+  checkpoint Git LFS đã được tải và khớp `aimedic/checkpoints.sha256`; không sửa
+  trọng số, test Python hay migration đã có.
+- `MediPassBrand` dùng chung logo khiên sinh trắc/pulse; các trang dùng Clinical
+  Indigo `#2563EB`, Deep Slate `#0F172A`, cùng token sáng/tối và favicon SVG.
+  Màu cảnh báo và trạng thái lâm sàng vẫn được phân biệt. Sửa tương phản chữ,
+  nút viền và liên kết trong portal; bản in luôn sáng dù trình duyệt đang tối.
+- Phát hiện và sửa lỗi cold-start của lịch sử R2/D1: `ensureDatabase` tạo bổ sung
+  bảng/index vết thương nếu thiếu, đúng schema migration `0001`. Hai regression
+  SQLite trong bộ nhớ xác nhận schema và dữ liệu có sẵn không bị thay thế.
+- Bản cuối: **62 unit tests TypeScript, 77 Python tests, TypeScript, lint và
+  `pnpm build` PASS**. Script kiểm chứng checkpoint gốc PASS suy luận ảnh đơn,
+  ghép baseline, hai lần đo, retry ảnh chờ, pipeline lịch sử và persistence.
+- Chrome `tests/brand-browser.mjs` PASS **14 đường dẫn × 2 theme × 2 viewport
+  (1440/390px)** sau khi nội dung tải xong: logo/màu chung, độ tương phản chữ
+  được đo, bản in sáng từ chế độ tối, không tràn ngang/chồng nút, không lỗi
+  JavaScript hoặc HTTP 5xx từ API cùng origin. `tests/theme-browser.mjs` và
+  toàn bộ workflow `tests/wound-analyzer-browser.mjs` cũng PASS; kiểm tra workflow
+  trình duyệt dùng API fixture riêng, kiểm chứng trọng số thật dùng SQLite tạm.
+  Không lưu chỉnh sửa hồ sơ hay feedback trong kiểm tra giao diện này.
+- Web và API được bật lại để review local. Không push hoặc triển khai website.
+
+## Điều hướng hồ sơ trước đây — 12/09/2026
+
+- `/records` dùng module hồ sơ cũ, không phải một cổng localhost khác. Logo trước
+  đây chỉ chuyển tab nội bộ; liên kết “Care team” bị đánh dấu như đang ở portal
+  bệnh viện và bị giấu trong menu điện thoại, gây khó tìm đường quay lại.
+- Thêm liên kết **Cổng bệnh viện** trong header cố định, luôn thấy trên desktop
+  và điện thoại; logo về sảnh `/`. Bỏ bộ chuyển cổng gây nhầm, ghi rõ module cũ
+  và dữ liệu riêng. Khi mở từ `/editor` hoặc `/patient`, cả rail và mobile giữ
+  `?patient=` để quay về đúng hồ sơ. Tham số chỉ dùng cho điều hướng; API và
+  danh tính dữ liệu `/records` không thay đổi, không ghép hai kho bệnh nhân.
+- `tests/records-navigation-browser.mjs` PASS Chrome 1440/390/360px × sáng/tối:
+  bấm đi/về từ bệnh nhân không phải người đầu tiên, mở trực tiếp không cần lịch
+  sử Back, logo về sảnh, menu mobile, query được encode/lặp và khung điện thoại
+  cùng origin. Nút đạt vùng chạm 44px, không tràn ngang, không lỗi JavaScript.
+  API dùng fixture trong bộ nhớ và chặn mọi thao tác ghi; không sửa hồ sơ thật.
+  Đã xem ảnh chụp desktop và mobile tối. TypeScript, lint, 62 unit tests và
+  `pnpm build` PASS; localhost 3001 được bật lại. Không push/deploy.
 
 ## Đọc góp ý trong phiên làm việc tiếp theo
 

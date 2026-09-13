@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
 type Theme = 'light' | 'dark';
@@ -22,24 +22,21 @@ function applyTheme(theme: Theme, persist = true) {
   window.dispatchEvent(new CustomEvent('medipass-theme-change', { detail: theme }));
 }
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('light');
+function subscribeTheme(sync: () => void) {
+  const syncStorage = (event: StorageEvent) => {
+    if (event.key !== storageKey || (event.newValue !== 'light' && event.newValue !== 'dark')) return;
+    applyTheme(event.newValue, false);
+  };
+  window.addEventListener('medipass-theme-change', sync);
+  window.addEventListener('storage', syncStorage);
+  return () => {
+    window.removeEventListener('medipass-theme-change', sync);
+    window.removeEventListener('storage', syncStorage);
+  };
+}
 
-  useEffect(() => {
-    setTheme(currentTheme());
-    const sync = () => setTheme(currentTheme());
-    const syncStorage = (event: StorageEvent) => {
-      if (event.key !== storageKey || (event.newValue !== 'light' && event.newValue !== 'dark')) return;
-      applyTheme(event.newValue, false);
-      setTheme(event.newValue);
-    };
-    window.addEventListener('medipass-theme-change', sync);
-    window.addEventListener('storage', syncStorage);
-    return () => {
-      window.removeEventListener('medipass-theme-change', sync);
-      window.removeEventListener('storage', syncStorage);
-    };
-  }, []);
+export function ThemeToggle() {
+  const theme = useSyncExternalStore(subscribeTheme, currentTheme, (): Theme => 'light');
 
   const next = theme === 'dark' ? 'light' : 'dark';
   const action = next === 'dark' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng';
@@ -54,7 +51,6 @@ export function ThemeToggle() {
       data-annotation-ui
       onClick={() => {
         applyTheme(next);
-        setTheme(next);
       }}
     >
       {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}

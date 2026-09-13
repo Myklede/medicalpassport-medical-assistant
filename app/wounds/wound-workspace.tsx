@@ -10,7 +10,6 @@ import {
   CircleHelp,
   Clock3,
   FileHeart,
-  HeartPulse,
   ImagePlus,
   Loader2,
   LockKeyhole,
@@ -24,6 +23,7 @@ import {
   X,
 } from 'lucide-react';
 import Link from '@/components/app-link';
+import MediPassBrand from '@/components/medipass-brand';
 import {
   useCallback,
   useEffect,
@@ -120,27 +120,27 @@ const triageTone: Record<
   { border: string; background: string; text: string; icon: typeof ShieldAlert }
 > = {
   emergency: {
-    border: 'border-rose-300',
-    background: 'bg-rose-50',
-    text: 'text-rose-900',
+    border: 'border-rose-300 dark:border-rose-900',
+    background: 'bg-rose-50 dark:bg-rose-950/40',
+    text: 'text-rose-900 dark:text-rose-200',
     icon: ShieldAlert,
   },
   'same-day': {
-    border: 'border-orange-300',
-    background: 'bg-orange-50',
-    text: 'text-orange-950',
+    border: 'border-orange-300 dark:border-orange-900',
+    background: 'bg-orange-50 dark:bg-orange-950/40',
+    text: 'text-orange-950 dark:text-orange-200',
     icon: AlertTriangle,
   },
   'prompt-review': {
-    border: 'border-amber-300',
-    background: 'bg-amber-50',
-    text: 'text-amber-950',
+    border: 'border-amber-300 dark:border-amber-900',
+    background: 'bg-amber-50 dark:bg-amber-950/40',
+    text: 'text-amber-950 dark:text-amber-200',
     icon: Clock3,
   },
   monitor: {
-    border: 'border-teal-200',
-    background: 'bg-teal-50',
-    text: 'text-teal-950',
+    border: 'border-blue-200 dark:border-blue-900',
+    background: 'bg-blue-50 dark:bg-blue-950/40',
+    text: 'text-blue-950 dark:text-blue-200',
     icon: ShieldCheck,
   },
 };
@@ -337,34 +337,28 @@ export function WoundWorkspace() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbfb_0%,#eef5f4_48%,#f8fafc_100%)] text-slate-950">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-card/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           <Link
             href="/wounds"
-            className="grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+            className="grid size-11 place-items-center rounded-xl border border-border text-muted-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
             aria-label="Về phân tích AI Wound Lab"
           >
             <ArrowLeft className="size-4" />
           </Link>
-          <span className="grid size-9 place-items-center rounded-xl bg-teal-700 text-white shadow-sm shadow-teal-900/15">
-            <HeartPulse className="size-5" />
-          </span>
-          <div className="leading-tight">
-            <p className="text-sm font-semibold tracking-tight">MediPass Wound Lab</p>
-            <p className="text-xs text-slate-500">Longitudinal RGB research capture</p>
-          </div>
-          <Link href="/wounds" aria-label="Phân tích ảnh AI" className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-900 hover:bg-teal-100">
+          <Link href="/" className="flex min-h-11 items-center rounded-xl focus-visible:outline-2 focus-visible:outline-primary" aria-label="MediPass home"><MediPassBrand compact subtitle="WOUND HISTORY" /></Link>
+          <Link href="/wounds" aria-label="Phân tích ảnh AI" className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-3 py-2 text-sm font-semibold text-blue-900 dark:text-blue-200 hover:bg-blue-100">
             <Sparkles className="size-4" /><span className="hidden sm:inline">Phân tích ảnh AI</span><span className="sm:hidden">AI</span>
           </Link>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
-          <div className="overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-xl shadow-slate-950/10 sm:p-8">
+          <div className="overflow-hidden rounded-3xl bg-[#0F172A] p-6 text-white shadow-xl shadow-slate-950/10 sm:p-8">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-teal-400/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-teal-300">
+              <span className="rounded-full bg-blue-400/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-blue-300">
                 Research prototype
               </span>
               <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
@@ -383,8 +377,8 @@ export function WoundWorkspace() {
                 ['2', 'Patient-specific context'],
                 ['3', 'Clinician-reviewable timeline'],
               ].map(([number, label]) => (
-                <div key={number} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-teal-400/15 text-xs font-bold text-teal-300">
+                <div key={number} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-card/5 p-3">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-blue-400/15 text-xs font-bold text-blue-300">
                     {number}
                   </span>
                   <span className="text-sm text-slate-200">{label}</span>
@@ -393,15 +387,15 @@ export function WoundWorkspace() {
             </div>
           </div>
 
-          <article className="rounded-3xl border border-rose-200 bg-rose-50 p-6">
-            <div className="flex items-center gap-2 text-rose-800">
+          <article className="rounded-3xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-6">
+            <div className="flex items-center gap-2 text-rose-800 dark:text-rose-200">
               <ShieldAlert className="size-5" />
               <h2 className="font-semibold">Emergency boundary</h2>
             </div>
-            <p className="mt-3 text-sm leading-6 text-rose-950/80">
+            <p className="mt-3 text-sm leading-6 text-rose-950/80 dark:text-rose-200">
               This prototype is not emergency care. For severe bleeding that will not stop, loss of feeling or function, or a serious deep injury, call 911 or your local emergency number now.
             </p>
-            <div className="mt-4 rounded-2xl border border-rose-200 bg-white/70 p-3 text-xs leading-5 text-rose-900">
+            <div className="mt-4 rounded-2xl border border-rose-200 dark:border-rose-900 bg-card/70 p-3 text-xs leading-5 text-rose-900 dark:text-rose-200">
               Never wait for an upload, score, or AI result when urgent help may be needed.
             </div>
           </article>
@@ -414,7 +408,7 @@ export function WoundWorkspace() {
         )}
 
         {error && (
-          <div role="alert" className="mt-5 flex items-start gap-3 rounded-2xl border border-rose-200 bg-white p-4 text-sm text-rose-800 shadow-sm">
+          <div role="alert" className="mt-5 flex items-start gap-3 rounded-2xl border border-rose-200 dark:border-rose-900 bg-card p-4 text-sm text-rose-800 dark:text-rose-200 shadow-sm">
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
             <p className="flex-1">{error}</p>
             <button type="button" onClick={() => setError('')} aria-label="Dismiss error">
@@ -424,26 +418,26 @@ export function WoundWorkspace() {
         )}
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(330px,0.65fr)]">
-          <form onSubmit={submitAssessment} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-5 py-5 sm:px-7">
+          <form onSubmit={submitAssessment} className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+            <div className="border-b border-border px-5 py-5 sm:px-7">
               <div className="flex items-center gap-3">
-                <span className="grid size-10 place-items-center rounded-2xl bg-teal-50 text-teal-700">
+                <span className="grid size-10 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200">
                   <Camera className="size-5" />
                 </span>
                 <div>
                   <h2 className="text-lg font-semibold tracking-tight">New wound assessment</h2>
-                  <p className="text-sm text-slate-500">Capture consistently so change is easier to review.</p>
+                  <p className="text-sm text-muted-foreground">Capture consistently so change is easier to review.</p>
                 </div>
               </div>
             </div>
 
             <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-2">
               <section>
-                <h3 className="text-sm font-semibold text-slate-900">1. Wound photo</h3>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <h3 className="text-sm font-semibold text-foreground">1. Wound photo</h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   Use even lighting, keep the camera parallel, avoid filters, and exclude faces or identifiers.
                 </p>
-                <label className="mt-4 block cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 transition hover:border-teal-500 hover:bg-teal-50/40">
+                <label className="mt-4 block cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-input bg-muted transition hover:border-blue-500 hover:bg-blue-50/40">
                   <span className="sr-only">Take or choose a wound photo</span>
                   {previewUrl ? (
                     <div className="relative aspect-[4/3] bg-slate-950">
@@ -457,14 +451,14 @@ export function WoundWorkspace() {
                     <div className="grid aspect-[4/3] place-items-center p-6 text-center">
                       <div>
                         {processingImage ? (
-                          <Loader2 className="mx-auto size-8 animate-spin text-teal-700" />
+                          <Loader2 className="mx-auto size-8 animate-spin text-blue-700 dark:text-blue-200" />
                         ) : (
-                          <ImagePlus className="mx-auto size-8 text-teal-700" />
+                          <ImagePlus className="mx-auto size-8 text-blue-700 dark:text-blue-200" />
                         )}
-                        <span className="mt-3 block text-sm font-semibold text-slate-800">
+                        <span className="mt-3 block text-sm font-semibold text-foreground">
                           {processingImage ? 'Removing image metadata…' : 'Take photo or choose image'}
                         </span>
-                        <span className="mt-1 block text-xs text-slate-500">JPEG or PNG · maximum 8 MB</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">JPEG or PNG · maximum 8 MB</span>
                       </div>
                     </div>
                   )}
@@ -479,29 +473,29 @@ export function WoundWorkspace() {
                 </label>
                 <label
                   aria-label="Confirm that a calibration marker is visible"
-                  className="mt-3 flex min-h-12 items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-700"
+                  className="mt-3 flex min-h-12 items-start gap-3 rounded-xl border border-border p-3 text-sm text-foreground"
                 >
                   <input
                     type="checkbox"
                     checked={form.hasScaleMarker}
                     onChange={(event) => setForm((current) => ({ ...current, hasScaleMarker: event.target.checked }))}
-                    className="mt-0.5 size-4 accent-teal-700"
+                    className="mt-0.5 size-4 accent-blue-700"
                   />
                   <span>
                     <span className="flex items-center gap-1.5 font-semibold"><Ruler className="size-3.5" /> Calibration marker is visible</span>
-                    <span className="mt-0.5 block text-xs leading-5 text-slate-500">Needed later for physical area estimates; do not place a non-sterile object on the wound.</span>
+                    <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">Needed later for physical area estimates; do not place a non-sterile object on the wound.</span>
                   </span>
                 </label>
               </section>
 
               <section className="space-y-4">
                 <div>
-                  <label htmlFor="wound-case" className="text-sm font-semibold text-slate-900">2. Match the timeline</label>
+                  <label htmlFor="wound-case" className="text-sm font-semibold text-foreground">2. Match the timeline</label>
                   <select
                     id="wound-case"
                     value={form.caseId}
                     onChange={(event) => setForm((current) => ({ ...current, caseId: event.target.value }))}
-                    className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15"
+                    className="mt-2 h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15"
                   >
                     <option value="">Start a new wound case</option>
                     {(data?.cases ?? []).map((woundCase) => (
@@ -522,7 +516,7 @@ export function WoundWorkspace() {
                           placeholder="e.g. Left heel wound"
                           required
                           maxLength={120}
-                          className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15"
+                          className="h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15"
                         />
                       </Field>
                       <Field label="Body location" required>
@@ -532,7 +526,7 @@ export function WoundWorkspace() {
                           placeholder="e.g. left heel"
                           required
                           maxLength={100}
-                          className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15"
+                          className="h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15"
                         />
                       </Field>
                     </div>
@@ -541,7 +535,7 @@ export function WoundWorkspace() {
                         <select
                           value={form.woundType}
                           onChange={(event) => setForm((current) => ({ ...current, woundType: event.target.value }))}
-                          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15"
+                          className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15"
                         >
                           <option value="unknown">Not sure</option>
                           <option value="acute">Acute injury</option>
@@ -556,7 +550,7 @@ export function WoundWorkspace() {
                           type="date"
                           value={form.onsetDate}
                           onChange={(event) => setForm((current) => ({ ...current, onsetDate: event.target.value }))}
-                          className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15"
+                          className="h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15"
                         />
                       </Field>
                     </div>
@@ -564,9 +558,9 @@ export function WoundWorkspace() {
                 )}
 
                 {selectedCase && (
-                  <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 text-sm">
-                    <p className="font-semibold text-teal-950">{selectedCase.label}</p>
-                    <p className="mt-1 text-teal-900/70">
+                  <div className="rounded-2xl border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 p-4 text-sm">
+                    <p className="font-semibold text-blue-950 dark:text-blue-200">{selectedCase.label}</p>
+                    <p className="mt-1 text-blue-900/70 dark:text-blue-200">
                       {selectedCase.body_location} · {selectedCase.assessments.length} previous {selectedCase.assessments.length === 1 ? 'capture' : 'captures'}
                     </p>
                   </div>
@@ -578,7 +572,7 @@ export function WoundWorkspace() {
                       type="datetime-local"
                       value={form.capturedAt}
                       onChange={(event) => setForm((current) => ({ ...current, capturedAt: event.target.value }))}
-                      className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15"
+                      className="h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15"
                     />
                   </Field>
                   <Field label={`Pain reported: ${form.painScore}/10`}>
@@ -589,21 +583,21 @@ export function WoundWorkspace() {
                       step="1"
                       value={form.painScore}
                       onChange={(event) => setForm((current) => ({ ...current, painScore: Number(event.target.value) }))}
-                      className="mt-2 h-6 w-full accent-teal-700"
+                      className="mt-2 h-6 w-full accent-blue-700"
                     />
                   </Field>
                 </div>
               </section>
             </div>
 
-            <section className="border-t border-slate-100 bg-slate-50/60 p-5 sm:p-7">
+            <section className="border-t border-border bg-muted/60 p-5 sm:p-7">
               <div className="flex items-start gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-800">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200">
                   <ShieldCheck className="size-4" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900">3. Report what is happening now</h3>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">Select only what you can observe. The checklist does not replace an examination.</p>
+                  <h3 className="text-sm font-semibold text-foreground">3. Report what is happening now</h3>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Select only what you can observe. The checklist does not replace an examination.</p>
                 </div>
               </div>
               <div className="mt-4 grid gap-2 md:grid-cols-2">
@@ -613,9 +607,9 @@ export function WoundWorkspace() {
                     className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition ${
                       symptoms[option.key]
                         ? option.urgent
-                          ? 'border-rose-300 bg-rose-50 text-rose-950'
-                          : 'border-amber-300 bg-amber-50 text-amber-950'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                          ? 'border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-950 dark:text-rose-200'
+                          : 'border-amber-300 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200'
+                        : 'border-border bg-card text-foreground hover:border-slate-300'
                     }`}
                   >
                     <input
@@ -624,7 +618,7 @@ export function WoundWorkspace() {
                       onChange={(event) =>
                         setSymptoms((current) => ({ ...current, [option.key]: event.target.checked }))
                       }
-                      className="mt-0.5 size-4 accent-teal-700"
+                      className="mt-0.5 size-4 accent-blue-700"
                     />
                     <span>{option.label}</span>
                   </label>
@@ -637,12 +631,12 @@ export function WoundWorkspace() {
                   placeholder="What changed since the last capture? Include clinician instructions if relevant."
                   maxLength={1500}
                   rows={4}
-                  className="w-full rounded-xl border border-slate-200 p-3 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15"
+                  className="w-full rounded-xl border border-border p-3 text-sm leading-6 outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15"
                 />
               </Field>
             </section>
 
-            <section className="border-t border-slate-100 p-5 sm:p-7">
+            <section className="border-t border-border p-5 sm:p-7">
               <div className="space-y-3">
                 <ConsentCheck
                   checked={form.consentAttested}
@@ -660,7 +654,7 @@ export function WoundWorkspace() {
               <button
                 type="submit"
                 disabled={saving || processingImage || !image || !form.consentAttested || !form.researchUseOnly}
-                className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
                 {saving ? 'Saving assessment…' : 'Save and run safety review'}
@@ -669,61 +663,61 @@ export function WoundWorkspace() {
           </form>
 
           <aside className="space-y-5">
-            <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <article className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <FileHeart className="size-4 text-teal-700" />
+                  <FileHeart className="size-4 text-blue-700 dark:text-blue-200" />
                   <h2 className="text-sm font-semibold">Record-aware context</h2>
                 </div>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+                <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
                   {data?.patient_context.record_count ?? 0} records
                 </span>
               </div>
-              <p className="mt-3 text-xs leading-5 text-slate-500">
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">
                 Only explicitly saved, active records are matched. No missing condition is inferred.
               </p>
               <div className="mt-4 space-y-3">
                 {(data?.patient_context.matched_factors ?? []).length ? (
                   data?.patient_context.matched_factors.map((factor) => (
-                    <div key={factor.key} className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                      <p className="text-sm font-semibold text-amber-950">{factor.label}</p>
-                      <p className="mt-1 text-xs leading-5 text-amber-900/75">{factor.note}</p>
-                      <p className="mt-2 text-xs font-medium text-amber-900">Matched: {factor.evidence.join(', ')}</p>
+                    <div key={factor.key} className="rounded-2xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4">
+                      <p className="text-sm font-semibold text-amber-950 dark:text-amber-200">{factor.label}</p>
+                      <p className="mt-1 text-xs leading-5 text-amber-900/75 dark:text-amber-200">{factor.note}</p>
+                      <p className="mt-2 text-xs font-medium text-amber-900 dark:text-amber-200">Matched: {factor.evidence.join(', ')}</p>
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-800">No configured risk factor matched</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">This does not mean none exists. The record may be incomplete or use different wording.</p>
+                  <div className="rounded-2xl border border-border bg-muted p-4">
+                    <p className="text-sm font-semibold text-foreground">No configured risk factor matched</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">This does not mean none exists. The record may be incomplete or use different wording.</p>
                   </div>
                 )}
               </div>
             </article>
 
-            <article className="rounded-3xl border border-violet-200 bg-violet-50 p-5 sm:p-6">
-              <div className="flex items-center gap-2 text-violet-900">
+            <article className="rounded-3xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 p-5 sm:p-6">
+              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200">
                 <CircleHelp className="size-4" />
                 <h2 className="text-sm font-semibold">Lưu trữ và phân tích AI</h2>
               </div>
-              <p className="mt-3 text-sm leading-6 text-violet-950/75">
+              <p className="mt-3 text-sm leading-6 text-blue-950/75 dark:text-blue-200">
                 Ảnh và ghi nhận ở đây được lưu vào lịch sử. Phân tích AI dùng dịch vụ Python cục bộ và không tự ghi kết quả vào hồ sơ đã lưu.
               </p>
-              <div className="mt-4 grid gap-2 text-xs text-violet-900">
-                <div className="flex items-center gap-2 rounded-xl bg-white/70 p-3">
-                  <CheckCircle2 className="size-4 shrink-0 text-teal-700" /> Versioned input/output contract
+              <div className="mt-4 grid gap-2 text-xs text-blue-900 dark:text-blue-200">
+                <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3">
+                  <CheckCircle2 className="size-4 shrink-0 text-blue-700 dark:text-blue-200" /> Versioned input/output contract
                 </div>
-                <div className="flex items-center gap-2 rounded-xl bg-white/70 p-3">
-                  <CheckCircle2 className="size-4 shrink-0 text-teal-700" /> Human review required by schema
+                <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3">
+                  <CheckCircle2 className="size-4 shrink-0 text-blue-700 dark:text-blue-200" /> Human review required by schema
                 </div>
-                <div className="flex items-center gap-2 rounded-xl bg-white/70 p-3">
-                  <X className="size-4 shrink-0 text-rose-700" /> No segmentation or healing forecast yet
+                <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3">
+                  <X className="size-4 shrink-0 text-rose-700 dark:text-rose-200" /> No segmentation or healing forecast yet
                 </div>
               </div>
             </article>
 
-            <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <article className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <div className="flex items-center gap-2">
-                <TrendingUp className="size-4 text-teal-700" />
+                <TrendingUp className="size-4 text-blue-700 dark:text-blue-200" />
                 <h2 className="text-sm font-semibold">Research progression</h2>
               </div>
               <ol className="mt-4 space-y-3 text-sm">
@@ -734,8 +728,8 @@ export function WoundWorkspace() {
                   ['Validate', 'Patient-level split and external clinical review'],
                 ].map(([phase, text]) => (
                   <li key={phase} className="flex gap-3">
-                    <span className="w-14 shrink-0 text-xs font-bold uppercase tracking-wide text-teal-700">{phase}</span>
-                    <span className="text-sm leading-5 text-slate-600">{text}</span>
+                    <span className="w-14 shrink-0 text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-200">{phase}</span>
+                    <span className="text-sm leading-5 text-muted-foreground">{text}</span>
                   </li>
                 ))}
               </ol>
@@ -743,25 +737,25 @@ export function WoundWorkspace() {
           </aside>
         </div>
 
-        <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <section className="mt-5 rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-7">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-teal-700">Longitudinal record</p>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700 dark:text-blue-200">Longitudinal record</p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight">Assessment history</h2>
-              <p className="mt-1 text-sm text-slate-500">Compare repeat captures from the same case; do not compare unrelated wounds.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Compare repeat captures from the same case; do not compare unrelated wounds.</p>
             </div>
             <button
               type="button"
               onClick={() => void loadData()}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-3 text-sm font-medium text-foreground hover:bg-muted"
             >
               <RefreshCw className="size-4" /> Refresh
             </button>
           </div>
 
           {loading ? (
-            <div className="flex min-h-48 items-center justify-center gap-3 text-sm text-slate-500">
-              <Loader2 className="size-5 animate-spin text-teal-700" /> Loading assessments…
+            <div className="flex min-h-48 items-center justify-center gap-3 text-sm text-muted-foreground">
+              <Loader2 className="size-5 animate-spin text-blue-700 dark:text-blue-200" /> Loading assessments…
             </div>
           ) : allAssessments.length ? (
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -770,17 +764,17 @@ export function WoundWorkspace() {
               ))}
             </div>
           ) : (
-            <div className="mt-5 grid min-h-48 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+            <div className="mt-5 grid min-h-48 place-items-center rounded-2xl border border-dashed border-input bg-muted p-6 text-center">
               <div>
-                <Camera className="mx-auto size-7 text-slate-400" />
-                <p className="mt-3 text-sm font-semibold text-slate-800">No wound captures yet</p>
-                <p className="mt-1 text-xs text-slate-500">The first saved assessment will start a longitudinal case.</p>
+                <Camera className="mx-auto size-7 text-muted-foreground" />
+                <p className="mt-3 text-sm font-semibold text-foreground">No wound captures yet</p>
+                <p className="mt-1 text-xs text-muted-foreground">The first saved assessment will start a longitudinal case.</p>
               </div>
             </div>
           )}
         </section>
 
-        <footer className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-slate-200 py-5 text-xs leading-5 text-slate-500 sm:flex-row">
+        <footer className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-border py-5 text-xs leading-5 text-muted-foreground sm:flex-row">
           <p>Research prototype · use synthetic or properly de-identified data only.</p>
           <p className="flex items-center gap-1.5"><LockKeyhole className="size-3.5" /> Private storage · patient-scoped queries · audit events</p>
         </footer>
@@ -802,7 +796,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-semibold text-slate-700">
+      <span className="mb-1.5 block text-xs font-semibold text-foreground">
         {label}{required ? ' *' : ''}
       </span>
       {children}
@@ -820,13 +814,13 @@ function ConsentCheck({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm leading-5 text-slate-700">
+    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-3 text-sm leading-5 text-foreground">
       <input
         type="checkbox"
         required
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 size-4 accent-teal-700"
+        className="mt-0.5 size-4 accent-blue-700"
       />
       <span>{children}</span>
     </label>
@@ -839,7 +833,7 @@ function SafetyReviewCard({ review, title }: { review: WoundSafetyReview; title:
   return (
     <article className={`rounded-3xl border ${tone.border} ${tone.background} p-5 shadow-sm sm:p-6`}>
       <div className="flex items-start gap-4">
-        <span className={`grid size-11 shrink-0 place-items-center rounded-2xl bg-white/80 ${tone.text}`}>
+        <span className={`grid size-11 shrink-0 place-items-center rounded-2xl bg-card/80 ${tone.text}`}>
           <Icon className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
@@ -870,28 +864,28 @@ function AssessmentCard({ woundCase, assessment }: { woundCase: WoundCase; asses
   const tone = triageTone[assessment.triage_level];
   const Icon = tone.icon;
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <article className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="relative aspect-[4/3] bg-slate-950">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={assessment.image_url} alt={`Wound assessment for ${woundCase.label}`} className="size-full object-contain" />
-        <span className={`absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border bg-white/95 px-2.5 py-1 text-xs font-semibold shadow-sm ${tone.border} ${tone.text}`}>
+        <span className={`absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border bg-card/95 px-2.5 py-1 text-xs font-semibold shadow-sm ${tone.border} ${tone.text}`}>
           <Icon className="size-3.5" /> {assessment.safety_review.label}
         </span>
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">{woundCase.label}</h3>
-            <p className="mt-0.5 text-xs text-slate-500">{woundCase.body_location} · {formatDate(assessment.captured_at)}</p>
+            <h3 className="text-sm font-semibold text-foreground">{woundCase.label}</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">{woundCase.body_location} · {formatDate(assessment.captured_at)}</p>
           </div>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">Pain {assessment.pain_score}/10</span>
+          <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">Pain {assessment.pain_score}/10</span>
         </div>
-        {assessment.notes && <p className="mt-3 line-clamp-2 text-xs leading-5 text-slate-600">{assessment.notes}</p>}
-        <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-semibold text-slate-700">
+        {assessment.notes && <p className="mt-3 line-clamp-2 text-xs leading-5 text-muted-foreground">{assessment.notes}</p>}
+        <details className="mt-3 rounded-xl border border-border bg-muted p-3">
+          <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-semibold text-foreground">
             Review details <ChevronRight className="size-3.5" />
           </summary>
-          <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-600">
+          <div className="mt-3 space-y-3 border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
             <p>{assessment.safety_review.action}</p>
             <ul className="space-y-1">
               {assessment.safety_review.reasons.map((reason) => <li key={reason}>• {reason}</li>)}

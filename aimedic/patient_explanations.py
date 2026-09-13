@@ -3,7 +3,7 @@
 General mechanisms are conditional, not a claim about this patient's blood flow.
 The seven-day research rule is neither an infection threshold nor a waiting period.
 """
-VERSION = "pwc-patient-explanation-v1"
+VERSION = "pwc-patient-explanation-v2"
 SOURCES = {
     "diabetes_circulation": {
         "url": "https://www.niddk.nih.gov/health-information/professionals/diabetes-discoveries-practice/diabetes-peripheral-arterial-disease-and-foot-ulcers",
@@ -29,14 +29,21 @@ SOURCES = {
 
 TEXT = {
     "en": {
+        "pending_model": "Your photo and visit details have been saved. Your recorded health history is available for context, but the image analysis is waiting for the model to become available. No wound size, tissue estimate or healing trend has been produced for this capture.",
+        "pending_why": "The explanation below comes from your recorded health history and general wound-care education. The saved photograph has not yet supplied visual findings to combine with that history.",
+        "retry_saved": "Keep this saved capture and retry its analysis when the service is ready; you do not need to upload the same photo again. Continue your existing care plan while waiting.",
+        "single_image": "This first photo has been analyzed together with your recorded health history. The current wound estimates can be reviewed now; a later photo is needed to measure the healing rate.",
         "reported_symptoms": "Warning symptoms were reported. They matter even if the photo looks unchanged or cannot be assessed.",
         "insufficient_data": "There is not enough reliable information to tell whether the wound is healing or getting worse.",
-        "stagnation": "The measured wound area has changed very little across several visits. It may need a closer look to understand why progress is slow.",
+        "stagnation": "The available wound measurements have changed very little across the recorded visits. It may need a closer look to understand why progress is slow.",
         "worsening": "The measurements show a larger wound area or more yellow or dark-looking material. A clinician should check whether this is a real change or a difference in the photographs.",
         "historical_review": "An earlier visit showed a concerning change. The latest visit does not trigger a new change warning, but that earlier change still needs review.",
         "possible_scab": "The clinician-reported dry scab and measured changes may fit with a scab forming during repair. A photograph cannot confirm normal healing.",
         "no_new_flag": "The available comparison did not trigger a new warning. This does not prove the wound is healing normally or rule out infection.",
-        "diabetes_why": "Over time, high blood sugar can damage blood vessels and reduce blood flow. Less oxygen and fewer nutrients may reach the skin to help it repair. High blood sugar can also make infection-fighting cells work less well. These are possible effects of diabetes, not proof that they are happening in this wound.",
+        "diabetes_why": "Over time, high blood sugar can damage blood vessels, including small vessels, and reduce blood flow. Less oxygen and fewer nutrients may reach the skin to help it repair. High blood sugar can also make infection-fighting cells work less well. These are possible effects of diabetes, not proof that they are happening in this wound.",
+        "neuropathy_why": "Your history records neuropathy. Reduced sensation can make pressure or a new injury harder to notice; it is useful to review protection from repeated pressure alongside the measured changes.",
+        "vascular_why": "Your history records impaired peripheral circulation. Your clinician can assess whether oxygen delivery is limiting repair; a photo cannot measure blood flow or establish the cause.",
+        "stagnant_why": "Because the recorded image measurements have stayed nearly unchanged, these baseline factors are reasons to review slow repair with your clinician, not proof that glucose or circulation caused it.",
         "general_why": "Skin repair needs an adequate blood supply and protection from repeated pressure or injury. A larger area or a change in color can have several causes; the pictures cannot identify the cause on their own.",
         "scab_why": "A dry scab can look dark in a photo. The dark-tissue image label cannot by itself distinguish a healing scab from tissue that needs medical attention.",
         "uncertain_why": "Lighting, camera distance, unclear images or missing visits can change the measurements. A missing score means the system could not judge the trend, not that the risk is zero.",
@@ -59,14 +66,21 @@ TEXT = {
         "safety_note": "This research decision-support tool does not diagnose infection, replace a doctor's visit or choose treatment. Scores are not proven probabilities. A clinician needs to assess the wound and your overall health.",
     },
     "vi": {
+        "pending_model": "Ảnh và thông tin lần chụp của bạn đã được lưu. Hệ thống có tiền sử sức khỏe để tham khảo, nhưng đang chờ mô hình sẵn sàng để phân tích ảnh. Lần chụp này chưa có số đo diện tích, ước tính mô hoặc nhận định tiến triển từ ảnh.",
+        "pending_why": "Phần giải thích dưới đây dựa trên tiền sử đã ghi nhận và kiến thức chăm sóc vết thương nói chung. Ảnh đã lưu chưa cung cấp kết quả trực quan để kết hợp với tiền sử đó.",
+        "retry_saved": "Giữ lần chụp đã lưu và bấm phân tích lại khi dịch vụ sẵn sàng; bạn không cần tải lại cùng ảnh. Trong khi chờ, tiếp tục kế hoạch chăm sóc đã được hướng dẫn.",
+        "single_image": "Ảnh đầu tiên đã được phân tích cùng tiền sử sức khỏe đã ghi nhận của bạn. Bạn có thể xem ước tính vết thương hiện tại; cần ảnh ở lần tiếp theo để đo tốc độ hồi phục.",
         "reported_symptoms": "Bạn đã báo có triệu chứng cần chú ý. Những triệu chứng này vẫn quan trọng dù ảnh có vẻ không đổi hoặc không đánh giá được.",
         "insufficient_data": "Chưa có đủ thông tin đáng tin cậy để biết vết thương đang lành hay xấu đi.",
-        "stagnation": "Diện tích vết thương đo được thay đổi rất ít qua nhiều lần theo dõi. Cần xem xét kỹ hơn để tìm hiểu vì sao tiến triển chậm.",
+        "stagnation": "Các số đo vết thương hiện có thay đổi rất ít qua các lần theo dõi đã lưu. Cần xem xét kỹ hơn để tìm hiểu vì sao tiến triển chậm.",
         "worsening": "Số đo cho thấy diện tích lớn hơn hoặc phần có màu vàng hay sẫm tăng lên. Nhân viên y tế cần kiểm tra xem đó là thay đổi thật hay do cách chụp ảnh.",
         "historical_review": "Một lần theo dõi trước có thay đổi cần chú ý. Lần mới nhất không tạo cảnh báo thay đổi mới, nhưng thay đổi trước đó vẫn cần được xem lại.",
         "possible_scab": "Lớp mày khô do bác sĩ ghi nhận và các số đo có thể phù hợp với quá trình đóng mày khi da hồi phục. Ảnh không xác nhận được vết thương đang lành bình thường.",
         "no_new_flag": "Lần so sánh hiện có không tạo cảnh báo mới. Điều này không chứng minh vết thương đang lành bình thường và không loại trừ nhiễm trùng.",
-        "diabetes_why": "Đường huyết cao kéo dài có thể làm tổn thương mạch máu và giảm lượng máu lưu thông. Da có thể nhận ít oxy và chất dinh dưỡng hơn để hồi phục. Đường huyết cao cũng có thể khiến các tế bào chống nhiễm trùng hoạt động kém hơn. Đây là những ảnh hưởng có thể có của đái tháo đường, không phải kết luận chúng đang xảy ra ở vết thương này.",
+        "diabetes_why": "Đường huyết cao kéo dài có thể làm tổn thương mạch máu, kể cả các vi mạch nhỏ, và giảm lượng máu lưu thông. Da có thể nhận ít oxy và chất dinh dưỡng hơn để hồi phục. Đường huyết cao cũng có thể khiến các tế bào chống nhiễm trùng hoạt động kém hơn. Đây là những ảnh hưởng có thể có của đái tháo đường, không phải kết luận chúng đang xảy ra ở vết thương này.",
+        "neuropathy_why": "Hồ sơ ghi nhận bệnh lý thần kinh ngoại biên. Giảm cảm giác có thể khiến bạn khó nhận ra chỗ tì đè hoặc tổn thương mới; cần xem lại việc bảo vệ vết thương khỏi áp lực lặp lại cùng với các số đo theo dõi.",
+        "vascular_why": "Hồ sơ ghi nhận tuần hoàn ngoại biên suy giảm. Bác sĩ có thể đánh giá liệu việc đưa oxy đến mô có đang hạn chế hồi phục hay không; ảnh không đo được dòng máu hoặc xác định nguyên nhân.",
+        "stagnant_why": "Vì các số đo từ ảnh gần như không đổi, những yếu tố nền này là lý do để cùng bác sĩ xem lại tiến triển chậm, không phải bằng chứng rằng đường huyết hay tuần hoàn đã gây ra tình trạng đó.",
         "general_why": "Da cần được cung cấp đủ máu và tránh bị tì đè hoặc tổn thương lặp lại để hồi phục. Diện tích tăng hoặc đổi màu có thể do nhiều nguyên nhân; chỉ ảnh chụp không xác định được nguyên nhân.",
         "scab_why": "Mày khô có thể trông sẫm màu trên ảnh. Nhãn mô sẫm màu của hệ thống không tự phân biệt được mày đang lành với mô cần được bác sĩ kiểm tra.",
         "uncertain_why": "Ánh sáng, khoảng cách chụp, ảnh không rõ hoặc thiếu lần theo dõi có thể làm số đo thay đổi. Không có điểm đánh giá nghĩa là hệ thống chưa đánh giá được, không phải nguy cơ bằng không.",
@@ -97,11 +111,14 @@ def build_patient_explanation(assessment, profile):
     current = [f for f in flags if f.get("scope") == "latest"]
     symptoms = any(f["rule_id"] == "reported_clinical_warning_signs" for f in current)
     insufficient = assessment["Deterioration_Risk_Score"] is None
-    stall = assessment["stagnation"]["flagged"]
+    new_stagnation = assessment.get("non_healing_trajectory", {})
+    stall = assessment["stagnation"]["flagged"] or new_stagnation.get("persistent_unchanged", False)
     scab = assessment["scab_context"]["compatible_with_reported_scab"]
     diabetes = profile["has_diabetes_type_2"]
     high = profile["hba1c_level"] > assessment["rule_provenance"]["parameters"]["high_hba1c_gt"]
-    scenario = ("reported_symptoms" if symptoms else "insufficient_data" if insufficient else
+    single_image = assessment.get("single_visit_analysis", {}).get("available", False)
+    pending = assessment.get("latest_analysis_status") == "pending_model"
+    scenario = ("reported_symptoms" if symptoms else "pending_model" if pending else "single_image" if single_image else "insufficient_data" if insufficient else
                 "stagnation" if stall else "worsening" if current else
                 "historical_review" if flags else "possible_scab" if scab else "no_new_flag")
     care = ("care_symptoms" if symptoms else
@@ -114,31 +131,49 @@ def build_patient_explanation(assessment, profile):
         actions.insert(0, ("a1c_review", ["a1c_meaning"]))
     if diabetes or high:
         actions.append(("pressure", ["offloading_review"]))
-    if insufficient:
+    if pending:
+        actions.append(("retry_saved", []))
+    elif insufficient:
         actions.append(("capture", []))
     # Exact medical terms remain available to clinicians in the original metrics.
     # Both locales share the same scenario, facts, action IDs and evidence IDs.
     locales = {}
     for language, t in TEXT.items():
         why = t["diabetes_why"] if diabetes or high else t["scab_why"] if scab else t["general_why"]
-        if insufficient:
+        if pending:
+            why = t["pending_why"] + " " + why
+        elif insufficient:
             why = t["uncertain_why"] + (" " + why if diabetes or high else "")
+        if profile.get("neuropathy_status") == "present":
+            why += " " + t["neuropathy_why"]
+        if profile.get("peripheral_vascular_status") == "impaired":
+            why += " " + t["vascular_why"]
+        if stall and (diabetes or high):
+            why += " " + t["stagnant_why"]
         consequence = t["risk_consequence"] if current and not insufficient else t["uncertain_consequence"] if insufficient else t["stable_consequence"]
         if symptoms:
             consequence = t["risk_consequence"]
-        baseline = ""
-        if diabetes or high:
-            hba1c = profile["hba1c_level"]
-            baseline = (
+        hba1c = profile["hba1c_level"]
+        baseline = (
                 ("Type 2 diabetes is recorded. " if diabetes else "Diabetes is not recorded in this profile. ")
                 + f"Recorded HbA1c: {hba1c:g}%. HbA1c reflects average blood sugar over about three months, not today's reading or blood flow at the wound."
                 if language == "en" else
                 ("Hồ sơ có ghi nhận đái tháo đường típ 2. " if diabetes else "Hồ sơ này chưa ghi nhận đái tháo đường. ")
                 + f"HbA1c đã ghi nhận: {hba1c:g}%. HbA1c phản ánh đường huyết trung bình khoảng ba tháng, không phải đường huyết hôm nay hay lượng máu đến vết thương."
-            )
+        )
+        if profile.get("fpg_mg_dl") is not None:
+            fpg = profile["fpg_mg_dl"]
+            baseline += (f" Recorded fasting plasma glucose: {fpg:g} mg/dL; this is a historical measurement."
+                         if language == "en" else f" Đường huyết lúc đói (FPG) đã ghi nhận: {fpg:g} mg/dL; đây là kết quả trong hồ sơ trước đó.")
+        vascular = profile.get("peripheral_vascular_status", "unknown")
+        neuropathy = profile.get("neuropathy_status", "unknown")
+        vascular_label = {"normal": "không ghi nhận suy giảm", "impaired": "ghi nhận suy giảm", "unknown": "chưa xác định"}
+        nerve_label = {"present": "có ghi nhận", "absent": "không ghi nhận", "unknown": "chưa xác định"}
+        baseline += (f" Recorded peripheral vascular status: {vascular}; neuropathy: {neuropathy}."
+                     if language == "en" else f" Tuần hoàn ngoại biên: {vascular_label[vascular]}; bệnh lý thần kinh ngoại biên: {nerve_label[neuropathy]}.")
         simple = t[scenario]
         if stall and not insufficient and not symptoms:
-            duration = assessment["stagnation"]["elapsed_days"]
+            duration = max(assessment["stagnation"]["elapsed_days"], new_stagnation.get("elapsed_days", 0))
             simple += f" This comparison spans {duration:g} days." if language == "en" else f" Chuỗi so sánh này kéo dài {duration:g} ngày."
         locales[language] = {
             "simple_explanation": simple, "baseline_context": baseline,

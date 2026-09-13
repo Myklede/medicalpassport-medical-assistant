@@ -99,6 +99,6 @@ export function validateFeedback(value: unknown): Feedback {
     if (Number(a.x) < 0 || Number(a.x) > 1 || Number(a.y) < 0 || Number(a.y) > 1 || Number(a.viewport_width) < 1 || Number(a.viewport_height) < 1) throw new PortalError('Vị trí ghim không hợp lệ.');
     annotation = { selector: text(a.selector, 2000, true), quote: text(a.quote, 500), x: Number(a.x), y: Number(a.y), viewport_width: Number(a.viewport_width), viewport_height: Number(a.viewport_height) };
   }
-  if (path && (!path.startsWith('/') || path.startsWith('//') || /[\\\u0000-\u001f]/.test(path))) throw new PortalError('Vị trí góp ý phải thuộc website này.');
+  if (path && (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || Array.from(path).some(character => character.charCodeAt(0) < 32))) throw new PortalError('Vị trí góp ý phải thuộc website này.');
   return { id: safeId(v.id), version: version(v.version), title: text(v.title, 160, true), description: text(v.description, 8000, true), category: choice(v.category, Object.keys(feedbackCategories), 'interface'), priority: choice(v.priority, ['normal', 'high'], 'normal'), status: choice(v.status, Object.keys(feedbackStatuses), 'open'), page_path: path, section: text(v.section, 200), patient_id: safeId(v.patient_id, true), encounter_id: safeId(v.encounter_id, true), resolution: text(v.resolution, 5000), annotation, created_at: '', updated_at: '' };
 }

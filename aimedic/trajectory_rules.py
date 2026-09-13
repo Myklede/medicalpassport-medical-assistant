@@ -14,7 +14,7 @@ else:
     from patient_explanations import VERSION as EXPLANATION_VERSION, SOURCES as PATIENT_SOURCES, build_patient_explanation
 
 TISSUES = ("necrotic", "slough", "granulation")
-VERSION = "pwc-trajectory-cds-v1"
+VERSION = "pwc-trajectory-cds-v2"
 RED_FLAGS = ("fever", "spreading_redness", "purulent_drainage", "increasing_pain")
 EXTRA_CONDITIONS = ("peripheral_arterial_disease", "chronic_kidney_disease", "immunosuppression")
 PARAMETERS = {
@@ -24,6 +24,10 @@ PARAMETERS = {
     "stall_min_intervals": 2, "stall_elapsed_days_gt": 7.0,
     "scab_granulation_le": 15.0, "scab_slough_le": 5.0,
     "max_unclassified_percent": 20.0,
+    "non_healing_elapsed_days_ge": 7.0,
+    "unchanged_tissue_tolerance_pp": 0.5,
+    "unchanged_area_tolerance_percent": 5.0,
+    "fpg_context_gt_mg_dl": 130.0,
 }
 EVIDENCE = {
     "infection_review": {
@@ -73,6 +77,12 @@ def validate_baseline_context(profile):
     for name in EXTRA_CONDITIONS:
         if name in profile and type(profile[name]) is not bool:
             raise ValueError(f"{name} must be a boolean when provided")
+    if profile.get("fpg_mg_dl") is not None:
+        number(profile["fpg_mg_dl"], "fasting plasma glucose", minimum=1, maximum=2000)
+    for key, values in (("peripheral_vascular_status", ("normal", "impaired", "unknown")),
+                        ("neuropathy_status", ("present", "absent", "unknown"))):
+        if key in profile and profile[key] not in values:
+            raise ValueError(f"Invalid {key}")
 
 
 def normalize_visits(visits):
@@ -196,7 +206,11 @@ def assess_trajectory(visits, profile):
     latest, pair = visits[-1], intervals[-1] if intervals else None
     diabetes, high = profile["has_diabetes_type_2"], profile["hba1c_level"] > PARAMETERS["high_hba1c_gt"]
     vulnerability = diabetes or high
-    systemic = vulnerability or profile["hypertension"] or profile["age"] >= PARAMETERS["age_context_ge"] or any(profile.get(k) for k in EXTRA_CONDITIONS)
+    high_fpg = profile.get("fpg_mg_dl") is not None and profile["fpg_mg_dl"] > PARAMETERS["fpg_context_gt_mg_dl"]
+    recorded_vascular = profile.get("peripheral_vascular_status") == "impaired"
+    recorded_neuropathy = profile.get("neuropathy_status") == "present"
+    systemic = (vulnerability or high_fpg or recorded_vascular or recorded_neuropathy or profile["hypertension"]
+                or profile["age"] >= PARAMETERS["age_context_ge"] or any(profile.get(k) for k in EXTRA_CONDITIONS))
     uncertainty_terms = [{"reason": "unvalidated_models_and_rules", "value": .35}]
     if not all("usable_for_demo" in v.get("quality", {}) for v in visits[-2:]):
         uncertainty_terms.append({"reason": "quality_not_assessed", "value": .15})
@@ -237,7 +251,33 @@ def assess_trajectory(visits, profile):
         stalled.insert(0, item)
     duration = sum(item["elapsed_days"] for item in stalled)
     stall = len(stalled) >= PARAMETERS["stall_min_intervals"] and duration > PARAMETERS["stall_elapsed_days_gt"]
-    scab = scab and not stall
+    # The inclusive seven-day workflow alert is deliberately separate from the
+    # legacy area-only rule above. It also works for one seven-day interval and
+    # checks the entire trailing run, rather than just its final pair.
+    unchanged = []
+    for item in reversed(intervals):
+        changes = item["change_percentage_points"]
+        if (not changes or not item["comparison_consistent"]
+                or max(abs(value) for value in changes.values()) > PARAMETERS["unchanged_tissue_tolerance_pp"]):
+            break
+        area_delta = item["area_trend_change_percent"]
+        if area_delta is not None and abs(area_delta) >= PARAMETERS["unchanged_area_tolerance_percent"]:
+            break
+        candidate = [item, *unchanged]
+        if max(abs(sum(part["change_percentage_points"][name] for part in candidate)) for name in TISSUES) > PARAMETERS["unchanged_tissue_tolerance_pp"]:
+            break
+        area_parts = [part for part in candidate if part["area_trend_change_percent"] is not None]
+        if area_parts and len({part["area_trend_unit"] for part in area_parts}) > 1:
+            break
+        if len(area_parts) == len(candidate):
+            cumulative_area_percent = 100 * (math.prod(1 + part["area_trend_change_percent"] / 100 for part in area_parts) - 1)
+            if abs(cumulative_area_percent) >= PARAMETERS["unchanged_area_tolerance_percent"]:
+                break
+        unchanged = candidate
+    unchanged_duration = sum(item["elapsed_days"] for item in unchanged)
+    persistent_unchanged = bool(evaluable and unchanged_duration >= PARAMETERS["non_healing_elapsed_days_ge"])
+    high_risk_non_healing = bool(vulnerability and persistent_unchanged)
+    scab = scab and not (stall or persistent_unchanged)
     flags, fired = [], []
     contributions = [{"term": "research_intercept", "value": .10}]
     if vulnerability:
@@ -246,7 +286,10 @@ def assess_trajectory(visits, profile):
         contributions.append({"term": "diabetes_with_hba1c_gt_8", "value": .10})
     for enabled, term, value in ((profile["hypertension"], "hypertension_context", .03),
                                   (profile["age"] >= 65, "age_context", .03),
-                                  (any(profile.get(k) for k in EXTRA_CONDITIONS), "additional_recorded_comorbidity", .08)):
+                                  (any(profile.get(k) for k in EXTRA_CONDITIONS), "additional_recorded_comorbidity", .08),
+                                  (high_fpg, "recorded_fasting_glucose_context", .03),
+                                  (recorded_vascular, "recorded_impaired_peripheral_circulation", .05),
+                                  (recorded_neuropathy, "recorded_neuropathy_context", .03)):
         if enabled:
             contributions.append({"term": term, "value": value})
 
@@ -281,6 +324,15 @@ def assess_trajectory(visits, profile):
         fired.append(event)
         flags.append(event)
         contributions.append({"term": "persistent_area_stagnation", "value": .20 if vulnerability else .12})
+    if high_risk_non_healing:
+        event = {"rule_id": "high_risk_non_healing_trajectory", "kind": "trajectory_review_flag", "scope": "latest",
+                 "from_day": unchanged[0]["from_day"], "to_day": latest["day"], "elapsed_days": unchanged_duration,
+                 "review_level": "high_risk_non_healing_review", "diabetes_recorded": diabetes,
+                 "recorded_hba1c": profile["hba1c_level"], "clinical_validation": False,
+                 "evidence_ids": ["perfusion_review", "diabetes_circulation", "diabetes_immunity"],
+                 "message": "Estimated tissue composition remains nearly unchanged for at least seven days alongside recorded diabetes or HbA1c above 8%. Prioritize clinician review of delayed healing, glucose control and recorded vascular/nerve findings; this research alert is not a diagnosis."}
+        fired.append(event)
+        flags.append(event)
     if pair and pair["area_trend_change_percent"] is not None and pair["area_trend_change_percent"] > 0:
         contributions.append({"term": "area_expansion", "value": min(.20, pair["area_trend_change_percent"] / 100)})
         event = {"rule_id": "area_expansion", "kind": "trajectory_review_flag", "scope": "latest",
@@ -311,6 +363,12 @@ def assess_trajectory(visits, profile):
         summary = "Latest trajectory withheld: two adjacent, usable, consistent visits are required."
     context = (f"Recorded baseline: age {profile['age']}, type 2 diabetes {'present' if diabetes else 'not recorded'}, "
                f"HbA1c {profile['hba1c_level']:.1f}%, hypertension {'present' if profile['hypertension'] else 'not recorded'}. ")
+    if profile.get("fpg_mg_dl") is not None:
+        context += f"Recorded fasting plasma glucose: {profile['fpg_mg_dl']:g} mg/dL; this historical measurement is not a current glucose reading. "
+    if "peripheral_vascular_status" in profile:
+        context += f"Recorded peripheral vascular status: {profile['peripheral_vascular_status']}. "
+    if "neuropathy_status" in profile:
+        context += f"Recorded neuropathy status: {profile['neuropathy_status']}. "
     if vulnerability:
         context += "Diabetes and/or HbA1c >8% increases the illustrative review sensitivity for tissue changes and stalled area reduction. "
     if scab:
@@ -328,6 +386,8 @@ def assess_trajectory(visits, profile):
         recommendations.append({"text": "Review flagged intervals and examine for local/systemic signs of infection; assess perfusion when clinically indicated. Images cannot determine organism type or establish microvascular compromise.", "evidence_ids": ["infection_review", "perfusion_review"]})
     if stall:
         recommendations.append({"text": "Limited area reduction persists beyond seven days in this illustrative rule. Arrange clinical reassessment of measurement, wound cause and current care; do not wait for this timer if clinical concerns arise.", "evidence_ids": ["perfusion_review"]})
+    if high_risk_non_healing:
+        recommendations.append({"text": "Prioritize review of this at-least-seven-day unchanged trajectory with the recorded diabetes/HbA1c, fasting glucose, circulation and nerve findings. Review the existing wound-care plan; do not wait seven days when symptoms or a nonhealing diabetic foot wound already warrant care.", "evidence_ids": ["diabetes_foot_care", "perfusion_review"]})
     if not evaluable:
         recommendations.append({"text": "Verify or reacquire the latest measurements; risk scoring is withheld, not set to zero.", "evidence_ids": []})
     considerations = []
@@ -337,6 +397,15 @@ def assess_trajectory(visits, profile):
             {"topic": "microvascular_compromise", "status": "requires_perfusion_assessment_not_inferred", "probability": None, "evidence_ids": ["perfusion_review"]},
             {"topic": "secondary_anaerobic_infection", "status": "cannot_determine_from_images_or_baseline", "probability": None, "evidence_ids": ["infection_review"]},
         ]
+    latest_deterioration = any(flag.get("scope") == "latest" and flag["rule_id"] in
+                              ("baseline_tissue_increase", "area_expansion", "reported_clinical_warning_signs") for flag in flags)
+    improving = bool(evaluable and pair["area_trend_change_percent"] is not None
+                     and pair["area_trend_change_percent"] <= -PARAMETERS["unchanged_area_tolerance_percent"]
+                     and pair["change_percentage_points"]["granulation"] > 0
+                     and pair["change_percentage_points"]["necrotic"] <= 0
+                     and pair["change_percentage_points"]["slough"] <= 0)
+    healing_status = ("insufficient_data" if not evaluable else "deteriorating" if latest_deterioration
+                      else "stagnant" if stall or persistent_unchanged else "improving" if improving else "insufficient_data")
     assessment = {"engine_version": VERSION, "score_status": "illustrative_not_calibrated" if evaluable else "withheld_insufficient_data",
             "Deterioration_Risk_Score": score, "Uncertainty_Score": round(uncertainty, 6),
             "score_is_probability": False, "prediction_horizon_days": None, "clinical_validation": False,
@@ -345,6 +414,21 @@ def assess_trajectory(visits, profile):
             "scab_context": {"compatible_with_reported_scab": scab, "confirmed_normal_healing": False,
                              "image_only_scab_detection": False},
             "stagnation": {"flagged": stall, "trailing_intervals": len(stalled), "elapsed_days": duration},
+            "non_healing_trajectory": {"flagged": high_risk_non_healing, "persistent_unchanged": persistent_unchanged,
+                "elapsed_days": unchanged_duration, "from_day": unchanged[0]["from_day"] if unchanged else None,
+                "to_day": latest["day"], "baseline_vulnerability": vulnerability,
+                "area_unchanged": True if unchanged and all(item["area_trend_change_percent"] is not None for item in unchanged) else None,
+                "tissue_unchanged": bool(unchanged), "thresholds_are_illustrative": True},
+            "healing_status": healing_status,
+            "latest_analysis_status": latest.get("analysis_status", "completed"),
+            "single_visit_analysis": {"available": bool(len(visits) == 1 and usable(latest)),
+                "baseline_fused": bool(usable(latest)), "baseline_evaluated": True,
+                "trajectory_available": bool(pair and pair["tissue_comparison_available"])},
+            "baseline_risk_context": {"has_diabetes_type_2": diabetes, "hba1c_level": profile["hba1c_level"],
+                "fpg_mg_dl": profile.get("fpg_mg_dl"),
+                "peripheral_vascular_status": profile.get("peripheral_vascular_status", "unknown"),
+                "neuropathy_status": profile.get("neuropathy_status", "unknown"),
+                "source": "locked_recorded_patient_profile", "individual_diagnosis_inferred": False},
             "summary": summary, "multimodal_context": context, "recommendations": recommendations,
             "rule_provenance": {"version": VERSION, "parameters": deepcopy(PARAMETERS), "thresholds_are_illustrative": True,
                                 "score_formula": "clip(sum(score_contributions), 0, 1); null when not evaluable",

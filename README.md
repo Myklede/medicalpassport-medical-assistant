@@ -1,12 +1,21 @@
 # MediPass — Medical Assistant demo
 
-Wound backend update (2026-09-11): masked tissue counts, persistent local image
-sessions, multi-day baseline-aware trajectory rules, risk/uncertainty and evidence
-provenance are implemented. Bilingual patient explanations now explain the mechanism,
-possible consequences and safe next steps; **77 Python tests passed.** See
-[trajectory API, runnable example and handoff](docs/WOUND_TRAJECTORY_ENGINE.md).
-The website uploader supports multi-day wound sessions and renders chronological
-changes in the research dashboard. Scores are uncalibrated research outputs.
+Wound workflow update (2026-09-12): `/wounds` now uses persistent SQLite image
+sessions for one or many captures, a thumbnail timeline, visit/session deletion,
+historical Developer Mode panels and Vietnamese/English four-step explanations.
+Image measurements are combined with each session's fixed diabetes/HbA1c/FPG,
+vascular and neuropathy baseline; five synthetic profiles include 20 full clinical
+encounters. Desktop and same-Wi-Fi phones use the web server's same-origin proxy.
+The existing **77 Python tests passed**. The three original checkpoints from
+`c269a89` are materialized through Git LFS and their SHA-256 digests are verified.
+`scripts/verify-wound-models.py` passed actual single/two-visit inference, pending
+retry, historical visuals and isolated SQLite persistence using those models.
+On another clone, run `git lfs install --local`, `git lfs pull` and verify
+`aimedic/checkpoints.sha256`. Missing models still preserve pending uploads without
+fabricated measurements. Scores are uncalibrated research outputs; these checks
+use synthetic fixtures, not clinical photographs. See
+[startup and integration](docs/WOUND_AI_INTEGRATION.md) and
+[trajectory contracts](docs/WOUND_TRAJECTORY_ENGINE.md).
 
 > Bắt đầu cho AI/cộng tác viên mới: đọc [`AGENTS.md`](AGENTS.md), [đối chiếu tính năng và Supabase](docs/PORTAL_AUDIT.md), rồi [tầm nhìn/whitepaper do chủ dự án cung cấp](docs/PROJECT_VISION_WHITEPAPER_VI.md).
 
@@ -23,6 +32,7 @@ Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy c
 
 - Trang sảnh tối giản `/`: chọn cổng bệnh viện, góc nhìn bệnh nhân, khung điện thoại, dữ liệu hoặc yêu cầu chỉnh sửa trước khi vào hồ sơ.
 - Cổng bệnh viện `/editor`: 5 bệnh nhân giả lập, thêm/sửa hồ sơ chung và từng lần khám đầy đủ.
+- `/records` là module **Hồ sơ trước đây**, có nút **Cổng bệnh viện** luôn hiện trên desktop/mobile và logo quay về sảnh. Khi mở từ portal, liên kết quay về giữ `?patient=`; tham số này chỉ giữ ngữ cảnh điều hướng, không thay đổi danh tính hoặc dữ liệu của module hồ sơ cũ.
 - Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích bệnh và xét nghiệm bằng lời dễ hiểu, gồm ảnh hưởng, mục tiêu theo dõi, ăn uống/sinh hoạt và dấu hiệu cần chú ý.
 - Từ hồ sơ đang chọn ở `/editor` hoặc `/patient`, nút **Xuất IPS** tạo PDF song ngữ dễ đọc và FHIR R4 document Bundle theo HL7 International Patient Summary 2.0.1. PDF dùng trang đầu ưu tiên nhận diện người bệnh, dị ứng/bệnh/thuốc, sinh hiệu và kế hoạch; các trang sau trình bày chi tiết lâm sàng, provenance và lưu ý sử dụng an toàn. PDF đính kèm chính JSON Bundle. Dữ liệu thiếu dùng Data Absent Reason/`unavailable`, không biến mảng rỗng thành “không có bệnh, dị ứng hay thuốc”; bản xuất luôn ghi rõ sơ bộ và chưa được clinician ký/xác nhận.
 - Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
@@ -246,6 +256,20 @@ pnpm run demo
 
 Mở `http://localhost:3001/editor`. Có thể dùng Chrome, Edge, Safari hoặc trình duyệt điện thoại; server không phụ thuộc trình duyệt. Xem hướng dẫn đầy đủ tại [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
 
+Để chạy AI Wound Lab trên macOS, chuẩn bị weights gốc một lần ở thư mục dự án:
+
+```bash
+git lfs install --local
+git lfs pull
+shasum -a 256 -c aimedic/checkpoints.sha256
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+```
+
+Giữ `pnpm run demo` chạy và mở Terminal thứ hai với
+`outputs/wound-venv/bin/python -B aimedic/main.py`, rồi vào
+`http://localhost:3001/wounds`. Script xác minh dùng SQLite tạm và ảnh giả lập;
+không đọc hoặc sửa database người dùng, không huấn luyện lại hay thay đổi weights.
+
 Kiểm tra build và schema:
 
 ```bash
@@ -266,22 +290,28 @@ pnpm run lint
 
 ## Wound Lab và Motion Lab hiện tại
 
-- `/wounds` và `/wound-analyzer` mở chung giao diện AI: **Patient Mode** khóa một hồ sơ mẫu và chỉ hiện tải ảnh/tóm tắt dễ đọc; **Developer Mode** cho chọn 5 hồ sơ giả lập, xem dữ liệu nền và lưới 4 bước (ảnh gốc, vùng U-Net, lớp phủ mô, kết luận kết hợp hồ sơ). Bật Developer Mode → **Thử ảnh & hồ sơ mẫu** → **Phân tích ảnh** để gọi FastAPI thật tại `127.0.0.1:8000`.
+- `/wounds` và `/wound-analyzer` dùng `WoundVisitWorkflow`: lưu một hoặc nhiều ảnh vào đợt theo dõi SQLite, mở lại đợt từ danh sách máy chủ, thêm ảnh ở ngày sau và xóa ảnh/đợt qua xác nhận. Một ảnh đã được ghép hồ sơ nền để phân tích khi model sẵn sàng; từ hai lần đo có thể so sánh thì hiện thay đổi diện tích/mô và trạng thái nghiên cứu. Mỗi đợt tối đa 1.000 ảnh, ngày tương đối được tính từ thời điểm chụp. Thumbnail và kết quả từng lần đều mở lại được.
+- **Patient Mode** khóa một hồ sơ mẫu, hiện giải thích bốn bước VI/EN cùng bệnh nền; **Developer Mode** chọn 5 hồ sơ giả lập và mở lưới ảnh gốc/U-Net/lớp phủ mô/Clinical Brief cho lần chụp đang chọn. 20 lần khám giả lập được giữ đầy đủ trong accordion bốn nhóm. FPG, trạng thái tưới máu và cảm giác ngoại vi bổ sung ngữ cảnh của baseline cố định, không thay đổi kiến trúc model.
+- Trình duyệt dùng `/api/wound-sessions`; web server chuyển tiếp tới Python `127.0.0.1:8000`. Điện thoại cùng Wi-Fi mở địa chỉ LAN của web server ở cổng 3001 và dùng cùng SQLite. Ba checkpoint gốc đã được tải qua Git LFS từ `c269a89`, kiểm tra SHA-256 và chạy suy luận ảnh thành công trong QA API riêng. Nếu weights bị thiếu hoặc không tương thích ở lần chạy khác, ảnh vẫn được lưu với trạng thái chờ và các phép đo `null`; nút phân tích lại dùng chính ảnh đã lưu.
 - Phân vùng dùng checkpoint U-Net/ResNet34 được cung cấp ở `outputs/wound_unet_fusd.pt` (CPU, ImageNet, 256×256, sigmoid >0.35). Mô hình mô giả lập riêng chỉ tô màu bên trong mask; kết quả trả về đúng kích thước ảnh gốc. Các hình này không phải giải thích đặc trưng hay bước trung gian của mô hình late fusion. Thiếu checkpoint phụ không làm hỏng Clinical Brief; xem `aimedic/README.md` để phân biệt hai checkpoint.
 - `/wounds/history` giữ luồng chụp/chọn ảnh cũ, xóa EXIF bằng cách tái mã hóa trong trình duyệt, lưu ảnh riêng tư vào R2 và nhóm các lần đánh giá theo `wound_case`. Liên kết **Lịch sử & ghi nhận** nằm ngay trên màn hình AI.
-- Safety review trong luồng lưu lịch sử chỉ dùng triệu chứng khai báo và bệnh lý/thuốc đã lưu. Kết quả AI riêng dùng mô hình học ảnh giả lập, chưa được xác nhận lâm sàng và không tự lưu vào hồ sơ.
+- Safety review trong luồng lịch sử R2/D1 chỉ dùng triệu chứng khai báo và bệnh lý/thuốc đã lưu. Ảnh, phép đo và dữ liệu phiên AI được lưu riêng trong SQLite cục bộ; không tự ghi thành hồ sơ lâm sàng đã xác nhận hay Supabase.
 - Ba bảng D1 mới là `wound_cases`, `wound_assessments` và `ai_inferences`. Bảng `ai_inferences` được dành sẵn cho model thật và mặc định bắt buộc human review.
 - `/therapy` là scaffold camera chạy tại thiết bị; video không được ghi hoặc upload. Rep count, range of motion và form deviation để trống cho tới khi pose model thật được nối.
-- Code huấn luyện/preprocessing nằm trong `aimedic/`, weights và bộ dữ liệu tạo ra nằm trong `outputs/` bị Git bỏ qua. Trình duyệt gọi inference, không huấn luyện model. Contract lưu trữ cũ trong `lib/vision/` vẫn tách khỏi Clinical Brief của API Python.
+- Code huấn luyện/preprocessing nằm trong `aimedic/`; ba checkpoint gốc trong `outputs/` được theo dõi bằng Git LFS. Bộ dữ liệu sinh ra, môi trường Python và SQLite người dùng vẫn bị Git bỏ qua. Trình duyệt gọi inference, không huấn luyện model. Contract lưu trữ cũ trong `lib/vision/` vẫn tách khỏi Clinical Brief của API Python.
 
 Chi tiết kiến trúc, nguyên tắc an toàn và workflow cộng tác GitHub nằm tại [`docs/WOUND_RESEARCH_ARCHITECTURE.md`](docs/WOUND_RESEARCH_ARCHITECTURE.md).
 
-Bản nghiên cứu Python chạy riêng trong [`aimedic/`](aimedic/README.md) hiện đã có đủ
-bốn script: tạo 1.000 bệnh nhân giả lập, mô hình ảnh + hồ sơ nền, huấn luyện PyTorch,
-và theo dõi thay đổi mô theo thời gian để xuất JSON cho người nghiên cứu xem lại.
-Đã chạy huấn luyện, đọc checkpoint và kiểm thử; đây là kết quả trên dữ liệu giả lập,
-chưa phải phân tích ảnh lâm sàng. Wound Lab hiện gọi mô hình qua API Python cục bộ;
-một ảnh chỉ có ước tính hiện tại, không tạo lịch sử hay kết luận lành/xấu đi.
+Bản nghiên cứu Python chạy riêng trong [`aimedic/`](aimedic/README.md) có các script
+tạo dữ liệu giả lập, mô hình ảnh + hồ sơ nền, huấn luyện, tracker và API lưu phiên.
+Các kết quả huấn luyện trước đây vẫn là lịch sử nghiên cứu trên dữ liệu giả lập.
+Ngày 12/09/2026, ba weights gốc đã được xác minh trong checkout macOS hiện tại;
+script kiểm tra API đã chạy ảnh thật qua chính các model đó với fixture giả lập,
+gồm ảnh đơn, hai lần chụp và phân tích lại ảnh từng lưu chờ. Đây là bằng chứng
+tích hợp phần mềm, không phải xác nhận lâm sàng hoặc QA trình duyệt toàn website.
+Một ảnh được lưu và phân tích cùng baseline khi model sẵn sàng; chỉ chuỗi phép đo
+có thể so sánh mới có nhận xét về tốc độ thay đổi.
 
 **Chạy tính năng mới:** xem [`docs/WOUND_AI_INTEGRATION.md`](docs/WOUND_AI_INTEGRATION.md).
-Cần giữ cả frontend cổng **3001** và Python cổng **8000** chạy trên cùng máy.
+Cần giữ frontend cổng **3001** và Python cổng **8000** chạy trên cùng máy chủ local;
+trình duyệt có thể ở máy đó hoặc điện thoại cùng mạng nội bộ.

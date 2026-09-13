@@ -3,6 +3,7 @@
 import {
   Activity,
   AlertCircle,
+  ArrowLeft,
   Bell,
   Camera,
   Check,
@@ -34,6 +35,7 @@ import {
   X,
 } from 'lucide-react';
 import Link from '@/components/app-link';
+import MediPassBrand from '@/components/medipass-brand';
 import {
   forwardRef,
   useCallback,
@@ -119,7 +121,7 @@ const typeMeta = {
     label: 'Allergy',
     plural: 'Allergies',
     icon: TriangleAlert,
-    iconClass: 'bg-rose-50 text-rose-700',
+    iconClass: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-200',
     dotClass: 'bg-rose-600',
     codeSystem: 'SNOMED CT',
   },
@@ -127,7 +129,7 @@ const typeMeta = {
     label: 'Condition',
     plural: 'Conditions',
     icon: FileHeart,
-    iconClass: 'bg-amber-50 text-amber-700',
+    iconClass: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-200',
     dotClass: 'bg-amber-500',
     codeSystem: 'ICD-10-CM',
   },
@@ -135,7 +137,7 @@ const typeMeta = {
     label: 'Medication',
     plural: 'Medications',
     icon: Pill,
-    iconClass: 'bg-sky-50 text-sky-700',
+    iconClass: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-200',
     dotClass: 'bg-sky-600',
     codeSystem: 'RxNorm',
   },
@@ -143,7 +145,7 @@ const typeMeta = {
     label: 'Lab result',
     plural: 'Lab results',
     icon: TestTube2,
-    iconClass: 'bg-violet-50 text-violet-700',
+    iconClass: 'bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-200',
     dotClass: 'bg-violet-600',
     codeSystem: 'LOINC',
   },
@@ -151,8 +153,8 @@ const typeMeta = {
     label: 'Visit',
     plural: 'Encounters',
     icon: ClipboardPlus,
-    iconClass: 'bg-teal-50 text-teal-700',
-    dotClass: 'bg-teal-600',
+    iconClass: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200',
+    dotClass: 'bg-blue-600',
     codeSystem: '',
   },
 } satisfies Record<RecordType, {
@@ -165,10 +167,10 @@ const typeMeta = {
 }>;
 
 const inputClass =
-  'h-10 rounded-xl border-slate-200 bg-white px-3 focus-visible:border-teal-600 focus-visible:ring-teal-600/15';
+  'h-10 rounded-xl border-border bg-card px-3 focus-visible:border-blue-600 focus-visible:ring-blue-600/15';
 const selectClass =
-  'h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15';
-const labelClass = 'mb-1.5 block text-xs font-semibold text-slate-700';
+  'h-10 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none transition focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15';
+const labelClass = 'mb-1.5 block text-xs font-semibold text-foreground';
 
 function cx(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(' ');
@@ -186,12 +188,12 @@ function Button({
   return (
     <button
       className={cx(
-        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition outline-none focus-visible:ring-3 focus-visible:ring-teal-600/20 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
-        size === 'sm' ? 'h-8 px-2.5 text-xs' : size === 'lg' ? 'h-11 px-4' : 'h-9 px-3',
-        variant === 'outline' && 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
-        variant === 'ghost' && 'text-slate-600 hover:bg-slate-100',
-        variant === 'destructive' && 'bg-rose-50 text-rose-700 hover:bg-rose-100',
-        variant === 'default' && 'bg-slate-950 text-white hover:bg-slate-800',
+        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition outline-none focus-visible:ring-3 focus-visible:ring-blue-600/20 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
+        size === 'sm' ? 'min-h-9 px-2.5 text-xs' : size === 'lg' ? 'min-h-11 px-4' : 'min-h-11 px-3',
+        variant === 'outline' && 'border border-border bg-card text-foreground hover:bg-muted',
+        variant === 'ghost' && 'text-muted-foreground hover:bg-muted',
+        variant === 'destructive' && 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-200 hover:bg-rose-100',
+        variant === 'default' && 'bg-primary text-primary-foreground hover:bg-primary/90',
         className,
       )}
       {...props}
@@ -234,7 +236,7 @@ function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaEl
   return (
     <textarea
       className={cx(
-        'w-full border bg-transparent text-base outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-3 focus:ring-teal-600/15 md:text-sm',
+        'w-full border bg-transparent text-base outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15 md:text-sm',
         className,
       )}
       {...props}
@@ -279,7 +281,7 @@ function DialogContent({
         <dialog
           open
           className={cx(
-            'pointer-events-auto relative m-0 w-full max-w-sm rounded-xl bg-white text-sm text-slate-900 shadow-2xl ring-1 ring-slate-950/10',
+            'pointer-events-auto relative m-0 w-full max-w-sm rounded-xl bg-card text-sm text-foreground shadow-2xl ring-1 ring-slate-950/10',
             className,
           )}
         >
@@ -288,7 +290,7 @@ function DialogContent({
             <button
               type="button"
               onClick={onClose}
-              className="absolute right-3 top-3 grid size-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-teal-600/20"
+              className="absolute right-3 top-3 grid size-9 place-items-center rounded-lg text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600/20"
               aria-label="Close dialog"
             >
               <X className="size-4" />
@@ -309,14 +311,14 @@ function DialogTitle({ className, children, ...props }: HTMLAttributes<HTMLHeadi
 }
 
 function DialogDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cx('text-sm text-slate-500', className)} {...props} />;
+  return <p className={cx('text-sm text-muted-foreground', className)} {...props} />;
 }
 
 function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cx(
-        'flex flex-col-reverse gap-2 rounded-b-xl border-t border-slate-100 bg-slate-50 p-4 sm:flex-row sm:justify-end',
+        'flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-muted p-4 sm:flex-row sm:justify-end',
         className,
       )}
       {...props}
@@ -389,7 +391,13 @@ function titleForView(view: ViewMode, filter: RecordType | 'all') {
   return filter === 'all' ? 'All medical records' : typeMeta[filter].plural;
 }
 
-export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }) {
+export function MedicalDashboard({ portal = 'patient', returnPatientId }: {
+  portal?: PortalMode;
+  returnPatientId?: string;
+}) {
+  const portalQuery = returnPatientId ? `?patient=${encodeURIComponent(returnPatientId)}` : '';
+  const hospitalHref = `/editor${portalQuery}`;
+  const patientHref = `/patient${portalQuery}`;
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -662,36 +670,27 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1480px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-card/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => setMobileNav((current) => !current)}
-            className="inline-flex size-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 lg:hidden"
+            className="inline-flex size-10 items-center justify-center rounded-xl border border-border text-muted-foreground lg:hidden"
             aria-label={mobileNav ? 'Close navigation' : 'Open navigation'}
             aria-expanded={mobileNav}
           >
             {mobileNav ? <X className="size-4" /> : <Menu className="size-4" />}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setView('overview');
-              setFilter('all');
-            }}
-            className="flex items-center gap-2.5"
-            aria-label="Go to MediPass overview"
+          <Link
+            href="/"
+            className="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-blue-600"
+            aria-label="Về sảnh MediPass"
           >
-            <span className="grid size-9 place-items-center rounded-xl bg-teal-700 text-white shadow-sm shadow-teal-900/15">
-              <HeartPulse className="size-5" strokeWidth={2.3} />
-            </span>
-            <span className="font-heading text-[17px] font-semibold tracking-[-0.025em] text-slate-950">
-              MediPass
-            </span>
-          </button>
+            <MediPassBrand compact />
+          </Link>
           <label htmlFor="desktop-record-search" className="relative ml-auto hidden w-full max-w-sm sm:block">
             <span className="sr-only">Search health history</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="desktop-record-search"
               ref={searchRef}
@@ -701,64 +700,50 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                 if (view === 'insurance') setView('records');
               }}
               placeholder="Search your health history"
-              className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-9 pr-14"
+              className="h-10 rounded-xl border-border bg-muted pl-9 pr-14"
             />
-            <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+            <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
               ⌘ K
             </kbd>
           </label>
-          <div className="hidden items-center rounded-xl border border-slate-200 bg-slate-50 p-1 md:flex" aria-label="Portal switcher">
-            <Link
-              href="/patient"
-              className={cx(
-                'rounded-lg px-3 py-2 text-xs font-semibold transition',
-                portal === 'patient' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500 hover:text-slate-900',
-              )}
-            >
-              Patient view
-            </Link>
-            <Link
-              href="/editor"
-              className={cx(
-                'rounded-lg px-3 py-2 text-xs font-semibold transition',
-                portal === 'editor' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900',
-              )}
-            >
-              Care team
-            </Link>
-          </div>
           <button
             type="button"
             onClick={() => setToast("You're all caught up — no demo notifications.")}
             aria-label="Notifications"
-            className="ml-auto grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-600 sm:ml-0"
+            className="ml-auto grid size-10 place-items-center rounded-xl border border-border text-muted-foreground sm:ml-0"
           >
             <Bell className="size-4" />
           </button>
-          <div className="hidden items-center gap-2 border-l border-slate-200 pl-4 sm:flex">
-            <span className="grid size-8 place-items-center rounded-full bg-teal-50 text-teal-800">
+          <div className="hidden items-center gap-2 border-l border-border pl-4 sm:flex">
+            <span className="grid size-8 place-items-center rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200">
               <CircleUserRound className="size-5" />
             </span>
             <div className="max-w-36 leading-tight">
-              <p className="truncate text-xs font-semibold text-slate-800">
+              <p className="truncate text-xs font-semibold text-foreground">
                 {data?.patient.display_name ?? 'Demo patient'}
               </p>
-              <p className="text-[10px] text-slate-500">
-                {portal === 'editor' ? 'Care team editor' : 'Patient · read only'}
+              <p className="text-[10px] text-muted-foreground">
+                {portal === 'editor' ? 'Hồ sơ cũ · chỉnh sửa' : 'Hồ sơ cũ · chỉ đọc'}
               </p>
             </div>
           </div>
         </div>
+        <nav
+          aria-label="Điều hướng hồ sơ trước đây"
+          className="mx-auto flex max-w-[1440px] items-center gap-3 border-t border-border/60 px-4 py-2 text-xs sm:px-6 sm:text-sm lg:px-8"
+        >
+          <Link
+            href={hospitalHref}
+            data-testid="records-hospital-link"
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-primary px-3 font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />Cổng bệnh viện
+          </Link>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span aria-current="page" className="min-w-0 font-medium text-foreground">Hồ sơ trước đây</span>
+        </nav>
         {mobileNav && (
-          <nav className="border-t border-slate-100 bg-white p-3 shadow-lg lg:hidden" aria-label="Mobile navigation">
-            <div className="mb-2 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-1 md:hidden">
-              <Link href="/patient" className={cx('rounded-lg px-3 py-2 text-center text-xs font-semibold', portal === 'patient' ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-500')}>
-                Patient view
-              </Link>
-              <Link href="/editor" className={cx('rounded-lg px-3 py-2 text-center text-xs font-semibold', portal === 'editor' ? 'bg-slate-950 text-white' : 'text-slate-500')}>
-                Care team
-              </Link>
-            </div>
+          <nav className="border-t border-border bg-card p-3 shadow-lg lg:hidden" aria-label="Mobile navigation">
             <div className="grid gap-1 sm:grid-cols-2">
               {navItems.map(({ label, icon: Icon, active, action, badge }) => (
                 <button
@@ -766,12 +751,12 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                   type="button"
                   onClick={action}
                   className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium ${
-                    active ? 'bg-teal-50 text-teal-900' : 'text-slate-600'
+                    active ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200' : 'text-muted-foreground'
                   }`}
                 >
                   <Icon className="size-[18px]" />
                   {label}
-                  {badge && <span className="ml-auto text-[10px] text-slate-400">{badge}</span>}
+                  {badge && <span className="ml-auto text-[10px] text-muted-foreground">{badge}</span>}
                 </button>
               ))}
             </div>
@@ -779,8 +764,8 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
         )}
       </header>
 
-      <div className="mx-auto grid max-w-[1480px] lg:grid-cols-[236px_minmax(0,1fr)]">
-        <aside className="hidden min-h-[calc(100vh-64px)] border-r border-slate-200/80 bg-white px-4 py-6 lg:flex lg:flex-col">
+      <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[236px_minmax(0,1fr)]">
+        <aside className="hidden min-h-[calc(100vh-125px)] border-r border-border/80 bg-card px-4 py-6 lg:flex lg:flex-col">
           <nav aria-label="Primary navigation" className="space-y-1">
             {navItems.map(({ label, icon: Icon, active, action, badge }) => (
               <button
@@ -789,32 +774,32 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                 onClick={action}
                 className={`flex w-full min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-teal-50 text-teal-900'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <Icon className="size-[18px]" />
                 {label}
                 {badge && (
-                  <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+                  <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                     {badge}
                   </span>
                 )}
               </button>
             ))}
           </nav>
-          <div className="mt-auto rounded-2xl border border-teal-100 bg-teal-50/70 p-4">
-            <div className="mb-3 grid size-8 place-items-center rounded-lg bg-white text-teal-700 shadow-sm">
+          <div className="mt-auto rounded-2xl border border-blue-100 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/40 p-4">
+            <div className="mb-3 grid size-8 place-items-center rounded-lg bg-card text-blue-700 dark:text-blue-200 shadow-sm">
               <Sparkles className="size-4" />
             </div>
-            <p className="text-sm font-semibold text-slate-900">Your Medical Passport</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">
+            <p className="text-sm font-semibold text-foreground">Your Medical Passport</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
               A concise emergency summary you control.
             </p>
             <Button
               type="button"
               onClick={() => setPassportOpen(true)}
-              className="mt-3 h-9 w-full bg-teal-700 hover:bg-teal-800"
+              className="mt-3 h-9 w-full bg-primary hover:bg-primary/90"
               size="sm"
             >
               Preview summary
@@ -822,13 +807,13 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
           </div>
         </aside>
 
-        <section className="min-w-0 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+        <section className="min-w-0 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
           <div className="mx-auto max-w-6xl">
-            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950">
-              <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-700" />
+            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-amber-950 dark:text-amber-200">
+              <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-200" />
               <div className="text-xs leading-5">
                 <p className="font-semibold">Demo environment — fictional data only.</p>
-                <p className="text-amber-900/75">
+                <p className="text-amber-900/75 dark:text-amber-200">
                   This prototype does not provide medical advice, diagnosis, or emergency care. In a U.S. emergency, call 911.
                 </p>
               </div>
@@ -836,37 +821,40 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
 
             <div className={cx(
               'mb-5 flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between',
-              portal === 'editor' ? 'border-sky-200 bg-sky-50' : 'border-teal-200 bg-teal-50',
+              portal === 'editor' ? 'border-sky-200 dark:border-sky-900 bg-sky-50 dark:bg-sky-950/40' : 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40',
             )}>
               <div>
-                <p className={cx('text-xs font-bold uppercase tracking-[0.12em]', portal === 'editor' ? 'text-sky-800' : 'text-teal-800')}>
-                  {portal === 'editor' ? 'Care team editor portal' : 'Patient portal · read only'}
+                <p className={cx('text-xs font-bold uppercase tracking-[0.12em]', portal === 'editor' ? 'text-sky-800 dark:text-sky-200' : 'text-blue-800 dark:text-blue-200')}>
+                  Hồ sơ trước đây · module riêng
                 </p>
-                <p className="mt-1 text-xs leading-5 text-slate-600">
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Dữ liệu tại đây thuộc module hồ sơ cũ, không phải hồ sơ bệnh nhân đang chọn ở cổng bệnh viện.
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {portal === 'editor'
                     ? canEdit
-                      ? 'Authorized staff can add, update, and remove records. Changes are written by the server and appear in the patient portal.'
+                      ? 'Bạn có thể thêm, sửa và xóa hồ sơ cũ theo quyền truy cập hiện tại.'
                       : 'Your account is not authorized to change this patient record.'
                     : 'This view can search, open, print, and download saved information, but it cannot change the medical record.'}
                 </p>
               </div>
               <Link
-                href={portal === 'editor' ? '/patient' : '/editor'}
-                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                href={patientHref}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted"
               >
-                {portal === 'editor' ? 'Preview patient view' : 'Open care team portal'}
+                Góc nhìn bệnh nhân
               </Link>
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <Badge className="mb-3 border-teal-200 bg-teal-50 text-teal-800" variant="outline">
+                <Badge className="mb-3 border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200" variant="outline">
                   <Cloud className="size-3" /> DATABASE CONNECTED
                 </Badge>
-                <h1 className="font-heading text-2xl font-semibold tracking-[-0.035em] text-slate-950 sm:text-3xl">
+                <h1 className="font-heading text-2xl font-semibold tracking-[-0.035em] text-foreground sm:text-3xl">
                   {titleForView(view, filter)}
                 </h1>
-                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">
+                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
                   {view === 'overview'
                     ? 'Your portable health story, organized for the next care team that needs it.'
                     : view === 'insurance'
@@ -878,7 +866,7 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                 <Button
                   type="button"
                   onClick={() => openCreate(filter === 'all' ? 'condition' : filter)}
-                  className="h-11 gap-2 self-start bg-teal-700 px-4 hover:bg-teal-800 sm:self-auto"
+                  className="h-11 gap-2 self-start bg-primary px-4 hover:bg-primary/90 sm:self-auto"
                 >
                   <Plus className="size-4" />
                   Add health record
@@ -887,17 +875,17 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
             </div>
 
             {error ? (
-              <div className="mt-7 rounded-2xl border border-rose-200 bg-white p-8 text-center">
+              <div className="mt-7 rounded-2xl border border-rose-200 dark:border-rose-900 bg-card p-8 text-center">
                 <AlertCircle className="mx-auto size-8 text-rose-600" />
-                <h2 className="mt-3 font-semibold text-slate-900">We could not load the database</h2>
-                <p className="mt-1 text-sm text-slate-500">{error}</p>
+                <h2 className="mt-3 font-semibold text-foreground">We could not load the database</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
                 <Button type="button" onClick={() => void loadRecords()} className="mt-4" variant="outline">
                   <RefreshCw className="size-4" /> Retry
                 </Button>
               </div>
             ) : loading ? (
-              <div className="mt-10 flex items-center justify-center gap-3 text-sm text-slate-500">
-                <Loader2 className="size-5 animate-spin text-teal-700" /> Loading your saved record…
+              <div className="mt-10 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="size-5 animate-spin text-blue-700 dark:text-blue-200" /> Loading your saved record…
               </div>
             ) : view === 'insurance' ? (
               <ComingSoonInsurance onBack={() => setView('overview')} />
@@ -910,13 +898,13 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                       className="mt-7 grid gap-5 overflow-hidden rounded-3xl bg-slate-950 p-5 text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                     >
                       <div className="flex items-start gap-4">
-                        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-teal-400/15 text-teal-300">
+                        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-blue-400/15 text-blue-300">
                           <Camera className="size-5" />
                         </span>
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-teal-300">New research workflow</p>
-                            <Badge className="border-white/10 bg-white/10 text-slate-200">RGB capture</Badge>
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-300">New research workflow</p>
+                            <Badge className="border-white/10 bg-card/10 text-slate-200">RGB capture</Badge>
                           </div>
                           <h2 className="mt-2 font-heading text-xl font-semibold tracking-tight">Follow a wound over time</h2>
                           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
@@ -924,7 +912,7 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                           </p>
                         </div>
                       </div>
-                      <span className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-slate-950">
+                      <span className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-card px-4 text-sm font-semibold text-foreground">
                         Open Wound Lab <ChevronRight className="size-4" />
                       </span>
                     </Link>
@@ -968,7 +956,7 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                         compact
                       />
                       <article className="rounded-2xl bg-slate-950 p-5 text-white shadow-lg shadow-slate-950/10 sm:p-6">
-                        <div className="flex items-center gap-2 text-teal-300">
+                        <div className="flex items-center gap-2 text-blue-300">
                           <ClipboardPlus className="size-4" />
                           <p className="text-xs font-semibold uppercase tracking-[0.12em]">Safety summary</p>
                         </div>
@@ -980,11 +968,11 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                         </p>
                         <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 text-sm">
                           <div>
-                            <dt className="text-xs text-slate-400">Blood type</dt>
+                            <dt className="text-xs text-muted-foreground">Blood type</dt>
                             <dd className="mt-1 font-semibold">{data?.patient.blood_type ?? 'Unknown'}</dd>
                           </div>
                           <div>
-                            <dt className="text-xs text-slate-400">Emergency contact</dt>
+                            <dt className="text-xs text-muted-foreground">Emergency contact</dt>
                             <dd className="mt-1 font-semibold">
                               {data?.patient.emergency_contact_name ? '1 on file' : 'Not recorded'}
                             </dd>
@@ -993,7 +981,7 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                         <Button
                           type="button"
                           onClick={() => setPassportOpen(true)}
-                          className="mt-5 h-10 w-full bg-white text-slate-950 hover:bg-slate-100"
+                          className="mt-5 h-10 w-full bg-card text-foreground hover:bg-muted"
                           size="lg"
                         >
                           Open Medical Passport
@@ -1001,11 +989,11 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
                       </article>
                     </div>
 
-                    {canEdit && <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                    {canEdit && <div className="mt-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-teal-700">Quick add</p>
-                          <h2 className="mt-1 font-heading text-base font-semibold text-slate-950">What happened in your care?</h2>
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700 dark:text-blue-200">Quick add</p>
+                          <h2 className="mt-1 font-heading text-base font-semibold text-foreground">What happened in your care?</h2>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {(Object.keys(typeMeta) as RecordType[]).map((type) => {
@@ -1024,16 +1012,16 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
 
                 {view === 'records' && (
                   <div className="mt-6">
-                    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center">
                       <label htmlFor="mobile-record-search" className="relative min-w-0 flex-1 sm:hidden">
                         <span className="sr-only">Search records</span>
-                        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           id="mobile-record-search"
                           value={query}
                           onChange={(event) => setQuery(event.target.value)}
                           placeholder="Search records"
-                          className="h-10 rounded-xl border-slate-200 pl-9"
+                          className="h-10 rounded-xl border-border pl-9"
                         />
                       </label>
                       <div className="flex flex-1 gap-1 overflow-x-auto pb-1 sm:pb-0">
@@ -1070,7 +1058,7 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
               </>
             )}
 
-            <footer className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-slate-200 py-5 text-[11px] leading-5 text-slate-500 sm:flex-row">
+            <footer className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-border py-5 text-[11px] leading-5 text-muted-foreground sm:flex-row">
               <p>Prototype only · Do not enter real or identifiable health information.</p>
               <p className="flex items-center gap-1.5">
                 <LockKeyhole className="size-3" /> Per-user server checks · audit trail · private file bucket
@@ -1118,7 +1106,7 @@ export function MedicalDashboard({ portal = 'patient' }: { portal?: PortalMode }
           aria-live="polite"
           className="fixed bottom-4 left-1/2 z-[80] flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm text-white shadow-2xl"
         >
-          <Check className="size-4 text-teal-300" /> {toast}
+          <Check className="size-4 text-blue-300" /> {toast}
         </output>
       )}
     </main>
@@ -1145,20 +1133,20 @@ function StatCard({
     <button
       type="button"
       onClick={onClick}
-      className="group min-h-44 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-[0_1px_2px_rgb(15_23_42/0.03)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-teal-600/20"
+      className="group min-h-44 rounded-2xl border border-border bg-card p-5 text-left shadow-[0_1px_2px_rgb(15_23_42/0.03)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600/20"
     >
       <div className="flex items-center justify-between">
         <span className={`grid size-9 place-items-center rounded-xl ${typeMeta[type].iconClass}`}>
           <Icon className="size-[18px]" />
         </span>
         {important && (
-          <Badge className="bg-rose-50 text-rose-700" variant="secondary">Important</Badge>
+          <Badge className="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-200" variant="secondary">Important</Badge>
         )}
       </div>
-      <p className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">{count}</p>
-      <p className="mt-0.5 text-sm font-medium text-slate-700">{label}</p>
-      <p className="mt-1 line-clamp-1 text-xs text-slate-500">{detail}</p>
-      <span className="mt-3 inline-flex items-center text-xs font-semibold text-teal-700 opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+      <p className="mt-5 text-2xl font-semibold tracking-tight text-foreground">{count}</p>
+      <p className="mt-0.5 text-sm font-medium text-foreground">{label}</p>
+      <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{detail}</p>
+      <span className="mt-3 inline-flex items-center text-xs font-semibold text-blue-700 dark:text-blue-200 opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
         View records <ChevronRight className="size-3" />
       </span>
     </button>
@@ -1177,24 +1165,24 @@ function RecordTimeline({
   compact?: boolean;
 }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.03)]">
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
+    <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgb(15_23_42/0.03)]">
+      <div className="flex items-center justify-between border-b border-border px-5 py-4 sm:px-6">
         <div>
-          <h2 className="font-heading text-base font-semibold text-slate-950">
+          <h2 className="font-heading text-base font-semibold text-foreground">
             {compact ? 'Recent health timeline' : 'Health record timeline'}
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Visits, labs, medications, conditions, and safety alerts
           </p>
         </div>
         {compact && (
-          <Button type="button" variant="ghost" size="sm" className="text-teal-800" onClick={onViewAll}>
+          <Button type="button" variant="ghost" size="sm" className="text-blue-800 dark:text-blue-200" onClick={onViewAll}>
             View all <ChevronRight className="size-3.5" />
           </Button>
         )}
       </div>
       {records.length ? (
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-border">
           {records.map((record) => {
             const meta = typeMeta[record.record_type];
             const Icon = meta.icon;
@@ -1203,27 +1191,27 @@ function RecordTimeline({
                 key={record.id}
                 type="button"
                 onClick={() => onSelect(record)}
-                className="grid w-full grid-cols-[42px_minmax(0,1fr)_auto] items-start gap-3 px-5 py-4 text-left transition hover:bg-slate-50/80 focus-visible:bg-slate-50 focus-visible:outline-none sm:px-6"
+                className="grid w-full grid-cols-[42px_minmax(0,1fr)_auto] items-start gap-3 px-5 py-4 text-left transition hover:bg-muted/80 focus-visible:bg-slate-50 focus-visible:outline-none sm:px-6"
               >
                 <span className={`grid size-10 place-items-center rounded-xl ${meta.iconClass}`}>
                   <Icon className="size-[18px]" />
                 </span>
                 <span className="min-w-0">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-sm font-semibold text-slate-800">{record.title}</span>
-                    <Badge variant="outline" className="h-5 bg-white text-[10px] text-slate-500">
+                    <span className="truncate text-sm font-semibold text-foreground">{record.title}</span>
+                    <Badge variant="outline" className="h-5 bg-card text-[10px] text-muted-foreground">
                       {meta.label}
                     </Badge>
-                    {record.attachment_id && <Paperclip className="size-3.5 text-slate-400" />}
+                    {record.attachment_id && <Paperclip className="size-3.5 text-muted-foreground" />}
                   </span>
-                  <span className="mt-1 block line-clamp-1 text-xs leading-5 text-slate-500">
+                  <span className="mt-1 block line-clamp-1 text-xs leading-5 text-muted-foreground">
                     {record.summary || `${record.source} · ${record.status}`}
                   </span>
-                  <span className="mt-1 block text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  <span className="mt-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     {record.provider || record.facility || record.source}
                   </span>
                 </span>
-                <span className="flex items-center gap-2 pt-1 text-xs font-medium text-slate-500">
+                <span className="flex items-center gap-2 pt-1 text-xs font-medium text-muted-foreground">
                   <span className="hidden sm:inline">{formatDate(record.clinical_date)}</span>
                   <ChevronRight className="size-4 text-slate-300" />
                 </span>
@@ -1234,8 +1222,8 @@ function RecordTimeline({
       ) : (
         <div className="px-6 py-12 text-center">
           <Search className="mx-auto size-7 text-slate-300" />
-          <p className="mt-3 text-sm font-semibold text-slate-800">No records match this view</p>
-          <p className="mt-1 text-xs text-slate-500">Try another type or clear your search.</p>
+          <p className="mt-3 text-sm font-semibold text-foreground">No records match this view</p>
+          <p className="mt-1 text-xs text-muted-foreground">Try another type or clear your search.</p>
         </div>
       )}
     </article>
@@ -1256,7 +1244,7 @@ function FilterButton({
       type="button"
       onClick={onClick}
       className={`min-h-9 shrink-0 rounded-lg px-3 text-xs font-semibold transition ${
-        active ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100'
+        active ? 'bg-slate-950 text-white' : 'text-muted-foreground hover:bg-muted'
       }`}
     >
       {children}
@@ -1296,7 +1284,7 @@ function RecordFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClose={() => onOpenChange(false)} className="max-h-[92vh] overflow-y-auto p-0 sm:max-w-2xl">
         <form onSubmit={onSubmit}>
-          <DialogHeader className="border-b border-slate-100 px-5 py-5 sm:px-6">
+          <DialogHeader className="border-b border-border px-5 py-5 sm:px-6">
             <DialogTitle className="text-lg">{editing ? 'Edit health record' : 'Add a health record'}</DialogTitle>
             <DialogDescription>
               Use fictional or de-identified information only in this prototype.
@@ -1305,7 +1293,7 @@ function RecordFormDialog({
 
           <div className="space-y-5 px-5 py-5 sm:px-6">
             {error && (
-              <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+              <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-3 text-xs text-rose-800 dark:text-rose-200">
                 <AlertCircle className="mt-0.5 size-4 shrink-0" /> {error}
               </div>
             )}
@@ -1358,7 +1346,7 @@ function RecordFormDialog({
                 maxLength={2000}
                 onChange={(event) => onUpdate('summary', event.target.value)}
                 placeholder="What should a future care team know?"
-                className="min-h-24 rounded-xl border-slate-200 px-3"
+                className="min-h-24 rounded-xl border-border px-3"
               />
             </label>
 
@@ -1427,8 +1415,8 @@ function RecordFormDialog({
               </label>
             </div>
 
-            <details className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-              <summary className="cursor-pointer text-xs font-semibold text-slate-700">Advanced coding details</summary>
+            <details className="rounded-xl border border-border bg-muted/60 p-4">
+              <summary className="cursor-pointer text-xs font-semibold text-foreground">Advanced coding details</summary>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label htmlFor="record-code-system">
                   <span className={labelClass}>Code system</span>
@@ -1441,12 +1429,12 @@ function RecordFormDialog({
               </div>
             </details>
 
-            <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center transition hover:border-teal-500 hover:bg-teal-50/40">
-              <UploadCloud className="mx-auto size-6 text-teal-700" />
-              <span className="mt-2 block text-sm font-semibold text-slate-800">
+            <label className="block rounded-2xl border border-dashed border-input bg-muted p-4 text-center transition hover:border-blue-500 hover:bg-blue-50/40">
+              <UploadCloud className="mx-auto size-6 text-blue-700 dark:text-blue-200" />
+              <span className="mt-2 block text-sm font-semibold text-foreground">
                 {file?.name || (editing?.attachment_name ? `Keep ${editing.attachment_name}` : 'Attach a PDF or image')}
               </span>
-              <span className="mt-1 block text-xs text-slate-500">PDF, JPEG, or PNG · up to 8 MB · private object storage</span>
+              <span className="mt-1 block text-xs text-muted-foreground">PDF, JPEG, or PNG · up to 8 MB · private object storage</span>
               <input
                 className="sr-only"
                 type="file"
@@ -1456,11 +1444,11 @@ function RecordFormDialog({
             </label>
           </div>
 
-          <DialogFooter className="sticky bottom-0 mx-0 mb-0 rounded-none rounded-b-xl bg-white/95 px-5 py-4 backdrop-blur sm:px-6">
+          <DialogFooter className="sticky bottom-0 mx-0 mb-0 rounded-none rounded-b-xl bg-card/95 px-5 py-4 backdrop-blur sm:px-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving} className="h-10">
               Cancel
             </Button>
-            <Button type="submit" disabled={saving} className="h-10 bg-teal-700 px-5 hover:bg-teal-800">
+            <Button type="submit" disabled={saving} className="h-10 bg-primary px-5 hover:bg-primary/90">
               {saving ? <Loader2 className="size-4 animate-spin" /> : <Cloud className="size-4" />}
               {saving ? 'Saving…' : editing ? 'Save changes' : 'Save to database'}
             </Button>
@@ -1589,7 +1577,7 @@ function RecordDetailDialog({
 
         <div className="space-y-4">
           {record.summary && (
-            <div className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">{record.summary}</div>
+            <div className="rounded-xl bg-muted p-4 text-sm leading-6 text-foreground">{record.summary}</div>
           )}
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <Detail label="Status" value={record.status} />
@@ -1602,8 +1590,8 @@ function RecordDetailDialog({
             {record.code && <Detail label={record.code_system || 'Code'} value={record.code} />}
           </dl>
           {Object.keys(record.details ?? {}).length > 0 && (
-            <div className="rounded-xl border border-slate-200 p-4">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Record details</p>
+            <div className="rounded-xl border border-border p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Record details</p>
               <dl className="grid gap-3 text-sm sm:grid-cols-2">
                 {Object.entries(record.details).map(([key, value]) => (
                   <Detail key={key} label={key.replace(/([A-Z])/g, ' $1')} value={String(value)} />
@@ -1616,19 +1604,19 @@ function RecordDetailDialog({
               href={`/api/files?id=${encodeURIComponent(record.attachment_id)}`}
               target="_blank"
               rel="noreferrer"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm transition hover:bg-slate-50"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-border p-3 text-sm transition hover:bg-muted"
             >
-              <span className="grid size-9 place-items-center rounded-lg bg-slate-100 text-slate-600">
+              <span className="grid size-9 place-items-center rounded-lg bg-muted text-muted-foreground">
                 <FileText className="size-4" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-slate-800">{record.attachment_name}</span>
-                <span className="text-xs text-slate-500">{formatBytes(record.attachment_byte_size)} · private attachment</span>
+                <span className="block truncate font-semibold text-foreground">{record.attachment_name}</span>
+                <span className="text-xs text-muted-foreground">{formatBytes(record.attachment_byte_size)} · private attachment</span>
               </span>
-              <Download className="size-4 text-teal-700" />
+              <Download className="size-4 text-blue-700 dark:text-blue-200" />
             </a>
           )}
-          <p className="text-[11px] text-slate-400">Last updated {formatDate(record.updated_at, true)} · audit event recorded</p>
+          <p className="text-[11px] text-muted-foreground">Last updated {formatDate(record.updated_at, true)} · audit event recorded</p>
         </div>
 
         {canEdit && <DialogFooter>
@@ -1647,8 +1635,8 @@ function RecordDetailDialog({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd className="mt-1 capitalize text-slate-800">{value}</dd>
+      <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className="mt-1 capitalize text-foreground">{value}</dd>
     </div>
   );
 }
@@ -1672,7 +1660,7 @@ function PassportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClose={() => onOpenChange(false)} className="max-h-[92vh] overflow-y-auto p-0 sm:max-w-2xl">
         <div className="bg-slate-950 px-6 py-6 text-white">
-          <div className="flex items-center gap-2 text-teal-300">
+          <div className="flex items-center gap-2 text-blue-300">
             <HeartPulse className="size-5" />
             <span className="text-xs font-semibold uppercase tracking-[0.14em]">MediPass clinical summary</span>
           </div>
@@ -1685,11 +1673,11 @@ function PassportDialog({
           <SummarySection title="Allergy alerts" icon={TriangleAlert} items={allergies} empty="No active allergies recorded" tone="rose" />
           <SummarySection title="Active conditions" icon={FileHeart} items={conditions} empty="No active conditions recorded" tone="amber" />
           <SummarySection title="Current medications" icon={Pill} items={medications} empty="No active medications recorded" tone="sky" />
-          <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
+          <div className="grid gap-3 rounded-xl border border-border bg-muted p-4 text-sm sm:grid-cols-2">
             <Detail label="Emergency contact" value={patient?.emergency_contact_name ?? 'Not recorded'} />
             <Detail label="Phone" value={patient?.emergency_contact_phone ?? 'Not recorded'} />
           </div>
-          <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+          <div className="flex items-start gap-2 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs leading-5 text-amber-900 dark:text-amber-200">
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
             Synthetic demo summary. Clinicians must verify all entries before making care decisions.
           </div>
@@ -1718,26 +1706,26 @@ function SummarySection({
   tone: 'rose' | 'amber' | 'sky';
 }) {
   const tones = {
-    rose: 'bg-rose-50 text-rose-700',
-    amber: 'bg-amber-50 text-amber-700',
-    sky: 'bg-sky-50 text-sky-700',
+    rose: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-200',
+    amber: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-200',
+    sky: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-200',
   };
   return (
     <section>
       <div className="mb-2 flex items-center gap-2">
         <span className={`grid size-7 place-items-center rounded-lg ${tones[tone]}`}><Icon className="size-3.5" /></span>
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       </div>
-      <div className="rounded-xl border border-slate-200">
+      <div className="rounded-xl border border-border">
         {items.length ? items.map((item) => (
-          <div key={item.id} className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 last:border-0">
+          <div key={item.id} className="flex items-start justify-between gap-3 border-b border-border px-4 py-3 last:border-0">
             <div>
-              <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-              <p className="mt-0.5 text-xs text-slate-500">{item.summary || item.source}</p>
+              <p className="text-sm font-semibold text-foreground">{item.title}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{item.summary || item.source}</p>
             </div>
             {item.severity && <Badge variant="outline" className="capitalize">{item.severity}</Badge>}
           </div>
-        )) : <p className="px-4 py-3 text-sm text-slate-500">{empty}</p>}
+        )) : <p className="px-4 py-3 text-sm text-muted-foreground">{empty}</p>}
       </div>
     </section>
   );
@@ -1745,14 +1733,14 @@ function SummarySection({
 
 function ComingSoonInsurance({ onBack }: { onBack: () => void }) {
   return (
-    <div className="mt-7 overflow-hidden rounded-3xl border border-slate-200 bg-white">
+    <div className="mt-7 overflow-hidden rounded-3xl border border-border bg-card">
       <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
         <div>
-          <Badge className="bg-violet-50 text-violet-700" variant="secondary">RESEARCH ROADMAP</Badge>
-          <h2 className="mt-4 font-heading text-2xl font-semibold tracking-tight text-slate-950">
+          <Badge className="bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-200" variant="secondary">RESEARCH ROADMAP</Badge>
+          <h2 className="mt-4 font-heading text-2xl font-semibold tracking-tight text-foreground">
             Explain policy language with its source attached.
           </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
             The planned module will ingest an SBC or policy PDF, retrieve the relevant clause, and explain deductibles, copays, coinsurance, networks, and prior authorization with page citations. It will not promise coverage or final cost.
           </p>
           <Button type="button" onClick={onBack} variant="outline" className="mt-5 h-10">
@@ -1767,15 +1755,15 @@ function ComingSoonInsurance({ onBack }: { onBack: () => void }) {
               ['3', 'Source-grounded retrieval'],
               ['4', 'Plain-language answer with page citation'],
             ].map(([number, label]) => (
-              <div key={number} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                <span className="grid size-7 place-items-center rounded-lg bg-teal-400/15 text-xs font-bold text-teal-300">{number}</span>
+              <div key={number} className="flex items-center gap-3 rounded-xl border border-white/10 bg-card/5 p-3">
+                <span className="grid size-7 place-items-center rounded-lg bg-blue-400/15 text-xs font-bold text-blue-300">{number}</span>
                 <span className="text-sm text-slate-200">{label}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
-      <div className="grid border-t border-slate-100 sm:grid-cols-3">
+      <div className="grid border-t border-border sm:grid-cols-3">
         <RoadmapItem icon={FlaskConical} title="Wound monitoring" text="Longitudinal RGB capture and segmentation research." />
         <RoadmapItem icon={Activity} title="Physical therapy" text="On-device pose tracking and progress summaries." />
         <RoadmapItem icon={Globe2} title="Global medication map" text="Ingredient-first candidates for pharmacist review." />
@@ -1786,10 +1774,10 @@ function ComingSoonInsurance({ onBack }: { onBack: () => void }) {
 
 function RoadmapItem({ icon: Icon, title, text }: { icon: typeof Activity; title: string; text: string }) {
   return (
-    <div className="border-b border-slate-100 p-5 last:border-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-      <Icon className="size-4 text-teal-700" />
-      <p className="mt-3 text-sm font-semibold text-slate-900">{title}</p>
-      <p className="mt-1 text-xs leading-5 text-slate-500">{text}</p>
+    <div className="border-b border-border p-5 last:border-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+      <Icon className="size-4 text-blue-700 dark:text-blue-200" />
+      <p className="mt-3 text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p>
     </div>
   );
 }

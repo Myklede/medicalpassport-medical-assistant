@@ -1,21 +1,48 @@
 # MediPass: multimodal wound research prototype
 
-Latest backend revision (2026-09-11): **77 tests passed, 0 failed**. API v2 uses
-mask-only tissue counts, local SQLite sessions and the new trajectory/risk rule
-engine. Read [the current trajectory contract and runnable example](../docs/WOUND_TRAJECTORY_ENGINE.md).
+Current integration revision (2026-09-12): the unchanged **77 tests passed, 0 failed**,
+plus actual original-model API verification through `scripts/verify-wound-models.py`.
+The three checkpoints from `c269a89` are materialized through Git LFS and match
+`aimedic/checkpoints.sha256`. API v2 uses mask-only
+tissue counts, durable SQLite sessions and baseline-aware trajectory rules. Web UI
+now lists/reopens sessions, appends one or many images, shows historical pipeline
+panels and confirms visit/session deletion. Read
+[the current trajectory contract and runnable example](../docs/WOUND_TRAJECTORY_ENGINE.md).
 Patient explanations now follow explanation → mechanism → consequence → next steps
 in English and Vietnamese, with source links and separate clinician wording.
 Earlier training/QA results below describe the original simulator and visual integration.
 
-Updated 2026-09-11. All five executable Python scripts are implemented. Training runs
-locally via CLI. The website's `/wounds` and `/wound-analyzer` now call Script 5 for
-fresh inference through `lib/wound-api.ts`. `/wounds/history` preserves the original
+Updated 2026-09-12. All five executable Python scripts are implemented. Training runs
+locally via CLI. The website's `/wounds` and `/wound-analyzer` use `WoundVisitWorkflow`
+and `lib/wound-sessions-api.ts` through the web server's same-origin proxy to Script 5.
+The stateless `lib/wound-api.ts` remains compatible. `/wounds/history` preserves the original
 stored captures and reported-data rules. Model results do not write to Supabase or
 patient records. See [frontend integration](../docs/WOUND_AI_INTEGRATION.md).
 
 ## Run from the repository root
 
 Create an isolated Python environment. Activation is unnecessary on Windows:
+
+**Current macOS checkout:** the environment is `outputs/wound-venv/bin/python`.
+The original fusion/binary/tissue checkpoints from `c269a89` have been retrieved,
+SHA-256 verified and exercised by real single/two-visit API inference. On a new
+clone, install Git LFS and materialize the existing models before starting:
+
+```bash
+git lfs install --local
+git lfs pull
+shasum -a 256 -c aimedic/checkpoints.sha256
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+```
+
+Keep `pnpm run demo` running in one terminal and
+`outputs/wound-venv/bin/python -B aimedic/main.py` in another, then open
+`http://localhost:3001/wounds`. The verification script uses a temporary SQLite
+database and the committed synthetic fixture; it never touches the user's database
+or trains/modifies models. Pending-image storage, session listing/readback/deletion
+and JSON reported-metric review also work if models become unavailable. The training
+commands below document the original research workflow; no replacement model was
+trained for this integration.
 
 ```powershell
 python -m venv outputs/pwc-venv
@@ -26,16 +53,18 @@ outputs/pwc-venv/Scripts/python.exe -B aimedic/train_loop.py --epochs 10 --out o
 outputs/pwc-venv/Scripts/python.exe -B aimedic/inference_tracker.py --checkpoint outputs/pwc-run/best.pt --profile outputs/pwc-synthetic/patients/SYN000001/patient_profile.json --images outputs/pwc-synthetic/patients/SYN000001/day_001_rgb.png outputs/pwc-synthetic/patients/SYN000001/day_003_rgb.png outputs/pwc-synthetic/patients/SYN000001/day_007_rgb.png --out outputs/pwc-brief.json
 ```
 
-On macOS/Linux use `outputs/pwc-venv/bin/python` instead of the Windows executable.
-Use a Python version supported by the installed wheels; this checkout was verified with
+On macOS/Linux use the chosen environment's `bin/python` instead of the Windows executable.
+Use a Python version supported by the installed wheels; the original Windows environment was verified with
 Python 3.14.7, PyTorch 2.14.0+cpu, NumPy 2.5.3 and OpenCV 5.0.0 on Windows.
 
-**Already generated on this laptop:** `outputs/pwc-synthetic` contains 1,000 patients
-and 3,000 visits; `outputs/pwc-run/best.pt` is the five-epoch demonstration checkpoint;
-`outputs/pwc-brief.json` is a complete example brief. Start with inference to reuse
-these files. Dataset/training directories and brief filenames refuse overwrites;
-choose a new `--out` value for another run. Generated files and the environment are
-ignored by Git and must be recreated on another laptop.
+**Historical Windows training artifacts:** `outputs/pwc-synthetic` contained 1,000 patients
+and 3,000 visits; `outputs/pwc-run/best.pt` is the original five-epoch demonstration checkpoint,
+now distributed through Git LFS; `outputs/pwc-brief.json` held an example brief.
+The full generated dataset and example brief are not included by cloning the repository.
+Dataset/training directories and brief filenames refuse overwrites;
+choose a new `--out` value for another run. Generated datasets, example briefs and
+the Python environment remain ignored and must be recreated on another laptop;
+the three original checkpoints are the explicit Git LFS exceptions.
 
 For day 30, generate a separate dataset with `--days 1 3 7 30`. The same architecture
 supports any number of ordered visits. Infer days from filenames such as
@@ -45,7 +74,7 @@ pixels verify identity. The caller supplies a single baseline valid for the comp
 
 ## Local FastAPI server (Script 5)
 
-Tested on Python **3.14.7** with FastAPI 0.141.1, Pydantic 2.13.5, Uvicorn 0.52.4
+Historically tested on Python **3.14.7** with FastAPI 0.141.1, Pydantic 2.13.5, Uvicorn 0.52.4
 and python-multipart 0.0.32. The API uses Pydantic v2; Python 3.14 is not a
 Pydantic v1 target. Install the current requirements before starting the server:
 
@@ -72,7 +101,8 @@ Open **http://127.0.0.1:8000/docs** to try the endpoint in Swagger UI.
 | `pixels_per_cm` | positive number, optional | Caller-measured same-plane scale in this image; enables projected cm² |
 | `clinical_observations` | JSON string, optional | Reported source and boolean symptoms/scab observations; never inferred from image color |
 
-Minimal Next.js client example (inside an async upload handler):
+Legacy stateless client example (browser on the same computer only; the current
+web workflow uses the same-origin session proxy instead):
 
 ```typescript
 const form = new FormData();
@@ -106,9 +136,10 @@ Responses: 413 oversized image; 415 unsupported/mismatched format; 422 invalid
 JSON/baseline/image/day; 503 missing or incompatible trained model.
 
 The service binds to loopback by default. This is a local adapter with no user
-authentication; CORS is not authorization. The frontend integration is local only;
-no hosted Python service has been deployed. A phone's `127.0.0.1` refers to the phone,
-not the laptop. The responsive web UI can be tested locally in Chrome device mode.
+authentication; CORS is not authorization. The current session workflow's web proxy
+reaches Python on `127.0.0.1:8000`. Desktop and same-LAN phones access the laptop's
+web host on port 3001 and share its SQLite sessions, without exposing Python or
+calling phone loopback. No hosted Python service has been deployed.
 
 API verification (includes training a tiny independent synthetic fixture):
 
@@ -117,16 +148,28 @@ outputs/pwc-venv/Scripts/python.exe -m pip install -r aimedic/requirements-dev.t
 outputs/pwc-venv/Scripts/python.exe -B -m unittest discover -s aimedic -p 'test_*.py' -v
 ```
 
-42 tests passed (17 API + 14 pipeline + 11 binary-visual tests), including real multipart inference, PNG/JPEG,
+Historical binary integration: 42 tests passed (17 API + 14 pipeline + 11 binary-visual tests), including real multipart inference, PNG/JPEG,
 the single-visit contract, CORS preflights, malformed input, upload bounds, missing
 checkpoints, and temporary-file cleanup. See [FastAPI forms and files](https://fastapi.tiangolo.com/tutorial/request-forms-and-files/)
 and [FastAPI CORS](https://fastapi.tiangolo.com/tutorial/cors/) for the request conventions.
 
-New `/api/wound-sessions` routes retain multiple images and measurements in
-ignored `outputs/wound-sessions.sqlite3`, independent of Supabase/D1/R2.
+`/api/wound-sessions` routes retain image bytes, measurements and historical
+pipeline data in ignored `outputs/wound-sessions.sqlite3`, independent of Supabase/D1/R2.
 `POST /api/analyze-trajectory` accepts ordered JSON metrics without needing weights.
 Sessions lock baseline, enforce chronology, reject duplicate captures and recompute
-the brief after each visit. See the trajectory guide for requests and validation.
+the brief after each visit. The limit is 1,000 images/session with no automatic expiry.
+The web derives days from capture timestamps and lists saved sessions from the server;
+it supports confirmed deletion of a visit/session and historical-visit readback.
+New recorded FPG/vascular/neuropathy context and the ≥7-day unchanged-trajectory
+review flag leave trained architecture unchanged and preserve the legacy >7-day area flag.
+
+The optional upload flag `preserve_on_model_unavailable=true` preserves valid images
+when inference returns 503 as `pending_model` visits with null metrics. The frontend
+uses this flag and labels missing analysis explicitly.
+`POST /api/wound-sessions/{session_id}/visits/{visit_id}/analyze?patient_id=...` retries
+from stored image bytes after compatible models are supplied; it keeps capture
+identity/timing and updates analysis atomically. The default API error behavior
+without opt-in is unchanged. See the trajectory guide for requests and validation.
 
 ## Optional Developer Mode visuals
 
@@ -165,7 +208,7 @@ The binary, tissue and late-fusion checkpoints are stored in Git LFS. After clon
 on another laptop, install Git LFS and materialize the files before running the API:
 
 ```powershell
-git lfs install
+git lfs install --local
 git lfs pull
 git lfs ls-files
 ```
@@ -179,7 +222,7 @@ Training reuses the existing
 patient-level train/validation/test splits and paired synthetic RGB/class masks.
 Those crops have no background class, so a known synthetic ellipse and gray noisy
 background are added to 3/4 of training examples. Labels: 0 background, 1 necrotic,
-2 slough, 3 granulation. Five epochs were run on this laptop; held-out **synthetic**
+2 slough, 3 granulation. Five epochs were run in the historical Windows environment; held-out **synthetic**
 mean IoU was 0.9346. This is not clinical segmentation performance. Epoch selection
 uses validation only; the test split is evaluated after selection. Original
 images/profiles and fusion weights are unchanged.
@@ -209,8 +252,15 @@ Default callers receive no extension. Optional Python tracker visuals describe t
 The stateless endpoint persists no images or briefs; session endpoints do. Tests cover core-brief/raw-byte equality,
 PNG alpha, JPEG MIME, optional-model fallback, quality abstention, normalization,
 strict threshold, original-size restoration and outside-mask pixel equality.
-Tests use controlled SMP fixture weights. A separate live upload verified the
-supplied checkpoint with HTTP 200 and both derived images. The earlier binary-only
+The existing tests use controlled SMP fixture weights. Separately, the original
+checkpoints were verified on this macOS checkout on 2026-09-12 using
+`scripts/verify-wound-models.py`: actual single-image analysis, a two-capture
+comparison, pending-image retry, saved historical visuals and exact-byte SQLite
+readback all passed. The original synthetic image produced 2,536 wound-mask pixels;
+the overlay left every outside-mask pixel unchanged. The second QA image is a
+horizontal mirror of the same simulator fixture, not a real later healing capture.
+This verifies model compatibility and software behavior, not clinical accuracy.
+The earlier binary-only
 update left the tracker unchanged; the subsequent trajectory update modifies it.
 `train_loop.py` and `multimodal_model.py` remain unchanged in both updates.
 
@@ -252,11 +302,24 @@ Blood type is encoded categorically but has no assumed causal effect in the gene
 
 ## Verification and limits
 
+Current macOS verification:
+
+```bash
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+outputs/wound-venv/bin/python -B -m unittest discover -s aimedic -p 'test_*.py' -v
+```
+
+Both passed after retrieving `c269a89`: the integration script uses all three
+original checkpoint files; the existing suite passed **77/77** without test edits.
+Checkpoint digests were unchanged before and after the integration checks.
+Its supplied 10 pixels/cm scale is only a test input. These API checks do not
+establish all-pages browser coverage or clinical measurement performance.
+
 ```powershell
 outputs/pwc-venv/Scripts/python.exe -B -m unittest discover -s aimedic -p test_pipeline.py -v
 ```
 
-14 tests passed: train/save/reload/infer, four time points including day 30,
+Historical original pipeline: 14 tests passed for train/save/reload/infer, four time points including day 30,
 patient split integrity, invalid checkpoints and paths, quality abstention,
 date validation, absolute change units, baseline-specific thresholds, cumulative
 and interim deterioration, and no false safety claim when no rule fires.

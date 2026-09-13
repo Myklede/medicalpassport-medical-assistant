@@ -5,7 +5,13 @@ import './portal/portal.css';
 import { FeedbackWidget } from './portal/review-widget';
 import { ThemeToggle } from '@/components/theme-toggle';
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
+export const viewport: Viewport = {
+  width: 'device-width', initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
+};
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -25,6 +31,7 @@ const socialImageUrl = new URL('/og.png', siteUrl).toString();
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: 'MediPass — Your portable medical history',
+  icons: { icon: { url: '/medipass-icon.svg', type: 'image/svg+xml' } },
   description:
     'A working prototype for organizing a patient-controlled, portable health record.',
   alternates: { canonical: '/' },

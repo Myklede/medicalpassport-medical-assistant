@@ -6,7 +6,9 @@
 They contain no real patient information. The image is a colored simulator mask,
 not a clinical photograph, and demonstrates only the model's synthetic domain.
 
-Wound Lab loads this pair on explicit user action and sends it to the running
-local API for fresh inference. No canned Clinical Brief is shipped here.
-The remaining dataset and trained checkpoint stay in ignored `outputs/`; recreate
-them using `aimedic/README.md` on a new laptop. Training runs in Python, not the browser.
+This pair is available for explicit manual uploads and isolated model verification
+against the running local API. No canned Clinical Brief is shipped here.
+The remaining generated dataset stays in ignored `outputs/`. The three original
+checkpoints are tracked through Git LFS: run `git lfs install --local` and
+`git lfs pull`, then verify `aimedic/checkpoints.sha256`. See `aimedic/README.md`
+for setup. Training runs in Python, not the browser.

@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:workers';
+import { woundSchemaStatements } from '@/db/wound-schema';
 
 export type PatientContext = {
   userId: string;
@@ -104,6 +105,7 @@ const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_records_patient_type ON health_records(patient_id, record_type)`,
   `CREATE INDEX IF NOT EXISTS idx_records_patient_status ON health_records(patient_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_patient_date ON audit_events(patient_id, created_at DESC)`,
+  ...woundSchemaStatements,
 ];
 
 let initialization: Promise<void> | null = null;

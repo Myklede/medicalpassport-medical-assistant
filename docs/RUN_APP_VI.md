@@ -41,7 +41,7 @@ Server local chỉ tồn tại khi cửa sổ Terminal này còn chạy. Dừng 
 Nếu Node mặc định trên máy quá cũ, có thể chạy app bằng Node 24 mà không cài Node toàn hệ thống:
 
 ```powershell
-npx --yes node@24 node_modules/vinext/dist/cli.js dev --host 0.0.0.0 --port 3001
+npx --yes node@24 node_modules/vinext/dist/cli.js dev --hostname 0.0.0.0 --port 3001
 ```
 
 ## Mở đúng bằng Chrome trên Windows
@@ -60,13 +60,42 @@ Start-Process "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe" "http://l
 
 ## Mở từ điện thoại trong cùng Wi-Fi
 
-Lệnh `pnpm run demo` cho phép thiết bị khác trong mạng nội bộ truy cập. Lấy địa chỉ IPv4 của máy tính bằng `ipconfig`, rồi mở trên điện thoại theo dạng:
+Lệnh `pnpm run demo` dùng `--hostname 0.0.0.0` để thiết bị trong mạng nội bộ truy cập. Lấy IPv4 bằng `ipconfig` trên Windows hoặc xem chi tiết Wi-Fi trong System Settings trên macOS, rồi mở trên điện thoại theo dạng:
 
 ```text
 http://DIA-CHI-IP-CUA-MAY:3001/patient
 ```
 
 Ví dụ: `http://192.168.1.25:3001/patient`. Windows Firewall có thể hỏi cho phép Node.js truy cập mạng riêng; chỉ cần cho phép trên mạng Private nếu muốn thử bằng điện thoại.
+
+## Wound Lab: lưu ảnh một ngày hoặc nhiều ngày
+
+Ba checkpoint AI gốc từ commit `c269a89` đã được tải bằng Git LFS, đối chiếu SHA-256
+và kiểm tra suy luận thành công trên checkout macOS hiện tại. Sau khi clone trên máy
+khác, cài Git LFS rồi chạy tại thư mục dự án:
+
+```bash
+git lfs install --local
+git lfs pull
+shasum -a 256 -c aimedic/checkpoints.sha256
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+```
+
+Script cuối kiểm tra bằng ảnh giả lập và SQLite tạm, không chạm database đang dùng
+hoặc thay đổi weights. Cần môi trường Python đã cài requirements theo
+[aimedic/README.md](../aimedic/README.md).
+
+Ngoài web server, mở Terminal thứ hai tại thư mục dự án và chạy Python. Môi trường macOS hiện tại:
+
+```bash
+outputs/wound-venv/bin/python -B aimedic/main.py
+```
+
+Mở `http://localhost:3001/wounds` trên máy tính hoặc `http://DIA-CHI-IP-CUA-MAY:3001/wounds` trên điện thoại cùng Wi-Fi. Trình duyệt gọi API cùng địa chỉ web; web server chuyển tiếp tới Python `127.0.0.1:8000`, nên không cần mở cổng Python cho điện thoại.
+
+Chọn/tạo đợt theo dõi, nhập đúng thời điểm chụp và bấm **Lưu & phân tích**. Lần sau mở lại đợt từ danh sách máy chủ rồi thêm ảnh. Tối đa 1.000 ảnh/đợt; ảnh, mốc ngày và dữ liệu được giữ trong `outputs/wound-sessions.sqlite3` qua lần khởi động lại, không phụ thuộc local storage của trình duyệt. Nút xóa ảnh hoặc xóa cả đợt đều có bước xác nhận và dùng được trên desktop/điện thoại.
+
+Giữ cả `pnpm run demo` và Python chạy trong hai Terminal. Nếu chuyển sang máy chưa tải đủ Git LFS hoặc model tạm không sử dụng được, ảnh vẫn được lưu ở trạng thái **chờ mô hình**, không có số đo giả. Khi model hoạt động trở lại, bấm **Phân tích lại ảnh đã lưu** để chạy trên chính ảnh đó. Luồng phân tích lại đã được kiểm tra với weights gốc. Xem vị trí checkpoint và hướng dẫn Windows tại [WOUND_AI_INTEGRATION.md](WOUND_AI_INTEGRATION.md). SQLite này thuộc demo local; dữ liệu không tự sao lưu lên Supabase. Trang hosted chưa có dịch vụ Python tương ứng.
 
 ## Chế độ Sáng/Tối
 

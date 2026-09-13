@@ -17,6 +17,8 @@ MEDIPASS_CORS_ORIGINS overrides the comma-separated local frontend origins.
 Single-image requests cannot establish a trajectory. Wound-session routes retain
 ordered captures locally in SQLite; /api/analyze-trajectory accepts metrics only.
 """
+import base64
+import hashlib
 import json
 import logging
 import os
@@ -26,7 +28,7 @@ from tempfile import TemporaryDirectory
 from typing import Annotated
 
 import cv2
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
@@ -134,6 +136,26 @@ async def read_upload(image):
     return content, suffix
 
 
+def pending_capture_brief(content, mime, profile, day, pixels_per_cm, observations):
+    """Retain a decoded capture without substituting an invented model result."""
+    message = "Image saved. The model is unavailable or incompatible; no visual analysis has been completed. Retry this saved capture after the model is configured."
+    visit = {"day": day, "image_sha256": hashlib.sha256(content).hexdigest(),
+             "analysis_status": "pending_model", "analysis_message": message,
+             "measurement_source": "pending_model", "measurement_status": "unavailable",
+             "tissue_percentages": None, "risk_deterioration_score": None,
+             "area_cm2": None, "wound_area_pixels": None, "unclassified_percentage": None,
+             "pixels_per_cm": pixels_per_cm, "clinical_observations": observations,
+             "quality": {"assessment_status": "not_assessed", "issues": ["Model analysis unavailable; the image file decoded successfully."]}}
+    brief = format_clinical_brief([visit], profile, {"input_source": "stored_capture_awaiting_model",
+                                                  "model_inference_completed": False})
+    brief["pipeline_visuals"] = {"schema_version": "pwc-pipeline-visuals-v1", "day": day,
+        "original_image": base64.b64encode(content).decode("ascii"), "original_mime_type": mime,
+        "unet_segmentation_mask": None, "tissue_analysis_overlay": None, "derived_mime_type": "image/png",
+        "status": "unavailable", "reason": message, "clinical_validation": False,
+        "relationship": "capture_saved_without_model_inference"}
+    return brief
+
+
 def create_app(checkpoint_path: Path | None = None, visual_checkpoint_path: Path | None = None,
                session_db_path: Path | None = None) -> FastAPI:
     api = FastAPI(
@@ -149,7 +171,7 @@ def create_app(checkpoint_path: Path | None = None, visual_checkpoint_path: Path
     origins = [origin.strip() for origin in os.getenv("MEDIPASS_CORS_ORIGINS", ",".join(DEFAULT_ORIGINS)).split(",") if origin.strip()]
     api.add_middleware(
         CORSMiddleware, allow_origins=origins, allow_credentials=False,
-        allow_methods=["GET", "POST"], allow_headers=["Content-Type"],
+        allow_methods=["GET", "POST", "DELETE"], allow_headers=["Content-Type"],
     )
 
     @api.post("/api/analyze-wound", summary="Analyze one wound image and patient baseline",
@@ -198,8 +220,39 @@ def create_app(checkpoint_path: Path | None = None, visual_checkpoint_path: Path
         return JSONResponse(result, status_code=201, headers={"Cache-Control": "no-store"})
 
     @api.get("/api/wound-sessions/{session_id}")
-    async def get_session(session_id: str):
-        result = await run_in_threadpool(api.state.sessions.get, session_id)
+    async def get_session(session_id: str, patient_id: Annotated[str | None, Query(min_length=1, max_length=128)] = None):
+        result = await run_in_threadpool(api.state.sessions.get, session_id, patient_id)
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    @api.get("/api/wound-sessions")
+    async def list_sessions(patient_id: Annotated[str, Query(min_length=1, max_length=128)]):
+        result = await run_in_threadpool(api.state.sessions.list, patient_id)
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    @api.delete("/api/wound-sessions/{session_id}")
+    async def delete_session(session_id: str, patient_id: Annotated[str, Query(min_length=1, max_length=128)]):
+        result = await run_in_threadpool(api.state.sessions.delete, session_id, patient_id)
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    @api.get("/api/wound-sessions/{session_id}/visits/{visit_id}")
+    async def get_visit(session_id: str, visit_id: str, patient_id: Annotated[str, Query(min_length=1, max_length=128)]):
+        result = await run_in_threadpool(api.state.sessions.visit, session_id, visit_id, patient_id)
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    @api.delete("/api/wound-sessions/{session_id}/visits/{visit_id}")
+    async def delete_visit(session_id: str, visit_id: str, patient_id: Annotated[str, Query(min_length=1, max_length=128)]):
+        result = await run_in_threadpool(api.state.sessions.delete_visit, session_id, visit_id, patient_id)
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    @api.post("/api/wound-sessions/{session_id}/visits/{visit_id}/analyze")
+    async def retry_visit(session_id: str, visit_id: str, patient_id: Annotated[str, Query(min_length=1, max_length=128)]):
+        saved = await run_in_threadpool(api.state.sessions.pending_input, session_id, visit_id, patient_id)
+        measurement = saved["measurement"]
+        brief = await run_in_threadpool(analyze_upload, saved["image"], ".png" if saved["mime"] == "image/png" else ".jpg",
+            saved["profile"], measurement["day"], api.state.checkpoint_path, True, api.state.visual_checkpoint_path,
+            measurement.get("pixels_per_cm"), measurement.get("clinical_observations"))
+        result = await run_in_threadpool(api.state.sessions.complete_pending, session_id, visit_id, patient_id,
+                                        brief, saved["measurement_version"])
         return JSONResponse(result, headers={"Cache-Control": "no-store"})
 
     @api.post("/api/wound-sessions/{session_id}/visits", status_code=201)
@@ -210,7 +263,9 @@ def create_app(checkpoint_path: Path | None = None, visual_checkpoint_path: Path
         day: Annotated[float, Form(ge=0, allow_inf_nan=False)],
         timestamp: Annotated[str | None, Form(max_length=64)] = None,
         pixels_per_cm: Annotated[float | None, Form(gt=0, le=100000, allow_inf_nan=False)] = None,
+        capture_conditions_consistent: Annotated[bool, Form(description="Caller confirms comparable lighting, framing, distance and camera scale")] = False,
         include_pipeline_visuals: Annotated[bool, Form()] = False,
+        preserve_on_model_unavailable: Annotated[bool, Form(description="Retain a pending capture if model inference returns 503; no estimates are fabricated")] = False,
         clinical_observations: Annotated[str | None, Form(max_length=4096)] = None,
     ):
         try:
@@ -220,17 +275,31 @@ def create_app(checkpoint_path: Path | None = None, visual_checkpoint_path: Path
             if session["patient_id"] != patient_id:
                 raise HTTPException(409, "Patient does not match the locked session baseline.")
             content, suffix = await read_upload(image)
-            brief = await run_in_threadpool(analyze_upload, content, suffix, session["patient_profile"], day,
-                api.state.checkpoint_path, include_pipeline_visuals, api.state.visual_checkpoint_path, pixels_per_cm, observations)
+            # Retain the acquisition-time pipeline for future Developer Mode,
+            # even when a capture was first uploaded in Patient Mode.
+            try:
+                brief = await run_in_threadpool(analyze_upload, content, suffix, session["patient_profile"], day,
+                    api.state.checkpoint_path, True, api.state.visual_checkpoint_path, pixels_per_cm, observations)
+            except HTTPException as exc:
+                if not preserve_on_model_unavailable or exc.status_code != 503:
+                    raise
+                brief = await run_in_threadpool(pending_capture_brief, content, image.content_type,
+                                               session["patient_profile"], day, pixels_per_cm, observations)
+            measurement = brief["objective_measurements"]["visits"][0]
+            measurement["capture_conditions_consistent"] = capture_conditions_consistent
+            measurement["pixels_per_cm"] = pixels_per_cm
+            measurement.setdefault("analysis_status", "completed")
             result = await run_in_threadpool(api.state.sessions.append, session_id, patient_id, content,
                 image.content_type, brief, captured_at, "caller_capture" if timestamp else "server_received")
+            if not include_pipeline_visuals and result["brief"]:
+                result["brief"].pop("pipeline_visuals", None)
             return JSONResponse(result, status_code=201, headers={"Cache-Control": "no-store"})
         finally:
             await image.close()
 
     @api.get("/api/wound-sessions/{session_id}/visits/{visit_id}/image")
-    async def visit_image(session_id: str, visit_id: str):
-        content, mime = await run_in_threadpool(api.state.sessions.image, session_id, visit_id)
+    async def visit_image(session_id: str, visit_id: str, patient_id: Annotated[str | None, Query(min_length=1, max_length=128)] = None):
+        content, mime = await run_in_threadpool(api.state.sessions.image, session_id, visit_id, patient_id)
         return Response(content, media_type=mime, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
 
     return api

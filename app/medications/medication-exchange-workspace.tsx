@@ -7,7 +7,6 @@ import {
   Check,
   CircleAlert,
   ExternalLink,
-  HeartPulse,
   Info,
   Pill,
   Search,
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import Link from '@/components/app-link';
+import MediPassBrand from '@/components/medipass-brand';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,42 +88,32 @@ export function MedicationExchangeWorkspace() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f3f8f7] text-slate-950 dark:bg-[#07171d] dark:text-slate-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200/90 bg-white/92 backdrop-blur-xl dark:border-white/10 dark:bg-[#0a2027]/92">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           <Link
             href="/patient"
-            className="grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
+            className="grid size-11 place-items-center rounded-xl border border-border text-muted-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
             aria-label="Trở lại MediPass"
           >
             <ArrowLeft className="size-4" />
           </Link>
-          <span className="grid size-9 place-items-center rounded-xl bg-teal-700 text-white shadow-sm shadow-teal-900/15 dark:bg-teal-400 dark:text-slate-950">
-            <HeartPulse className="size-5" />
-          </span>
-          <div className="leading-tight">
-            <p className="text-sm font-semibold tracking-tight">
-              MediPass Medication Passport
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Đối chiếu tên thuốc xuyên quốc gia
-            </p>
-          </div>
-          <div className="ml-auto hidden items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-800 dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-teal-200 sm:flex">
+          <Link href="/" className="flex min-h-11 items-center rounded-xl focus-visible:outline-2 focus-visible:outline-primary" aria-label="MediPass · Trang chủ"><MediPassBrand compact subtitle="MEDICATION PASSPORT" /></Link>
+          <div className="ml-auto hidden items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200 sm:flex">
             <ShieldCheck className="size-3.5" /> 20 nhóm thuốc demo
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)]">
           <div
-            className="rounded-3xl bg-[#0b3038] p-6 text-white shadow-xl shadow-slate-950/10 sm:p-8"
+            className="rounded-3xl bg-[#0F172A] p-6 text-white shadow-xl shadow-slate-950/10 sm:p-8"
             data-annotate="medication-exchange-intro"
             data-annotation-label="Giới thiệu đối chiếu thuốc"
           >
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-teal-300/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-teal-200">
+              <span className="rounded-full bg-blue-300/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-blue-200">
                 Research demo
               </span>
               <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
@@ -160,7 +150,7 @@ export function MedicationExchangeWorkspace() {
         </section>
 
         <section
-          className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#0d252d] sm:p-6"
+          className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card sm:p-6"
           data-annotate="medication-country-selector"
           data-annotation-label="Chọn quốc gia đối chiếu"
         >
@@ -189,10 +179,11 @@ export function MedicationExchangeWorkspace() {
             />
           </div>
           <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 dark:border-white/10 lg:flex-row lg:items-center">
-            <label className="relative flex-1">
+            <label htmlFor="medication-search" className="relative flex-1">
               <span className="sr-only">Tìm thuốc theo tên hoặc hoạt chất</span>
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input
+                id="medication-search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Tìm Panadol, Tylenol, paracetamol…"
@@ -216,7 +207,7 @@ export function MedicationExchangeWorkspace() {
                   type="button"
                   onClick={() => setFilter(value)}
                   aria-pressed={filter === value}
-                  className={`min-h-10 rounded-xl border px-3 text-sm font-semibold transition ${filter === value ? 'border-teal-700 bg-teal-700 text-white dark:border-teal-300 dark:bg-teal-300 dark:text-slate-950' : 'border-slate-200 bg-white text-slate-600 hover:border-teal-300 dark:border-white/10 dark:bg-white/5 dark:text-slate-300'}`}
+                  className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-primary ${filter === value ? 'border-primary bg-primary text-white' : 'border-border bg-card text-muted-foreground hover:border-blue-300 dark:hover:border-blue-700'}`}
                 >
                   {label}
                 </button>
@@ -227,7 +218,7 @@ export function MedicationExchangeWorkspace() {
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(330px,0.7fr)_minmax(0,1.3fr)]">
           <section
-            className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#0d252d]"
+            className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
             aria-label="Danh sách thuốc demo"
           >
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-white/10">
@@ -239,7 +230,7 @@ export function MedicationExchangeWorkspace() {
                   {results.length} trong 20 nhóm demo
                 </p>
               </div>
-              <Pill className="size-5 text-teal-700 dark:text-teal-300" />
+              <Pill className="size-5 text-blue-700 dark:text-blue-300" />
             </div>
             <div className="max-h-[760px] space-y-2 overflow-y-auto p-3">
               {results.map((medication) => {
@@ -252,7 +243,7 @@ export function MedicationExchangeWorkspace() {
                     type="button"
                     onClick={() => setSelectedId(medication.id)}
                     aria-pressed={active}
-                    className={`w-full rounded-2xl border p-4 text-left transition ${active ? 'border-teal-500 bg-teal-50 shadow-sm dark:border-teal-300/50 dark:bg-teal-300/10' : 'border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/5'}`}
+                    className={`w-full rounded-2xl border p-4 text-left transition ${active ? 'border-blue-500 bg-blue-50 shadow-sm dark:border-blue-300/50 dark:bg-blue-300/10' : 'border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/5'}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -269,7 +260,7 @@ export function MedicationExchangeWorkspace() {
                       <span className="truncate">
                         {COUNTRIES[to].flag} {target.exampleName}
                       </span>
-                      <ArrowLeftRight className="ml-auto size-3.5 shrink-0 text-teal-600 dark:text-teal-300" />
+                      <ArrowLeftRight className="ml-auto size-3.5 shrink-0 text-blue-600 dark:text-blue-300" />
                     </div>
                   </button>
                 );
@@ -300,7 +291,7 @@ export function MedicationExchangeWorkspace() {
         </div>
 
         <Methodology />
-        <footer className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-[#0d252d] dark:text-slate-300">
+        <footer className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-card dark:text-slate-300">
           <div className="flex items-start gap-3">
             <CircleAlert className="mt-0.5 size-5 shrink-0 text-amber-600" />
             <p>
@@ -334,7 +325,7 @@ function CountrySelect({
 }) {
   return (
     <label htmlFor={id} className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-teal-800 dark:text-teal-300">
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-blue-800 dark:text-blue-300">
         {label}
       </span>
       <NativeSelect
@@ -388,13 +379,13 @@ function MedicationDetail({
   const target = medication.products[to];
   return (
     <section
-      className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#0d252d] sm:p-7"
+      className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card sm:p-7"
       data-annotate={`medication-${medication.id}`}
       data-annotation-label={`Đối chiếu thuốc ${medication.inn}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-teal-700 dark:text-teal-300">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700 dark:text-blue-300">
             Hoạt chất chuẩn · ATC {medication.atc}
           </p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
@@ -406,7 +397,7 @@ function MedicationDetail({
         </div>
         <Badge
           variant="outline"
-          className="h-auto border-teal-200 bg-teal-50 px-3 py-1.5 text-teal-800 dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-teal-200"
+          className="h-auto border-blue-200 bg-blue-50 px-3 py-1.5 text-blue-800 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
         >
           <ShieldCheck />
           Cùng hoạt chất
@@ -420,7 +411,7 @@ function MedicationDetail({
           label="Đang dùng / đang tìm"
         />
         <div className="grid place-items-center">
-          <span className="grid size-10 place-items-center rounded-full border border-slate-200 bg-slate-50 text-teal-700 dark:border-white/10 dark:bg-white/5 dark:text-teal-300">
+          <span className="grid size-10 place-items-center rounded-full border border-slate-200 bg-slate-50 text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-blue-300">
             <ArrowLeftRight className="size-4" />
           </span>
         </div>
@@ -432,7 +423,7 @@ function MedicationDetail({
       </div>
 
       <div
-        className={`mt-4 rounded-2xl border p-4 ${review.sameStrength && review.sameForm ? 'border-teal-200 bg-teal-50 dark:border-teal-400/20 dark:bg-teal-400/10' : 'border-amber-200 bg-amber-50 dark:border-amber-400/20 dark:bg-amber-400/10'}`}
+        className={`mt-4 rounded-2xl border p-4 ${review.sameStrength && review.sameForm ? 'border-blue-200 bg-blue-50 dark:border-blue-400/20 dark:bg-blue-400/10' : 'border-amber-200 bg-amber-50 dark:border-amber-400/20 dark:bg-amber-400/10'}`}
       >
         <p className="flex items-start gap-2 text-sm font-semibold">
           <Info className="mt-0.5 size-4 shrink-0" />
@@ -503,7 +494,7 @@ function MedicationDetail({
 
       <article className="mt-4 rounded-2xl border border-slate-200 p-5 dark:border-white/10">
         <div className="flex items-center gap-2">
-          <Stethoscope className="size-4 text-teal-700 dark:text-teal-300" />
+          <Stethoscope className="size-4 text-blue-700 dark:text-blue-300" />
           <h3 className="text-sm font-semibold">
             Hỏi pharmacist trước khi mua
           </h3>
@@ -511,7 +502,7 @@ function MedicationDetail({
         <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           {medication.pharmacistChecks.map((item) => (
             <li key={item} className="flex items-start gap-2">
-              <Check className="mt-0.5 size-4 shrink-0 text-teal-600 dark:text-teal-300" />
+              <Check className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-300" />
               {item}
             </li>
           ))}
@@ -613,7 +604,7 @@ function ReviewLine({
       {warning ? (
         <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
       ) : ok ? (
-        <Check className="mt-0.5 size-4 shrink-0 text-teal-600 dark:text-teal-300" />
+        <Check className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-300" />
       ) : (
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
       )}
@@ -662,13 +653,13 @@ function Methodology() {
   ];
   return (
     <section
-      className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#0d252d] sm:p-7"
+      className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card sm:p-7"
       data-annotate="medication-methodology"
       data-annotation-label="Quy trình đối chiếu thuốc"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-teal-700 dark:text-teal-300">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700 dark:text-blue-300">
             Quy trình an toàn
           </p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
@@ -689,7 +680,7 @@ function Methodology() {
             key={number}
             className="rounded-2xl border border-slate-200 p-4 dark:border-white/10"
           >
-            <span className="grid size-8 place-items-center rounded-xl bg-teal-50 text-xs font-bold text-teal-800 dark:bg-teal-400/10 dark:text-teal-200">
+            <span className="grid size-8 place-items-center rounded-xl bg-blue-50 text-xs font-bold text-blue-800 dark:bg-blue-400/10 dark:text-blue-200">
               {number}
             </span>
             <h3 className="mt-3 text-sm font-semibold">{title}</h3>
@@ -711,7 +702,7 @@ function Methodology() {
                 href={source.url}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-start gap-2 text-teal-800 hover:underline dark:text-teal-300"
+                className="flex items-start gap-2 text-blue-800 hover:underline dark:text-blue-300"
               >
                 {source.label}
                 <ExternalLink className="mt-0.5 size-3.5 shrink-0" />
@@ -725,7 +716,7 @@ function Methodology() {
                 href={COUNTRIES[code].registryUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-start gap-2 text-teal-800 hover:underline dark:text-teal-300"
+                className="flex items-start gap-2 text-blue-800 hover:underline dark:text-blue-300"
               >
                 {COUNTRIES[code].flag} {COUNTRIES[code].regulator}
                 <ExternalLink className="mt-0.5 size-3.5 shrink-0" />

@@ -1,8 +1,11 @@
 # Local multimodal trajectory engine
 
-Updated 2026-09-11. Implementation: `aimedic/inference_tracker.py`,
+Updated 2026-09-12. Implementation: `aimedic/inference_tracker.py`,
 `trajectory_rules.py`, `main.py`, `session_store.py`, `visual_pipeline.py`.
 The existing `train_loop.py` and `multimodal_model.py` are unchanged.
+All three original checkpoints from `c269a89` are materialized through Git LFS,
+match `aimedic/checkpoints.sha256` and pass the actual original-model API check
+in `scripts/verify-wound-models.py` on the current macOS environment.
 
 ## Patient explanations (latest update)
 
@@ -22,7 +25,8 @@ No request changes are required. Read `patient_explanation.locales.en` or `.vi`:
   image limitations, the illustrative timer, and the need for professional assessment.
 
 Both languages use the same triggering facts and actions. The selected `scenario`
-distinguishes reported symptoms, insufficient data, stagnation, current worsening,
+distinguishes reported symptoms, a successfully analyzed first image, a saved
+`pending_model` capture, insufficient data, stagnation, current worsening,
 historical changes, a possible clinician-reported scab, and no new flag. Unknown
 quality or missing visits never become reassurance. Symptoms still prompt care
 when the photo is unusable. Patients are not told to wait seven days.
@@ -41,23 +45,39 @@ Source checks: [NIDDK circulation and wound healing](https://www.niddk.nih.gov/h
 [CDC HbA1c](https://www.cdc.gov/diabetes/diabetes-testing/prediabetes-a1c-test.html),
 and [CDC glucose monitoring](https://www.cdc.gov/diabetes/diabetes-testing/monitoring-blood-sugar.html).
 
-Latest QA: **77 Python tests passed, 0 failed**, including eight bilingual
-explanation scenarios and API/session readback. Earlier counts below document
-the preceding engine revision. This update changes backend output only; Patient
-Mode's static UI will need to render `patient_explanation.locales.vi` to display
-all structured sections. Existing string-based clients receive the English text.
+The unchanged **77 Python tests passed**, including eight bilingual explanation
+scenarios and API/session readback. Temporary isolated API cases also exercise the
+new session routes. Earlier counts below document preceding revisions. Patient Mode
+now renders every structured section from `patient_explanation.locales.vi`, with an
+English option; existing string-based clients continue receiving English text.
+Recorded FPG, vascular and neuropathy findings appear in baseline context without
+assuming unrecorded microvascular disease or treating historical glucose as current.
 
 ## Run and try it
 
-```powershell
-outputs/pwc-venv/Scripts/python.exe -B aimedic/main.py
+```bash
+git lfs install --local
+git lfs pull
+shasum -a 256 -c aimedic/checkpoints.sha256
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+outputs/wound-venv/bin/python -B aimedic/main.py
 ```
+
+Keep `pnpm run demo` running in a separate terminal for
+`http://localhost:3001/wounds`. The verification script exits after isolated
+synthetic-fixture checks and removes its temporary SQLite data.
 
 Open http://127.0.0.1:8000/docs. `POST /api/analyze-trajectory` accepts JSON;
 paste [`aimedic/examples/trajectory_request.json`](../aimedic/examples/trajectory_request.json).
 It does not need model weights and labels these metrics as caller-reported.
 This example has latest granulation +8 percentage points, necrotic -1 pp,
 slough -7 pp, area -0.1 cm², plus earlier worsening and prolonged limited area reduction.
+
+The command above uses the current macOS environment; Windows uses
+`outputs/pwc-venv/Scripts/python.exe`. Original-model image inference has now passed
+in this checkout. JSON caller-reported metrics and pending-image persistence remain
+usable even if models become unavailable; a new clone must materialize its LFS
+files before image inference can run.
 
 Alternatively:
 
@@ -70,6 +90,12 @@ $brief | ConvertTo-Json -Depth 30
 Python. Required baseline fields keep their existing validation. Optional extra
 booleans: `peripheral_arterial_disease`, `chronic_kidney_disease`, `immunosuppression`.
 They affect only the rule context, not the learned model's fixed feature schema.
+New recorded fields are `fpg_mg_dl` (finite positive mg/dL),
+`peripheral_vascular_status` (`normal`, `impaired`, `unknown`) and
+`neuropathy_status` (`present`, `absent`, `unknown`). Impaired vascular status does
+not assert a confirmed PAD diagnosis. The web's five profiles retain all original
+core values and add 20 complete synthetic clinical encounters; only the baseline
+whitelist enters image inference, not the historical encounter measurements.
 
 ## Inputs and output contract
 
@@ -125,10 +151,21 @@ withhold tissue/area conclusions rather than establish that an injury has healed
 Diabetes **or** HbA1c >8 selects review for increasing estimated necrotic/slough
 classes. Age/hypertension and optional comorbidities add explicit context modifiers.
 Small changes remain research review signals, not an assertion of urgency.
-The illustrative stagnation rule requires at least two trailing comparable area
+The legacy illustrative stagnation rule requires at least two trailing comparable area
 intervals, each with <5% reduction, spanning **more than seven days**. A gap or
 change of area unit resets the run. Sampling cadence affects this demonstration
 rule; it is not a validated clinical threshold or a directive to wait seven days.
+
+The separate `high_risk_non_healing_trajectory` rule implements the inclusive
+**≥7-day** workflow requirement. It accepts one or more trailing comparable
+intervals with near-unchanged tissue ratios and, where comparable area is available,
+near-unchanged area. Both interval and cumulative changes must remain within the
+recorded research tolerances; inconsistent captures or missing tissue comparisons
+break the run. Diabetes **or** HbA1c >8% then triggers a high-risk delayed-healing
+review alert. `non_healing_trajectory` retains the duration and triggering facts.
+This does not replace or relabel the older >7-day area-only flag. FPG, vascular and
+neuropathy findings explain the recorded risk context; mechanisms and consequences
+remain conditional, not image-based diagnoses.
 
 Dark pixels alone neither prove necrosis nor establish benign scabbing. To qualify
 a possible scab, supply per-visit observations such as:
@@ -165,41 +202,69 @@ wording; [FDA guidance](https://www.fda.gov/media/109618/download) remains linke
 All endpoints are local, unauthenticated research APIs. Use synthetic/de-identified
 data only. Session IDs are opaque access capabilities, not authorization for clinical use.
 
-1. `POST /api/wound-sessions`, multipart `patient_data` JSON string: creates a
+1. `GET /api/wound-sessions?patient_id=...`: server-side list with counts/latest dates,
+   allowing a new browser or same-LAN phone to find saved sessions.
+2. `POST /api/wound-sessions`, multipart `patient_data` JSON string: creates a
    session with a fixed baseline and returns `session_id`.
-2. `POST /api/wound-sessions/{session_id}/visits`: multipart `image`, `patient_id`,
+3. `POST /api/wound-sessions/{session_id}/visits`: multipart `image`, `patient_id`,
    `day`; optional `timestamp`, `pixels_per_cm`, `clinical_observations` JSON string,
-   `include_pipeline_visuals`. Returns the recomputed full brief and visits.
-3. `GET /api/wound-sessions/{session_id}`: reloads the stored history and recomputes
+   `include_pipeline_visuals`, `capture_conditions_consistent`,
+   `preserve_on_model_unavailable`. Returns the recomputed full brief and visits.
+4. `GET /api/wound-sessions/{session_id}`: reloads the stored history and recomputes
    the brief using the currently installed rule version; model measurements stay unchanged.
-4. `GET /api/wound-sessions/{session_id}/visits/{visit_id}/image`: scoped stored image.
+5. `GET /api/wound-sessions/{session_id}/visits/{visit_id}`: historical brief through
+   the selected capture and its saved pipeline visuals.
+6. `GET /api/wound-sessions/{session_id}/visits/{visit_id}/image`: scoped stored image.
+7. `DELETE /api/wound-sessions/{session_id}/visits/{visit_id}`: explicitly removes one
+   capture and recomputes the remaining trajectory without renumbering saved days.
+8. `DELETE /api/wound-sessions/{session_id}`: explicitly removes the session and captures.
+9. `POST /api/wound-sessions/{session_id}/visits/{visit_id}/analyze`: retries a pending
+   capture from stored image bytes after models become available. Capture identity,
+   baseline, day and timestamp remain fixed; updates are atomic.
+
+Visit/read/delete/retry requests carry `patient_id` in the query; append carries it
+in multipart. Patient matching scopes demo data but is not production authentication.
 
 Storage is atomic SQLite (image bytes + measurements), default ignored
 `outputs/wound-sessions.sqlite3`; override `MEDIPASS_WOUND_SESSION_DB`.
-Limit 30 visits/session. Duplicate images, backwards days/timestamps, wrong patient
+Limit **1,000 visits/session**, no automatic expiry. Images survive browser storage
+clearing, service restarts and future visits while the SQLite file is retained.
+Duplicate images, backwards days/timestamps, wrong patient
 and incompatible model/preprocessing versions return 409 without storing a visit.
 Missing timestamp uses server receipt time and is labeled `server_received`;
 relative day remains caller supplied. No batch chronology is invented.
+The web UI supplies actual capture timestamps and derives relative days from a
+stable timestamp/day anchor, beginning at day 0. A batch is appended in capture
+order; earlier successful saves survive a later failure. Desktop and phone expose
+confirmation before permanently deleting a capture/session.
 These sessions are **not Supabase/D1/R2 or clinician-confirmed records**.
 `/api/analyze-wound` remains stateless. CORS allows local ports 3000/3001.
 
-The current Next.js uploader still calls the stateless endpoint. The existing
-`lib/wound-sessions-api.ts` service is available for a future session-selector UI;
-this backend task does not add that UI. Use Swagger/the API to test multi-day sessions.
+`WoundVisitWorkflow` now uses `lib/wound-sessions-api.ts` and the same-origin
+`/api/wound-sessions` proxy. The web server reaches Python at `127.0.0.1:8000`;
+same-LAN phones connect to the laptop's web host at port 3001. Neither phone
+loopback nor a hosted page is assumed to reach the local backend.
 
-## Verification and handoff
+With `preserve_on_model_unavailable=true` (used by the web UI), a model-inference
+503 preserves valid image bytes as `analysis_status: pending_model`. Tissue, area
+and learned-risk estimates stay null, and the brief reports insufficient image
+data. Retry operates on the same saved image when compatible checkpoints are supplied.
+Without this opt-in the previous 503 behavior is preserved. Pending images never
+become synthetic measurements or zero-valued healing estimates.
 
-```powershell
-outputs/pwc-venv/Scripts/python.exe -B -m unittest discover -s aimedic -p 'test_*.py' -v
+## Verification and historical handoff
+
+```bash
+outputs/wound-venv/bin/python -B -m unittest discover -s aimedic -p 'test_*.py' -v
 ```
 
-**69 passed, 0 failed**: 21 API + 14 original pipeline + 21 trajectory + 13 binary visual tests.
+Historical pre-education revision: **69 passed, 0 failed** (21 API + 14 original pipeline + 21 trajectory + 13 binary visual tests).
 Coverage includes mask input isolation, denominator, scab guardrails, baseline
 thresholds, exact deltas, quality abstention, historical flags, score reproducibility,
 session persistence across app instances, scoped images, validation and failed-write cleanup.
 No model retraining or clinical validation was performed.
 
-The pre-push check also passed: TypeScript, 41 frontend unit tests and production
+That historical pre-push check also passed: TypeScript, 41 frontend unit tests and production
 build. It found and fixed a pre-existing type-narrowing error in the unfinished
 session service. Focused headless Chrome QA passed against the live backend:
 Patient/Developer modes, five profiles, real Base64 masks, loading/errors, quality
@@ -207,3 +272,23 @@ abstention, older-server fallback and mobile/light/dark layouts. The running API
 also accepted the example above and returned the exact latest deltas, score 0.61,
 uncertainty 0.60, and the illustrative stagnation flag. That is software evidence,
 not an estimate of clinical performance. Nothing was committed, pushed or deployed.
+
+Current post-`c269a89` verification: all **77 existing Python tests passed**, and
+`outputs/wound-venv/bin/python -B scripts/verify-wound-models.py` passed against the
+three original Git LFS checkpoints. The latter checks actual first-image baseline
+fusion, exact two-visit deltas, a stored pending capture retried with the real models,
+historical pipeline readback, mask/overlay boundaries, unchanged original image
+bytes, app restart and scoped deletion in temporary SQLite. Checkpoint digests
+match the manifest before and after. Existing test files and original model bytes
+were not modified or replaced.
+
+The sample and mirrored second image are synthetic QA fixtures, not a real patient's
+healing sequence. The 10 pixels/cm scale supplied by that script is a test input;
+scores and measured changes from it are not clinical validation. The script does
+not access the application's patient database or claim browser coverage.
+
+Before model retrieval, the workflow revision passed TypeScript, whole-project lint,
+production build and 60 frontend tests. That earlier browser contract QA and the
+missing-model SQLite/proxy smoke check remain scoped separately in
+[the integration guide](WOUND_AI_INTEGRATION.md). Do not promote those results to
+a new all-pages browser pass merely because the model files are now available.

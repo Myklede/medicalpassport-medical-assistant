@@ -1,161 +1,209 @@
-# Wound Lab AI integration — 2026-09-11
+# Wound Lab AI integration — 2026-09-12
 
-Current backend contract: [multi-day trajectory engine and stored sessions](WOUND_TRAJECTORY_ENGINE.md).
-The existing uploader remains single-image. Use Swagger/API for multi-day sessions;
-the session service is present but a session-selector UI is not yet wired.
+Current backend contract: [trajectory engine and stored sessions](WOUND_TRAJECTORY_ENGINE.md).
+`components/wound-analyzer.tsx` embeds `WoundVisitWorkflow`: one or many captures
+are saved in server-listed local SQLite sessions and analyzed with a fixed clinical
+baseline when the required models are available.
 
 ## Run on this laptop
 
-Open two terminals in the repository root and leave both running:
+Leave two terminals running in the repository root:
 
-```powershell
-# Terminal 1: frontend (uses Node 24 even if the system Node is older)
-npx --yes node@24 node_modules/vinext/dist/cli.js dev --host 0.0.0.0 --port 3001
+```bash
+# Terminal 1: Node >=22.13
+pnpm run demo
+
+# Terminal 2: current macOS environment
+outputs/wound-venv/bin/python -B aimedic/main.py
 ```
 
-```powershell
-# Terminal 2: Python 3.14 environment and trained checkpoint already on this laptop
-outputs/pwc-venv/Scripts/python.exe -B aimedic/main.py
+If system Node is older, use
+`npx --yes node@24 node_modules/vinext/dist/cli.js dev --hostname 0.0.0.0 --port 3001`.
+Windows users can follow the environment instructions in
+[`aimedic/README.md`](../aimedic/README.md) using `outputs/pwc-venv/Scripts/python.exe`.
+
+Open **http://localhost:3001/wounds**. Choose an existing tracking session or start
+a new one, select PNG/JPEG files, enter each capture's actual date/time, then choose
+**Lưu & phân tích**. One available image is analyzed with the historical baseline;
+comparable later images add trajectory deltas. Developer Mode also offers a public
+synthetic sample and five selectable profiles. This is a fresh request, not a prerecorded result.
+
+**All three original checkpoints from `c269a89` are present and verified in this
+macOS checkout.** Their paths and optional environment overrides are:
+
+- Fusion: `outputs/pwc-run/best.pt` (`MEDIPASS_MODEL_PATH`).
+- Binary U-Net: `outputs/wound_unet_fusd.pt` (`MEDIPASS_VISUAL_MODEL_PATH`).
+- Tissue: `outputs/pwc-visual-run/best.pt` (`MEDIPASS_TISSUE_MODEL_PATH`).
+
+The checkpoint paths are tracked through Git LFS; the Python environment, generated
+dataset and user SQLite database remain ignored. No replacement model was trained
+for this UI work, and the original checkpoint bytes and backend tests are unchanged.
+The small public synthetic sample is committed with the app. On another clone:
+
+```bash
+git lfs install --local
+git lfs pull
+git lfs ls-files
+shasum -a 256 -c aimedic/checkpoints.sha256
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
 ```
 
-Open **http://localhost:3001/wounds** in Chrome. Complete local sign-in if requested.
-Enable **Developer Mode**, choose **Thử ảnh & hồ sơ mẫu**, then **Phân tích ảnh**. The bundled synthetic image
-and matching profile produce a fresh API request, not a prerecorded result.
-You can instead upload PNG/JPEG. Patient Mode locks one simulated signed-in profile;
-Developer Mode selects one of five profiles and exposes the relative observation day.
+The `.pt` files must contain actual model bytes, not small Git LFS pointer files.
+The verification script loads the originals through the API, uses only a temporary
+SQLite database and synthetic fixtures, and checks unchanged digests afterward.
+It passed on this checkout; original-model inference now runs without a replacement
+checkpoint or fabricated measurements.
 
-On another laptop, install frontend dependencies and follow
-[`aimedic/README.md`](../aimedic/README.md) to create the Python environment, generate
-the 1,000-patient dataset and train a checkpoint first. `outputs/` and weights are
-intentionally not committed. The small public sample is committed with the app.
+The uploader opts into `preserve_on_model_unavailable=true`. When inference returns
+a missing-model 503, the image is retained as `pending_model` with null image/tissue/risk
+estimates. The UI displays **Ảnh đã lưu · đang chờ mô hình AI** and **Phân tích lại ảnh đã lưu**.
+If compatible checkpoints need to be restored, retry analyzes the saved bytes without
+another upload. Missing optional visual models show explicit unavailable panels.
 
-For the optional U-Net panels, first copy supplied binary weights to
-`outputs/wound_unet_fusd.pt`. The following trains only the separate synthetic
-tissue overlay model (skip if it already exists):
+## Desktop and same-Wi-Fi phones
 
-```powershell
-outputs/pwc-venv/Scripts/python.exe -B aimedic/visual_pipeline.py --epochs 5
-```
+Both services run on the laptop. The browser calls same-origin
+`/api/wound-sessions`; the web server forwards only this API to Python at
+`127.0.0.1:8000`. A phone opens `http://LAPTOP-LAN-IP:3001/wounds` and uses
+the same saved sessions. It never calls the phone's loopback. Keep Python on loopback
+and expose the web port only on the trusted LAN. A hosted page cannot reach this
+laptop's service; hosted inference and production authentication are separate work.
+See [LAN startup instructions](RUN_APP_VI.md).
 
-This creates `outputs/pwc-visual-run/best.pt`; both files already exist on this laptop.
-`MEDIPASS_VISUAL_MODEL_PATH` overrides binary weights; `MEDIPASS_TISSUE_MODEL_PATH`
-overrides tissue weights. Missing binary weights leave both panels unavailable.
-Missing only tissue weights preserves isolation and leaves the overlay unavailable.
-See `aimedic/README.md` for model provenance and limits.
-
-Both services must run on the computer running the browser. The requested API URL
-is fixed to `127.0.0.1:8000`; it does not connect a physical phone or a hosted site
-to this laptop. Desktop Chrome device emulation and the same-origin mobile preview
-can use it. Remote service hosting, authentication and a configurable endpoint are
-separate future work. No deployment or GitHub push was performed for this change.
-
-## What changed and what was reused
+## Workflow and integration surfaces
 
 | Surface | Current behavior |
 | --- | --- |
-| `/wounds` | Main Wound Lab now opens the working AI upload/results interface |
-| `/wound-analyzer` | Alternate URL for the same shared client component |
-| `/wounds/history` | Original capture form, EXIF-removing image preparation, symptoms, saved photos, case history and reported-data review |
-| `lib/wound-api.ts` | `analyzeWound(File, object, day = 0, options = {})` retains the original three fields; `options.includePipelineVisuals` adds the opt-in form flag |
-| `components/wound-analyzer.tsx` | Patient/Developer switch, Select, responsive light/dark UI, preview, sample, loading, friendly summary or research pipeline/metadata |
-| `lib/wound-patients.ts` | Five immutable synthetic profiles; Patient Mode always uses `PATIENT_MODE_PROFILE`, regardless of the last developer selection |
-| `public/wound-demo` | One matching synthetic image/profile pair from SYN000014, day 7; no real clinical data |
-| `aimedic/` | Existing late-fusion predictions preserved; optional supplied binary U-Net isolation plus synthetic tissue overlay clipped inside its mask |
+| `/wounds`, `/wound-analyzer` | Shared Patient/Developer analyzer and persistent visit workflow |
+| `components/wound-visit-workflow.tsx` | Server session selector, one/multiple captures, timestamps, durable append/reload, thumbnails, historical selection, confirmed deletion and pending-analysis retry |
+| `lib/wound-sessions-api.ts`, `vite.config.ts`, `app/api/wound-sessions` | Same-origin client; local Node/Vite proxy reaches Python outside the Worker sandbox, with a server route providing a controlled unavailable-service response where loopback is inaccessible |
+| `components/wound-clinical-history.tsx` | Complete four-group clinical encounter accordion |
+| `lib/wound-patients.ts` | Five deeply immutable synthetic profiles, FPG/vascular/neuropathy context and four full clinical visits each |
+| `/wounds/history` | Preserved EXIF-removing R2/D1 capture storage and reported-data review, independent of AI sessions |
+| `lib/wound-api.ts` | Existing stateless `analyzeWound` service remains for compatibility |
+| `aimedic/` | Existing trained architecture, isolated crop/inside-mask tissue counts, trajectory rules, SQLite sessions and API |
+| `public/wound-demo` | SYN000014 day-7 synthetic image/profile; no real clinical data |
+| `components/medipass-brand.tsx`, `components/medipass-badge.tsx`, `app/globals.css` | Shared biometric-shield/pulse badge and Clinical Indigo/Deep Slate theme tokens across the common shell |
 
-Every existing Wound Lab navigation link now reaches the analyzer. **Lịch sử & ghi
-nhận** opens the preserved storage workflow; its AI link returns to the analyzer.
-No stored images, medical records, database schemas or storage providers were migrated.
-The old `lib/vision` placeholder describes the stored-review adapter only, not the
-new local API. Model training remains executable Python CLI work, not a browser button.
+Existing R2/D1 images and clinician records are not migrated. SQLite evolves
+additively to retain pipeline data with image bytes/measurements. Model training
+remains Python CLI work, not a browser control.
 
-## View modes and image provenance
+## View modes and baseline fusion
 
-Patient Mode is the default. It hides metadata controls, developer sample controls,
-technical risk score, intermediate images and model metadata. The friendly summary
-retains quality abstention and one-image/research limits. This is a simulated login
-profile, not real account-to-patient authorization.
+Patient Mode fixes `PATIENT_MODE_PROFILE` (SYN000014), hides technical scores and
+intermediate images, and renders `patient_explanation.locales.vi` by default with
+an English option. All four steps are displayed: simple explanation/baseline;
+biological mechanism; realistic consequences; actions/care triggers. Measurement,
+rule and safety notes remain visible. Quality abstention never becomes reassurance.
 
-Developer Mode offers five age/blood-type/HbA1c/comorbidity profiles via Select.
-Selection fills the displayed baseline and API payload. Changing mode/profile
-clears the image and brief; controls lock during a request. Patient Mode always
-restores SYN000014. These mock profiles do not create Supabase records.
+Developer Mode selects one of five profiles and opens the four pipeline panels for
+any selected saved capture. Changing mode/profile clears unsaved drafts and old
+results, then reloads that patient's sessions; saved images are not deleted.
+This is simulated sign-in, not real patient authorization or a Supabase connection.
 
-The four panels show raw input, actual U-Net foreground with transparent background,
-its tissue overlay, and the late-fusion Clinical Brief with the selected baseline.
-API v2 now counts tissue percentages within the binary mask, including unclassified
-pixels. Tissue inference and the learned risk head receive an isolated crop;
-overlays are still not feature attribution. The model architecture is unchanged.
-The binary U-Net uses supplied weights whose training provenance/clinical performance
-are not verified here. It runs on CPU with ImageNet normalization, 256×256 input,
-sigmoid >0.35 and original-size masks. Tissue and fusion training remain synthetic.
+Baseline keys are `patient_id`, `age`, `blood_type`, **`hba1c_level`**,
+`has_diabetes_type_2`, `hypertension`, `fpg_mg_dl`,
+`peripheral_vascular_status` (`normal`, `impaired`, `unknown`) and
+`neuropathy_status` (`present`, `absent`, `unknown`).
+Each session retains its original baseline. Additional clinical context affects
+deterministic rules and explanations, not the learned model's feature architecture.
 
-Developer Mode requests `include_pipeline_visuals=true`; Patient Mode omits it.
-Base64 strings include MIME/status/provenance fields. The UI accepts bounded PNG/JPEG
-data only and displays placeholders if images are absent, malformed, quality-abstained
-or unavailable from an older server.
+The accordion exposes all 20 synthetic visits: recorded reference ranges/flags,
+wound dimensions and tissue ratios, procedures, exact medication doses/dressings,
+offloading plans and follow-up dates. Carried-forward HbA1c keeps its original
+measurement date. These historical records are never substituted for measurements
+from newly uploaded images.
 
-## Contract and limits
+## Chronology, persistence and deletion
 
-Baseline keys are `patient_id`, `age`, **`hba1c_level`**, `blood_type`,
-`has_diabetes_type_2`, and `hypertension`. The spelling uses the digit **1**, not
-`hbaic_level`. `day` is a nonnegative relative observation day, default 0.
+Each append request accepts one PNG/JPEG, up to 8 MiB. The UI serializes a batch
+in capture-time order and preserves successful saves if a later request fails.
+Sessions allow up to 1,000 captures. Duplicate images and backward timestamps/days
+are rejected. The UI derives relative days from capture times with a fixed session
+anchor; deleting a capture does not renumber the remaining history.
 
-The browser sends no manually constructed Content-Type header so its multipart
-boundary stays valid. Requests time out after 60 seconds. FastAPI 422 messages show
-the field and message without dumping the submitted `input` object. Editing inputs
-clears a previous brief. Rejected image quality displays missing estimates as dashes,
-not zeros; malformed success payloads become errors rather than fabricated metrics.
+One analyzed capture provides a full current baseline-fused brief but no invented
+healing rate. Two comparable captures expose exact tissue percentage-point and
+cm²/pixel deltas. Optional `pixels_per_cm` must come from a same-plane ruler in
+that image; pixel comparisons require explicit capture consistency. A ≥7-day
+nearly unchanged trajectory with diabetes OR HbA1c >8% triggers a research review
+alert, separate from the legacy >7-day area-only flag. These are not validated
+clinical timers, probabilities or instructions to wait for symptoms.
 
-The current endpoint accepts **one image per request**. Its tracker returns current
-estimates and `trajectory_available: false`; repeated uploads do not become a time
-series automatically. Multi-visit analysis remains available through the Python
-tracker CLI. The score describes the invented simulator target, not a calibrated
-clinical probability. No diagnosis, clinical validation or regulatory approval is
-claimed. A clinical photograph is outside the model's synthetic training domain.
+SQLite defaults to ignored `outputs/wound-sessions.sqlite3` and has no automatic
+expiry. Browser storage clearing or service restarts do not erase this database.
+Delete controls confirm permanent removal of one capture or a complete session;
+remaining trajectories are recomputed. SQLite is local storage, not cloud backup
+or clinician-confirmed records. Supabase and the original R2/D1 history remain separate.
 
-The stateless endpoint deletes temporary upload files. New session endpoints store
-images/measurements in local SQLite and recalculate the multi-day brief on read.
-These AI sessions are not saved to Supabase, D1, R2 or clinician-confirmed records. The separate history workflow
-continues saving captures to private R2 and metadata to D1 as before.
+Multipart requests let the browser set Content-Type/boundary. Session requests
+time out after 65 seconds; the UI reloads server state before retrying an uncertain
+save. Invalid/identity-mismatched success payloads are rejected; unavailable
+measurements are null/dashes, never zero estimates.
+
+## Historical visual pipeline
+
+The workflow requests/stores visuals even when Patient Mode hides them. Developer
+Mode reopens input, U-Net isolation, tissue overlay and Clinical Brief through the
+selected capture. Raw input can always be retrieved separately from the stored image.
+
+Binary U-Net uses supplied weights, CPU/ImageNet normalization, 256×256 input,
+sigmoid >0.35 and original-size masks. Tissue inference and the learned risk head
+receive the isolated crop; tissue percentages count all mask pixels, including
+unclassified pixels. These panels are not feature attribution. Missing, malformed,
+quality-abstained or unavailable images receive honest placeholders. Current
+original-checkpoint API verification confirmed both derived images, original-size
+mask restoration and unchanged overlay pixels outside the mask on the synthetic fixture.
 
 ## Verification
 
-```powershell
-# Contract tests; no API server needed
-npx --yes node@24 --test tests/wound-api.test.ts
+```bash
+npx --yes node@24 --test tests/wound-api.test.ts tests/wound-sessions-api.test.ts tests/wound-presentation.test.ts
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+outputs/wound-venv/bin/python -B -m unittest discover -s aimedic -p 'test_*.py' -v
+pnpm build
 
-# Browser integration; requires both servers and the existing ignored Playwright install
-$env:MEDIPASS_TEST_URL='http://localhost:3001'
+# Browser contract QA, frontend required; uses isolated in-memory session fixtures
 npx --yes node@24 tests/wound-analyzer-browser.mjs
-
-# Full pre-push check (does not push)
-npx --yes node@24 scripts/pre-push-check.mjs
 ```
 
-The browser script covers real multipart inference, disabled/loading states,
-structured results, 422 and connection failures, quality abstention, stale-result
-clearing, mobile dark mode without horizontal overflow, the synthetic sample, both
-analyzer routes, and preserved history navigation/inputs. It does not save medical
-data. Screenshots are written under ignored `outputs/qa/`.
+After retrieving `c269a89`, the unchanged **77 Python tests** and
+`scripts/verify-wound-models.py` passed with the original materialized checkpoints.
+The isolated API verification covers full single-image baseline fusion, two-visit
+exact area/tissue deltas, actual pending-image retry, persisted historical pipeline
+visuals, exact input bytes, reopening the database and patient-scoped deletion.
+The sample produced 2,536 wound-mask pixels; changing only the synthetic baseline
+changed the learned score while leaving the tissue mask/counts unchanged. This
+demonstrates integration and baseline sensitivity, not calibrated risk or clinical
+accuracy. The second capture is an explicitly mirrored synthetic fixture; its
+differences must not be interpreted as observed healing. No user data was accessed.
 
-`tests/browser.mjs` now enters **Lịch sử & ghi nhận** before testing the existing
-capture/save/readback flow. `scripts/pre-push-check.mjs` includes the ten new
-service/profile tests along with the existing unit suite, TypeScript and production build.
+Earlier on 12 September, before the checkpoint retrieval, the workflow revision
+passed **60 frontend unit tests**, TypeScript, whole-project `pnpm run lint`,
+`pnpm build`, and the unchanged **77 Python tests**. Chrome contract
+QA passed single/multi-capture persistence, restored server lists without localStorage,
+historical pipeline selection, all clinical fields, VI/EN education, missing-model
+retry, confirmed deletion, 390px light/dark layouts, annotation cancellation and
+same-origin iframe theme synchronization. Browser inference responses use isolated
+in-memory fixtures; they are not original-checkpoint validation.
 
-Verified on 2026-09-11: **41 frontend unit tests, 30 Python tests, TypeScript, production build and the focused
-Chrome integration script passed**. Both the frontend on 3001 and FastAPI on 8000
-were running during the live upload tests. The full portal browser suite was not
-rerun for this wound-only change; its history route entry was updated. Focused QA
-covers all five developer profiles, fixed patient identity after mode switching,
-rejection of mismatched response identity, three decodable images/four pipeline
-panels, older-server fallback and both modes in mobile dark/light layouts.
+A separate pre-retrieval localhost/SQLite smoke check used an isolated synthetic QA identity:
+create/upload/list/reload, exact retained PNG bytes, selected historical brief,
+failed pending-model retry without data loss, wrong-patient rejection, origin guard,
+visit deletion and session cleanup all passed. The LAN address also returned the
+same session API. That run exercised the missing-model path; the actual original-model
+checks above now cover successful inference and retry separately.
 
-Binary update, 2026-09-11: **42 Python tests passed, 0 failed** using the project's
-virtual environment and `unittest discover -s aimedic -p 'test_*.py' -v`.
-Fixtures now separate the single-output SMP binary model from the tissue classifier.
-Coverage includes normalization, threshold, original-size masks, background exclusion,
-empty masks, unavailable models and relative paths. Live inference with the supplied
-checkpoint returned HTTP 200 with both images. SHA256 checks confirmed unchanged
-`train_loop.py`, `multimodal_model.py` and `inference_tracker.py` at that stage.
-Subsequent trajectory revision: **69 Python tests passed**, tracker/API updated;
-training and core multimodal model remain unchanged. See the current trajectory guide.
+Historical QA on 2026-09-11 passed 41 frontend tests, TypeScript/build and focused
+Chrome checks; Python counts progressed from 30 to 42, 69 and 77 as backend features
+were added. Those older runs included supplied-checkpoint visual inference on a
+different environment. They remain historical records; the current model retrieval
+and isolated API results above are separate evidence. None establish clinical validation
+or a new all-pages browser verification.
+
+`tests/wound-analyzer-browser.mjs` now exercises the persistent workflow with
+in-memory session fixtures. It verifies UI/API contracts without touching real
+SQLite, Supabase or owner data, and does not verify original-checkpoint inference.
+`tests/browser.mjs` uses **Lịch sử & ghi nhận** for the preserved R2/D1
+capture/save/readback flow.

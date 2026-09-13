@@ -1,10 +1,11 @@
-import { ArrowRight, Database, FileHeart, HeartPulse, MessageSquare, ShieldCheck, Smartphone, Stethoscope } from 'lucide-react';
+import MediPassBrand from '@/components/medipass-brand';
+import { ArrowRight, Database, FileHeart, MessageSquare, ShieldCheck, Smartphone, Stethoscope } from 'lucide-react';
 import Link from '@/components/app-link';
 
 export default function Home() {
   return <main className="mp-lobby">
     <header className="mp-lobby-nav">
-      <Link href="/" className="mp-lobby-brand"><span><HeartPulse /></span>MediPass</Link>
+      <Link href="/" className="inline-flex rounded-xl focus-visible:outline-2 focus-visible:outline-blue-600"><MediPassBrand /></Link>
       <p><ShieldCheck />Demo riêng · dữ liệu giả lập</p>
     </header>
 
