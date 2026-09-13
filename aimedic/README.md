@@ -1,350 +1,325 @@
-# MediPass: multimodal wound research prototype
+# MediPass — Medical Assistant Demo
 
-Current integration revision (2026-09-12): the unchanged **77 tests passed, 0 failed**,
-plus actual original-model API verification through `scripts/verify-wound-models.py`.
-The three checkpoints from `c269a89` are materialized through Git LFS and match
-`aimedic/checkpoints.sha256`. API v2 uses mask-only
-tissue counts, durable SQLite sessions and baseline-aware trajectory rules. Web UI
-now lists/reopens sessions, appends one or many images, shows historical pipeline
-panels and confirms visit/session deletion. Read
-[the current trajectory contract and runnable example](../docs/WOUND_TRAJECTORY_ENGINE.md).
-Patient explanations now follow explanation → mechanism → consequence → next steps
-in English and Vietnamese, with source links and separate clinician wording.
-Earlier training/QA results below describe the original simulator and visual integration.
+MediPass is a Patient-Controlled Medical Record platform functioning as a digital "Medical Passport." It allows individuals to maintain, understand, and securely share their health data with clinicians across different healthcare systems.
+Rather than focusing purely on technical infrastructure, the system is designed to solve medical record fragmentation, translate complex clinical jargon into plain language, and offer practical, at-home AI monitoring tools.
+How MediPass Operates
+Centralized Data Aggregation: Users gather their entire medical history—diagnoses, allergies, medications, lab tests, and attached files (wound photos, paper records, insurance PDFs)—into one unified, patient-owned space.
+Automated Clinical Translation: Raw medical observations and test markers are automatically translated into accessible explanations: how a condition affects the body, what dietary/lifestyle adjustments are recommended, and which red-flag symptoms require immediate emergency care.
+Patient-Governed Access: The patient dictates who sees what. When visiting a new provider, they can generate a temporary summary link or standardized export without exposing their entire life history.
+Context-Aware Assistance: Built-in AI tools track wound healing progress from serial photos, interpret complex insurance policy benefits, and cross-reference medications when traveling or relocating internationally.
+Detailed Feature Breakdown
 
-Updated 2026-09-12. All five executable Python scripts are implemented. Training runs
-locally via CLI. The website's `/wounds` and `/wound-analyzer` use `WoundVisitWorkflow`
-and `lib/wound-sessions-api.ts` through the web server's same-origin proxy to Script 5.
-The stateless `lib/wound-api.ts` remains compatible. `/wounds/history` preserves the original
-stored captures and reported-data rules. Model results do not write to Supabase or
-patient records. See [frontend integration](../docs/WOUND_AI_INTEGRATION.md).
+1. Medical Passport & Core Health Records
+   Five Essential Record Categories: Organizes health data into Allergies, Conditions, Medications, Lab Results, and Encounters (clinical visits).
+   Visit Cards: Every encounter is stored as a self-contained card containing the reason for the visit, reported symptoms, provider diagnosis, vital signs, ordered labs, prescribed medications, and follow-up care plans.
+   International Patient Summary (IPS Export): Generates a bilingual, human-readable PDF accompanied by standardized HL7 FHIR IPS data. The first page prioritizes critical safety information—allergies, active conditions, current medications, and baseline vitals—so any clinician can grasp the patient’s profile in seconds.
+   Timeline Search & Filters: Quickly locate specific historical data (e.g., searching "Hemoglobin") or filter records across a chronological care timeline.
 
-## Run from the repository root
+2. Dual-Interface Experience: Hospital vs. Patient
+   Hospital Portal (/editor): Built for comprehensive clinical data entry and management, displaying full clinical terminology, standardized codes, and administrative edit controls.
+   Patient View (/patient): A read-only, patient-friendly environment that suppresses confusing medical code structures and emphasizes:
+   Clear explanations of active conditions.
+   What abnormal lab values signify.
+   Practical lifestyle/dietary guidance and specific warning signs that demand clinical attention.
 
-Create an isolated Python environment. Activation is unnecessary on Windows:
+3. Wound Monitoring Assistant (Wound Lab)
+   Image Segmentation: Patients photograph wounds over time; the tool isolates the wound boundary, measures surface area, and assesses tissue composition.
+   Healing Trajectory Tracking: Compares serial images across days to determine whether a wound is closing normally or showing signs of deterioration, providing an objective trajectory along with confidence notes.
+   Privacy-First Ingestion: Automatically scrubs device and location metadata (EXIF data) within the browser before images are encrypted and stored.
 
-**Current macOS checkout:** the environment is `outputs/wound-venv/bin/python`.
-The original fusion/binary/tissue checkpoints from `c269a89` have been retrieved,
-SHA-256 verified and exercised by real single/two-visit API inference. On a new
-clone, install Git LFS and materialize the existing models before starting:
+4. Insurance Policy Decoder (/insurance)
+   Benefits Document Intake: Users upload standard Summary of Benefits and Coverage (SBC) documents.
+   Out-of-Pocket Cost Estimation: When a user inputs a routine care scenario (such as "in-network knee MRI"), the system parses the document to estimate:
+   Remaining deductible.
+   Copay or coinsurance responsibility.
+   Estimated plan coverage versus out-of-pocket costs.
+   Prior authorization requirements, complete with page-specific policy citations.
+
+5. Cross-Border Medication Crosswalk (/medications)
+   Active Ingredient Mapping: Enables patients (such as international students or travelers) to match 20 major drug categories across Vietnam, the United States, India, and China.
+   Safety Over Brand Names: Normalizes commercial brand names to standard active molecules, strengths, and dosage forms (tablets, syrups). It highlights prescription (Rx) versus over-the-counter (OTC) status while explicitly mandating professional pharmacist sign-off before substitution.
+
+6. Physical Therapy Form Checker (Motion Lab — Prototype)
+   Joint Tracking: Leverages the user's camera to identify skeletal landmark coordinates (shoulders, elbows, hips, knees).
+   Repetition Counting & Alignment Feedback: Supports guided home exercises by counting completed reps and flagging posture deviations.
+   On-Device Processing: Analyzes motion entirely within the local browser session without recording, streaming, or saving raw video feeds.
+
+Wound backend update (2026-09-11): masked tissue counts, persistent local image sessions, multi-day baseline-aware trajectory rules, risk/uncertainty, and evidence provenance are implemented. Bilingual patient explanations now explain the mechanism, possible consequences, and safe next steps; **77 Python tests passed.** See [trajectory API, runnable example and handoff](https://www.google.com/search?q=docs/WOUND_TRAJECTORY_ENGINE.md). The website uploader supports multi-day wound sessions and renders chronological changes in the research dashboard. Scores are uncalibrated research outputs.
+
+> Quickstart for new AIs/contributors: read [`AGENTS.md`](AGENTS.md), [feature-to-Supabase alignment](https://www.google.com/search?q=docs/PORTAL_AUDIT.md), then [the project vision/whitepaper provided by the project owner](https://www.google.com/search?q=docs/PROJECT_VISION_WHITEPAPER_VI.md).
+
+MediPass is a working demo of a **patient-controlled medical record**: users can view, search, add, edit, and soft-delete medical history; upload private images/PDFs; and generate a concise "Medical Passport" for their next visit.
+
+Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
+
+How to open with Chrome, run locally on a fixed port `3001`, and access from a mobile phone: [`docs/RUN_APP_VI.md`](https://www.google.com/search?q=docs/RUN_APP_VI.md).
+
+> **Mandatory Disclaimer:** This is a research/startup prototype. It is not a medical device, does not provide diagnoses or treatment advice, and has not been declared HIPAA compliant. Use synthetic or de-identified data only.
+
+## What is Currently Running
+
+- Minimalist lobby `/`: select hospital portal, patient view, mobile frame, data, or edit requests before entering a record.
+- Hospital portal `/editor`: 5 simulated patients, add/edit general records, and complete visit entries.
+- Patient view `/patient`: identical data, read-only, includes plain-language disease and lab test explanations covering impact, monitoring goals, diet/lifestyle, and red-flag symptoms.
+- From the selected record in `/editor` or `/patient`, the **Export IPS** button generates a human-readable bilingual PDF and an HL7 International Patient Summary (IPS) 2.0.1 compliant FHIR R4 document Bundle. The first page of the PDF prioritizes patient identification, allergies/conditions/medications, vitals, and plan; subsequent pages detail clinical specifics, provenance, and safe-use notices. The PDF embeds the FHIR JSON Bundle itself. Missing data uses Data Absent Reason/`unavailable` without collapsing empty arrays into "no conditions, allergies, or medications"; exports are always clearly marked as preliminary and uncertified/unsigned by a clinician.
+- The portal and UI comments are stored in the Supabase project `gsllxxdewmksjbcnxgvp` via the backend; API keys are never exposed on the client or in Git.
+- **UI Annotation** mode: select an area via mouse/touch, pin a comment to a specific patient/visit, and review it at `/feedback`.
+- Responsive interface and mobile test frame `/mobile` at 360/390/430 px.
+- `/medications` demo compares 20 medication classes across Vietnam, India, the US, and China by standardized active ingredient, strength, dosage form, and Rx/OTC status; always mandates pharmacist/prescriber verification and does not assert automatic therapeutic equivalence.
+- `/insurance` securely stores SBC PDFs for user retrieval or download, extracts text, accepts condition/service descriptions, and generates estimates for deductible, copay/coinsurance, network status, prior authorization, plan share, and user share. Results and query history are saved per patient in D1; PDFs reside in R2. Scanned/unreadable PDFs default to simulated coverage profiles and are explicitly labeled.
+- Light/Dark mode shared across desktop and mobile; user preference is persisted in the browser.
+- Each visit is represented as a card detailing reason for encounter, symptoms, diagnosis/annotations, vital signs, labs, medications, procedures/services, care plan, and practitioner.
+- Medical annotations currently cover 5 sample underlying conditions and 6 primary lab tests. The app strictly matches verified terminology, uses reference ranges directly from the lab report, and avoids guessing unknown terms.
+- Unified overview dashboard tracking a consistent fictional patient.
+- 5 record types: Allergy, Condition, Medication, Lab Result, and Encounter.
+- Add, read, edit, and soft-delete records.
+- Search and timeline filtering by record type.
+- Clinical summary / "Medical Passport".
+- Upload PDFs, JPEGs, and PNGs (up to 8 MB) to private object storage, retrievable via an ownership-verified API.
+- Data persists across page refreshes.
+- Automated synthetic data seeding for every new demo account.
+- Server-side ownership verification and audit logs for read/write/upload/download operations.
+- Responsive for desktop/mobile, `Cmd/Ctrl + K` keyboard shortcut, and explicit loading/error/empty states.
+
+Wound Lab features local AI trained on simulated imagery, Patient/Developer Mode, a research U-Net segmentation layer, and an isolated image/history storage pipeline. Clinically validated computer vision, pose estimation models, real-time insurance eligibility/EDI, and live medication catalogs remain on the roadmap; Motion Lab currently provides a live camera preview, `/insurance` utilizes a rule-based policy parser, and `/medications` operates on a curated demo dataset.
+
+Guide for pushing commits to GitHub: [`docs/GITHUB_PUSH_GUIDE_VI.md`](https://www.google.com/search?q=docs/GITHUB_PUSH_GUIDE_VI.md).
+
+## Demo Architecture
+
+```text
+Browser / mobile PWA
+        |
+        | HTTPS + authenticated user headers
+        v
+Vinext / React UI
+        |
+        | /api/records               /api/files
+        v                             v
+Cloudflare D1 (SQLite)          Cloudflare R2 (private files)
+        |
+        +-- app_users
+        +-- patients
+        +-- patient_memberships
+        +-- health_records
+        +-- storage_objects
+        +-- audit_events
+
+```
+
+The frontend never accesses the database directly. Each request resolves user → membership → patient, appending `patient_id` to every downstream query. This serves as the RLS abstraction layer for the D1 demo.
+
+### Current APIs
+
+| Endpoint                                     | Method | Function                                                       |
+| -------------------------------------------- | ------ | -------------------------------------------------------------- |
+| `/api/records`                               | GET    | Retrieve patient + all non-deleted records                     |
+| `/api/records`                               | POST   | Create a new record                                            |
+| `/api/records`                               | PATCH  | Update a record belonging to the current patient               |
+| `/api/records`                               | DELETE | Soft-delete a record                                           |
+| `/api/files`                                 | POST   | Upload a file to R2 and store metadata in D1                   |
+| `/api/files?id=...`                          | GET    | Retrieve a file after ownership verification                   |
+| `/api/files`                                 | DELETE | Delete object and soft-delete metadata                         |
+| `/api/portal/ips?patient_id=...&format=pdf`  | GET    | Export IPS PDF following ownership check; PDF embeds FHIR JSON |
+| `/api/portal/ips?patient_id=...&format=json` | GET    | Export standalone FHIR R4 document Bundle                      |
+
+Drizzle migrations reside in `drizzle/`. Source schema is located at `db/schema.ts`; idempotent runtime initialization is defined in `db/runtime.ts` to allow immediate local demo execution.
+
+## Supabase Status
+
+The portal is currently connected to Supabase project `gsllxxdewmksjbcnxgvp`. The `mp_*` tables store patients, conditions, allergies, practitioners, encounters, labs, medications, services, audit trails, and UI feedback comments. The backend uses a server secret; the client receives no keys. `/records` data, Wound Lab, and private files partially utilize D1/R2 as outlined in the audit documentation.
+
+Remaining production steps for Supabase:
+
+1. Migrate D1 to PostgreSQL while preserving current relational schemas.
+2. Integrate Supabase Auth; configure `patient_memberships` for owner/patient/caregiver roles.
+3. Enable RLS across **all** tables containing patient data; enforce policies that verify active membership or explicit access grants.
+4. Transition R2 to private Supabase Storage; restrict generation of short-lived signed URLs to the backend.
+5. Add `access_grants`, `consents`, and `share_links` featuring token hashing, expiration, scoping, and revocation capabilities.
+6. Deconstruct clinical tables into `conditions`, `allergy_intolerances`, `observations`, `diagnostic_reports`, `encounters`, `procedures`, `medication_statements`, and `document_references`.
+7. Retain normalized fields for query performance alongside `source_fhir_json JSONB` for imports/exports; avoid flattening the entire schema into a single monolithic JSONB table.
+8. Integrate `pgvector` for insurance RAG once document ingestion and search stabilize.
+
+Supabase mandates a signed BAA and a HIPAA/High Compliance configuration when handling PHI; using Supabase **does not automatically** ensure HIPAA compliance. Refer to the [Supabase HIPAA guidance](https://supabase.com/docs/guides/security/hipaa-compliance), [HIPAA projects](https://supabase.com/docs/guides/platform/hipaa-projects), and [Row-Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## Recommended Production Data Model
+
+### Identity, Consent, and Sharing
+
+- `app_users`, `patients`, `patient_memberships`
+- `organizations`, `practitioners`, `practitioner_roles`
+- `access_grants`, `share_links`, `consents`
+- `resource_provenance`, append-only `audit_events`
+
+QR code shares should carry only an opaque, single-use token; the database stores solely the token hash. Tokens must be read-only, scoped, short-lived, and revokable. Never embed names, patient IDs, or PHI directly in the QR code.
+
+### Clinical Records
+
+- `encounters`
+- `conditions`
+- `allergy_intolerances`
+- `observations` + `observation_components`
+- `diagnostic_reports` + links to observations
+- `procedures`
+- `medication_statements`
+- `storage_objects` + `document_references`
+- `insurance_coverages` + `insurance_benefits`
+
+Medical codes are stored as a triad of `code_system`, `code`, and `display`: ICD-10-CM, SNOMED CT, LOINC, RxNorm, and UCUM. The UI does not require non-clinical users to enter codes directly; codes reside in Advanced Details or are resolved during import mapping.
+
+FHIR is a data exchange standard, not a security protocol. The demo implements preliminary export aligned with [International Patient Summary 2.0.1](https://hl7.org/fhir/uv/ips/en/): a `document`-type Bundle led by a Composition resource, Patient, and the three mandatory sections: Problem List, Allergies/Intolerances, and Medication Summary; empty sections apply `emptyReason=unavailable`. Eight synthetic test fixtures achieved 0 errors/0 warnings using the HL7 FHIR Validator 6.9.12, FHIR R4 4.0.1, IPS 2.0.1 package, and `tx.fhir.org`; this confirms fixture profile conformance, not product certification or clinician attestation. Ingestion, independent consumer validation, and live hospital EHR integration still necessitate SMART/OAuth, consent management, patient matching, terminology normalization, and formal integration agreements. Reference: [FHIR overview](https://hl7.org/fhir/overview.html), [US Core](https://www.hl7.org/fhir/us/core/), and [FHIR security](https://hl7.org/fhir/R4/security.html).
+
+## Four-Pillar Feature Roadmap
+
+### 1. Medical Passport and Record Synchronization
+
+**Next MVP**
+
+- Patient profile, caregiver membership, consent management, and time-limited share links.
+- **Implemented in demo:** FHIR IPS document Bundle export + PDF with embedded JSON; eight adverse test fixtures validated by HL7 Validator. Next production milestones include automated release gates, independent consumer integration testing, clinician digital signatures/attestations, import pipelines, and granular provenance tracking.
+- Clear provenance labeling: self-reported, provider document, imported, verified.
+- Medication reconciliation and dedicated clinician view.
+- No automated clinical diagnoses; all critical alerts require a validated clinical rules engine.
+
+### 2. Insurance Policy Checker
+
+**Implemented in demo:** `/insurance` uploads SBC PDFs to R2, persists metadata/parsing results in D1, supports document selection and download, parses text via an in-Worker PDF engine, and calculates cost-sharing estimates based on described services and network status. Parsed citations retain page-level provenance; unreadable tables trigger explicit warnings of simulated data usage. Real-time deductible accumulators, negotiated allowed amounts, CPT/HCPCS crosswalks, eligibility (270/271), and claims processing are not yet integrated live.
+
+Target pipeline:
+
+```text
+Private PDF upload
+  -> malware/file validation
+  -> PDF text + table extraction
+  -> section-aware chunking
+  -> embedding
+  -> vector retrieval
+  -> answer with page/section citation + uncertainty
+
+```
+
+MVP scope covers deductible, out-of-pocket maximum, copay, coinsurance, network limits, formulary tiering, visit caps, and prior authorizations. Responses must cite page/section numbers and explicitly state that estimates do not constitute a formal coverage determination. CMS guidelines on SBC documents: [Summary of Benefits and Coverage](https://www.cms.gov/marketplace/health-plans-issuers/summary-benefits-coverage).
+
+### 3A. Wound Monitoring / UB Research
+
+To align with UB's Precision Wound Care initiative, avoid early claims of "infection diagnosis." Instead, construct a **longitudinal capture + annotation pipeline**:
+
+```text
+wound_case
+  -> wound_visit / assessment at t0, t1, t2...
+  -> media asset (RGB first; modality + device + capture protocol + calibration)
+  -> clinician annotation / segmentation mask
+  -> area and tissue measurements
+  -> healing trajectory for research review
+
+```
+
+Initial AI milestone: wound margin segmentation and surface area trajectory; progressing sequentially to tissue classification, multimodal fusion, and predictive forecasting. Model inferences reside in `ai_inferences` without overwriting verified clinician records. Training imagery requires dedicated study consent, patient-level data splits, versioned datasets, and external multi-center validation.
+
+The UB initiative emphasizes multimodal sensing, objective metrics, early deterioration detection, and predictive/preventive wound healing: [Precision Wound Care opportunity](https://www.buffalo.edu/undergrad-research/opportunities.host.html/content/shared/www/undergrad-research/research-opportunities/precision-wound-care-collaborative-ai-powered-multimodal-monitoring-for-predictive-preventive-healing.detail.html).
+
+### 3B. Physical Therapy Pose Tracking
+
+- MediaPipe Pose/TensorFlow.js running client-side in the browser.
+- Joint angle calculation derived from hip–knee–ankle or shoulder–elbow–wrist coordinates.
+- Finite-state machine for rep counting; exercise-specific heuristics to flag form deviation.
+- Store reps, range of motion (ROM), session aggregates, and form anomalies; **do not store raw video streams by default**.
+- If video retention is required, implement explicit consent protocols, retention lifecycle policies, encrypted private storage, and clinician-only access tiers.
+
+### 4. Cross-Border Medication Reconciliation
+
+Target pipeline:
+
+```text
+Prescription / label OCR
+  -> extract ingredient + strength + dose form + route
+  -> WHO INN normalization
+  -> country-specific regulatory catalog
+  -> U.S. RxNorm/NDC mapping
+  -> candidate match
+  -> pharmacist verification
+
+```
+
+The UI must explicitly display: "candidate matching ingredients/strength/form — pharmacist verification required"; avoid labeling items as "equivalent substitutes" solely on the basis of shared active ingredients. [WHO INN](https://www.who.int/teams/health-product-and-policy-standards/inn/) provides the global baseline; [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/overview.html) handles standard US drug mapping.
+
+Note: RxNav deprecated its drug–drug interaction (DDI) API endpoint on 2024-01-02; do not design new DDI pipelines against that service. See the [RxNav FAQ](https://lhncbc.nlm.nih.gov/RxNav/information/FAQs.html).
+
+## Minimum Production Infrastructure
+
+| Layer                    | Recommended Architecture                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web/PWA                  | Next.js/React, TypeScript, Tailwind CSS                                                                                                        |
+| Auth + Relational DB     | Supabase Auth + PostgreSQL + RLS                                                                                                               |
+| File Storage             | Private Supabase Storage or Cloudflare R2                                                                                                      |
+| Interoperability / FHIR  | FHIR R4/US Core mapping + IPS export; HAPI FHIR for complex integrations                                                                       |
+| AI / Inference APIs      | Python FastAPI, isolated container runtime, async task queue                                                                                   |
+| Insurance RAG            | PDF parser, structured chunking, vector embeddings, pgvector/Vectorize, attributed outputs                                                     |
+| Computer Vision Research | PyTorch, experiment tracking (MLflow/W&B), dataset/model versioning, clinician-in-the-loop validation                                          |
+| Pose Estimation          | On-device MediaPipe Pose / TensorFlow.js                                                                                                       |
+| Observability            | Structured PHI-redacted logs, error tracing, performance metrics, immutable audit trails                                                       |
+| Security & Compliance    | TLS termination, secret managers, MFA, least-privilege RBAC, encryption at rest/in transit, automated backups/PITR, incident response runbooks |
+| CI/CD & Delivery         | Segregated dev/staging/prod environments, automated migrations, CI test suites, IaC, vulnerability/dependency scanning                         |
+
+Never ingest production relational databases containing identifiers directly into model training datasets. Build dedicated de-identification pipelines, consent tracking, and isolated dataset snapshots. HHS details both HIPAA de-identification pathways in the [HHS De-identification Guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html). Non-covered consumer health applications remain subject to the [FTC Health Breach Notification Rule](https://www.ftc.gov/business-guidance/resources/health-breach-notification-rule-basics-business).
+
+## Realistic Implementation Sequence
+
+1. **Completed:** Responsive frontend, database schema, private file storage, per-user ownership enforcement, CRUD operations, timeline, search/filter, synthetic demo seeding.
+2. Supabase production schema + RLS test harness + consent/sharing/audit frameworks.
+3. Upgrade the demo FHIR/IPS export into a validated and cryptographically signed pipeline; add import functionality and clinician read-only access.
+4. **Demo implemented:** Insurance PDF ingestion + clause extraction/citation + cost estimation history; next production stage requires section-level vector retrieval, EDI 270/271 integration, CPT/HCPCS crosswalks, and live eligibility/claim checks.
+5. Wound longitudinal data collection and labeling pipeline; secure IRB approval and research consent prior to acquiring real patient data.
+6. Wound segmentation model training and research validation; strictly omit diagnostic claims.
+7. Client-side physical therapy pose estimation proof of concept.
+8. Active ingredient normalization and cross-border drug catalog mappings; build pharmacist review workflows.
+9. Formal clinical safety, data privacy, cybersecurity, and regulatory compliance audits prior to clinical pilot deployment.
+
+## Running Locally
+
+Prerequisites: Node.js `>=22.13` and pnpm.
+
+```powershell
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run demo
+
+```
+
+Open `http://localhost:3001/editor`. Compatible with Chrome, Edge, Safari, or mobile browsers; the server operates independently of the browser environment. For detailed setup instructions, see [`docs/RUN_APP_VI.md`](https://www.google.com/search?q=docs/RUN_APP_VI.md).
+
+Validate build and schema:
 
 ```bash
-git lfs install --local
-git lfs pull
-shasum -a 256 -c aimedic/checkpoints.sha256
-outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+pnpm run db:generate
+pnpm run build
+pnpm run lint
+
 ```
 
-Keep `pnpm run demo` running in one terminal and
-`outputs/wound-venv/bin/python -B aimedic/main.py` in another, then open
-`http://localhost:3001/wounds`. The verification script uses a temporary SQLite
-database and the committed synthetic fixture; it never touches the user's database
-or trains/modifies models. Pending-image storage, session listing/readback/deletion
-and JSON reported-metric review also work if models become unavailable. The training
-commands below document the original research workflow; no replacement model was
-trained for this integration.
+## 90-Second Demo Pitch Flow
 
-```powershell
-python -m venv outputs/pwc-venv
-outputs/pwc-venv/Scripts/python.exe -m pip install -r aimedic/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
-outputs/pwc-venv/Scripts/python.exe -B aimedic/synthetic_data_generator.py
-outputs/pwc-venv/Scripts/python.exe -B aimedic/multimodal_model.py
-outputs/pwc-venv/Scripts/python.exe -B aimedic/train_loop.py --epochs 10 --out outputs/pwc-run
-outputs/pwc-venv/Scripts/python.exe -B aimedic/inference_tracker.py --checkpoint outputs/pwc-run/best.pt --profile outputs/pwc-synthetic/patients/SYN000001/patient_profile.json --images outputs/pwc-synthetic/patients/SYN000001/day_001_rgb.png outputs/pwc-synthetic/patients/SYN000001/day_003_rgb.png outputs/pwc-synthetic/patients/SYN000001/day_007_rgb.png --out outputs/pwc-brief.json
-```
+1. Open Overview; highlight the Penicillin allergy and active medical conditions immediately.
+2. Navigate to the Medical Passport to show the consolidated cross-provider summary.
+3. Go to Medical Records; search `Hemoglobin`, filter by Lab Results.
+4. Add a synthetic lab result and attach a mock PDF/image.
+5. Refresh the page: demonstrate data persistence; reopen the attachment.
+6. Edit the record, then soft-delete it; explain the audit trail and ownership validation logic.
+7. Open `/insurance`, select a saved SBC, input an in-network MRI scenario, and highlight the estimated plan/patient cost shares, prior authorization requirements, and source citations.
 
-On macOS/Linux use the chosen environment's `bin/python` instead of the Windows executable.
-Use a Python version supported by the installed wheels; the original Windows environment was verified with
-Python 3.14.7, PyTorch 2.14.0+cpu, NumPy 2.5.3 and OpenCV 5.0.0 on Windows.
+## Wound Lab and Motion Lab Current Status
 
-**Historical Windows training artifacts:** `outputs/pwc-synthetic` contained 1,000 patients
-and 3,000 visits; `outputs/pwc-run/best.pt` is the original five-epoch demonstration checkpoint,
-now distributed through Git LFS; `outputs/pwc-brief.json` held an example brief.
-The full generated dataset and example brief are not included by cloning the repository.
-Dataset/training directories and brief filenames refuse overwrites;
-choose a new `--out` value for another run. Generated datasets, example briefs and
-the Python environment remain ignored and must be recreated on another laptop;
-the three original checkpoints are the explicit Git LFS exceptions.
+- `/wounds` and `/wound-analyzer` share a unified AI interface: **Patient Mode** isolates a sample profile, presenting simple image uploads and plain-language summaries; **Developer Mode** exposes 5 synthetic test profiles, clinical background parameters, and a 4-step diagnostic grid (original image, U-Net mask, tissue overlay, fused multimodal output). Toggle Developer Mode → **Sample Image & Profile** → **Analyze Image** to dispatch requests to the live local FastAPI backend at `127.0.0.1:8000`.
+- Tissue segmentation utilizes the U-Net/ResNet34 checkpoint provided at `outputs/wound_unet_fusd.pt` (CPU runtime, ImageNet backbone, 256×256, sigmoid threshold >0.35). A standalone synthetic tissue heuristic recolors areas within the generated mask; inferences return mapped to the original image dimensions. These visualizations represent standalone segmented regions rather than feature-attribution maps or intermediate activations of the late-fusion model. Missing auxiliary weights will not interrupt Clinical Brief generation; refer to `aimedic/README.md` to distinguish between the checkpoints.
+- `/wounds/history` retains the legacy capture/upload pipeline, strips EXIF data via in-browser canvas re-encoding, writes securely to private R2 storage, and groups evaluations under distinct `wound_case` entities. The **History & Records** entry point is accessible directly within the AI dashboard.
+- The history safety review pipeline relies exclusively on self-reported patient symptoms and documented diagnoses/medications. Standalone AI predictions stem from synthetic training benchmarks, lack clinical validation, and are not automatically committed to medical records.
+- Three new D1 tables: `wound_cases`, `wound_assessments`, and `ai_inferences`. The `ai_inferences` table is reserved for production model inferences and enforces human-in-the-loop review by default.
+- `/therapy` provides a client-side device camera scaffold; raw video streams are neither recorded nor uploaded. Rep counts, range of motion metrics, and form deviation indicators remain mock placeholders pending integration with a validated pose model.
+- Model training and data preprocessing code reside in `aimedic/`; generated model weights and synthesized datasets are stored in `outputs/` (ignored by Git). The browser client executes inference only, never local training. The legacy storage contract in `lib/vision/` remains separate from the Python API Clinical Brief schema.
 
-For day 30, generate a separate dataset with `--days 1 3 7 30`. The same architecture
-supports any number of ordered visits. Infer days from filenames such as
-`day_001_rgb.png` or `img_day1.jpg`; otherwise pass `--days 1 3 7 30` explicitly.
-Images must belong to the same patient and wound episode. Neither filenames nor
-pixels verify identity. The caller supplies a single baseline valid for the comparison.
+For in-depth architectural details, safety guardrails, and GitHub collaboration guidelines, refer to [`docs/WOUND_RESEARCH_ARCHITECTURE.md`](https://www.google.com/search?q=docs/WOUND_RESEARCH_ARCHITECTURE.md).
 
-## Local FastAPI server (Script 5)
+The standalone Python research codebase in [`aimedic/`](https://www.google.com/search?q=aimedic/README.md) includes all four required scripts: generating 1,000 synthetic patient profiles, multimodal image + demographic feature modeling, PyTorch training pipelines, and longitudinal tissue change tracking to export JSON reports for investigator review. Model training, checkpoint restoration, and evaluation suites have executed successfully; these metrics reflect synthetic data baselines, not clinical diagnostic performance. Wound Lab currently queries the model via the local Python API; single-image inputs generate point-in-time estimates without populating historical trends or asserting wound healing/deterioration trajectories.
 
-Historically tested on Python **3.14.7** with FastAPI 0.141.1, Pydantic 2.13.5, Uvicorn 0.52.4
-and python-multipart 0.0.32. The API uses Pydantic v2; Python 3.14 is not a
-Pydantic v1 target. Install the current requirements before starting the server:
-
-```powershell
-outputs/pwc-venv/Scripts/python.exe -m pip install -r aimedic/requirements.txt
-outputs/pwc-venv/Scripts/python.exe -B aimedic/main.py
-```
-
-From the repository root, this alternative also works:
-
-```powershell
-outputs/pwc-venv/Scripts/python.exe -m uvicorn aimedic.main:app --host 127.0.0.1 --port 8000
-```
-
-Open **http://127.0.0.1:8000/docs** to try the endpoint in Swagger UI.
-`POST /api/analyze-wound` accepts `multipart/form-data`:
-
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `image` | UploadFile | PNG or JPEG, maximum 8 MiB |
-| `patient_data` | string | JSON baseline object, maximum 16,384 characters |
-| `day` | number, optional | Nonnegative relative observation day; default 0 denotes this capture's baseline |
-| `include_pipeline_visuals` | boolean, optional | Default false; true adds the Base64 visualization extension for Developer Mode |
-| `pixels_per_cm` | positive number, optional | Caller-measured same-plane scale in this image; enables projected cm² |
-| `clinical_observations` | JSON string, optional | Reported source and boolean symptoms/scab observations; never inferred from image color |
-
-Legacy stateless client example (browser on the same computer only; the current
-web workflow uses the same-origin session proxy instead):
-
-```typescript
-const form = new FormData();
-form.append("image", file); // file is the user's File from the file input
-form.append("patient_data", JSON.stringify({
-  patient_id: "DEMO-001", age: 62, blood_type: "O+",
-  has_diabetes_type_2: true, hba1c_level: 9.2, hypertension: true,
-  synthetic: true,
-}));
-form.append("day", "1"); // optional
-const response = await fetch("http://127.0.0.1:8000/api/analyze-wound", {
-  method: "POST", body: form,
-});
-const result = await response.json();
-if (!response.ok) throw new Error(JSON.stringify(result.detail));
-console.log(result.objective_measurements, result.multimodal_context_analysis);
-```
-
-Let the browser set `Content-Type` and the multipart boundary. CORS allows
-`localhost` and `127.0.0.1` on frontend ports **3000 and 3001**. Override origins
-with comma-separated `MEDIPASS_CORS_ORIGINS` if needed. Cookies are not required.
-The default checkpoint is `outputs/pwc-run/best.pt`, resolved relative to the repo
-regardless of the process working directory. Override it with `MEDIPASS_MODEL_PATH`.
-
-The stateless route calls `track_wound` in a worker thread using isolated temporary files,
-which are deleted on success or failure. It does not retain uploads or accumulate
-visits across requests. One image returns current estimates but
-`trajectory_available: false`; no previous visit or healing rate is fabricated.
-The existing quality abstention and research-only flags remain in the brief.
-Responses: 413 oversized image; 415 unsupported/mismatched format; 422 invalid
-JSON/baseline/image/day; 503 missing or incompatible trained model.
-
-The service binds to loopback by default. This is a local adapter with no user
-authentication; CORS is not authorization. The current session workflow's web proxy
-reaches Python on `127.0.0.1:8000`. Desktop and same-LAN phones access the laptop's
-web host on port 3001 and share its SQLite sessions, without exposing Python or
-calling phone loopback. No hosted Python service has been deployed.
-
-API verification (includes training a tiny independent synthetic fixture):
-
-```powershell
-outputs/pwc-venv/Scripts/python.exe -m pip install -r aimedic/requirements-dev.txt
-outputs/pwc-venv/Scripts/python.exe -B -m unittest discover -s aimedic -p 'test_*.py' -v
-```
-
-Historical binary integration: 42 tests passed (17 API + 14 pipeline + 11 binary-visual tests), including real multipart inference, PNG/JPEG,
-the single-visit contract, CORS preflights, malformed input, upload bounds, missing
-checkpoints, and temporary-file cleanup. See [FastAPI forms and files](https://fastapi.tiangolo.com/tutorial/request-forms-and-files/)
-and [FastAPI CORS](https://fastapi.tiangolo.com/tutorial/cors/) for the request conventions.
-
-`/api/wound-sessions` routes retain image bytes, measurements and historical
-pipeline data in ignored `outputs/wound-sessions.sqlite3`, independent of Supabase/D1/R2.
-`POST /api/analyze-trajectory` accepts ordered JSON metrics without needing weights.
-Sessions lock baseline, enforce chronology, reject duplicate captures and recompute
-the brief after each visit. The limit is 1,000 images/session with no automatic expiry.
-The web derives days from capture timestamps and lists saved sessions from the server;
-it supports confirmed deletion of a visit/session and historical-visit readback.
-New recorded FPG/vascular/neuropathy context and the ≥7-day unchanged-trajectory
-review flag leave trained architecture unchanged and preserve the legacy >7-day area flag.
-
-The optional upload flag `preserve_on_model_unavailable=true` preserves valid images
-when inference returns 503 as `pending_model` visits with null metrics. The frontend
-uses this flag and labels missing analysis explicitly.
-`POST /api/wound-sessions/{session_id}/visits/{visit_id}/analyze?patient_id=...` retries
-from stored image bytes after compatible models are supplied; it keeps capture
-identity/timing and updates analysis atomically. The default API error behavior
-without opt-in is unchanged. See the trajectory guide for requests and validation.
-
-## Optional Developer Mode visuals
-
-The original `pwc-late-fusion-v1` model uses a ResNet-style encoder and predicts
-global tissue proportions. It has no U-Net mask or pixel-level attribution.
-`visual_pipeline.py` now loads the supplied `outputs/wound_unet_fusd.pt` with
-`smp.Unet(encoder_name="resnet34", encoder_weights=None, in_channels=3, classes=1)`
-on CPU in eval/inference mode. `segmentation-models-pytorch==0.5.0` is in requirements.
-It loads a bare state dictionary or `state_dict`/`model_state_dict` wrapper strictly
-with `weights_only=True`, without downloading encoder weights. See the
-[SMP U-Net API](https://smp.readthedocs.io/en/latest/models.html#unet).
-
-Binary preprocessing: RGB → bilinear resize to 256×256 → divide by 255 → ImageNet
-mean `[0.485, 0.456, 0.406]`, std `[0.229, 0.224, 0.225]`. Apply sigmoid to logits,
-select probabilities **strictly >0.35**, then resize the binary mask to the original
-image dimensions with nearest-neighbor interpolation. This mask determines PNG alpha.
-
-The existing small four-class U-Net remains the synthetic tissue classifier with
-its original 64×64 RGB `[0,1]` preprocessing. Tissue labels and the rendered overlay
-are both clipped to the binary mask; outside overlay pixels remain identical to the input.
-The input to tissue inference is now zero-masked before crop/resize and masked again
-after resize. API v2 tissue percentages come from counted mask pixels, including an
-explicit unclassified fraction. The risk head receives the isolated crop with the
-existing baseline encoding; the model architecture/weights remain unchanged.
-
-```powershell
-# This command trains ONLY the synthetic tissue companion; use a fresh --out.
-outputs/pwc-venv/Scripts/python.exe -B aimedic/visual_pipeline.py --epochs 5 --out outputs/pwc-visual-run
-outputs/pwc-venv/Scripts/python.exe -B aimedic/main.py
-```
-
-Binary weights default to `outputs/wound_unet_fusd.pt` (`MEDIPASS_VISUAL_MODEL_PATH`
-override). Tissue weights remain `outputs/pwc-visual-run/best.pt`
-(`MEDIPASS_TISSUE_MODEL_PATH` override). Relative paths resolve from the repo root.
-The binary, tissue and late-fusion checkpoints are stored in Git LFS. After cloning
-on another laptop, install Git LFS and materialize the files before running the API:
-
-```powershell
-git lfs install --local
-git lfs pull
-git lfs ls-files
-```
-
-Expected locations and SHA-256 digests are recorded in
-`aimedic/checkpoints.sha256`. If `git lfs pull` is skipped, the `.pt` paths contain
-small LFS pointer text instead of PyTorch weights and model loading will fail.
-Their training provenance/clinical performance are not verified here.
-The following training description applies only to the synthetic tissue companion.
-Training reuses the existing
-patient-level train/validation/test splits and paired synthetic RGB/class masks.
-Those crops have no background class, so a known synthetic ellipse and gray noisy
-background are added to 3/4 of training examples. Labels: 0 background, 1 necrotic,
-2 slough, 3 granulation. Five epochs were run in the historical Windows environment; held-out **synthetic**
-mean IoU was 0.9346. This is not clinical segmentation performance. Epoch selection
-uses validation only; the test split is evaluated after selection. Original
-images/profiles and fusion weights are unchanged.
-
-`include_pipeline_visuals=true` adds one object to the brief:
-
-- `original_image`: standard Base64 of exact input bytes, with `original_mime_type`
-  (`image/png` or `image/jpeg`); API strings have no data-URL prefix.
-- `unet_segmentation_mask`: Base64 PNG RGBA with transparent predicted background;
-  dark tissue is not removed just because it is dark.
-- `tissue_analysis_overlay`: Base64 PNG RGB highlighting tissue classes only inside
-  the binary wound mask; surrounding skin is excluded.
-- `status`, `reason`, `model`, `day`, `relationship`, `clinical_validation` describe
-  provenance and limits. Both derived PNGs retain the original image dimensions.
-  `model` describes the supplied binary model and threshold; `tissue_model`
-  separately describes the synthetic tissue classifier.
-
-Missing/incompatible visual weights return `status: unavailable`; quality failure
-returns `quality_abstained`. Both derived image values are null in either case.
-The original image remains available and the core Clinical Brief is preserved.
-If only tissue weights are missing, isolation remains available (`status: available`,
-`tissue_status: unavailable`) while the overlay is null. Empty binary masks produce
-transparent isolation, unchanged overlay and `tissue_status: no_wound_pixels`; this
-does not confirm absence of injury.
-Default callers receive no extension. Optional Python tracker visuals describe the
-**last** visit and require `include_pipeline_visuals=True, visual_checkpoint_path=...`.
-The stateless endpoint persists no images or briefs; session endpoints do. Tests cover core-brief/raw-byte equality,
-PNG alpha, JPEG MIME, optional-model fallback, quality abstention, normalization,
-strict threshold, original-size restoration and outside-mask pixel equality.
-The existing tests use controlled SMP fixture weights. Separately, the original
-checkpoints were verified on this macOS checkout on 2026-09-12 using
-`scripts/verify-wound-models.py`: actual single-image analysis, a two-capture
-comparison, pending-image retry, saved historical visuals and exact-byte SQLite
-readback all passed. The original synthetic image produced 2,536 wound-mask pixels;
-the overlay left every outside-mask pixel unchanged. The second QA image is a
-horizontal mirror of the same simulator fixture, not a real later healing capture.
-This verifies model compatibility and software behavior, not clinical accuracy.
-The earlier binary-only
-update left the tracker unchanged; the subsequent trajectory update modifies it.
-`train_loop.py` and `multimodal_model.py` remain unchanged in both updates.
-
-## Contracts for the next agent
-
-- `synthetic_data_generator.py`: profile JSONs, per-patient visit JSONs, RGB PNGs,
-  class masks and a versioned manifest. All of one patient's visits stay in the
-  same split: 700 train / 150 validation / 150 test patients by default.
-- `multimodal_model.py`: ResNet-style vision encoder (64 features), baseline MLP
-  (32 features), concatenation (96), shared dense layer and two heads. Images are
-  RGB float32 `[B,3,H,W]` in `[0,1]`; baseline is `[B,13]`. Tissue fractions are
-  `[B,3]` in necrotic/slough/granulation order, summing to one. Risk logits/scores
-  are `[B,1]`. `forward_sequence` returns `[B,T,3]` and `[B,T,1]`; it shares the
-  per-visit model, rather than learning a recurrent/attention temporal encoder.
-- `train_loop.py`: MSE on fractions plus BCEWithLogitsLoss on binary seven-day
-  simulator labels; AdamW, gradient clipping, seeded shuffling, validation-based
-  checkpoint selection and a held-out test evaluation. Input features exclude
-  masks, patient IDs, future outcomes and risk labels. Duplicate patients/images
-  and dataset paths outside the data root are rejected.
-- `inference_tracker.py`: `track_wound(image_paths, patient_profile_path,
-  checkpoint_path, days=None, device="cpu")` returns a JSON-serializable dictionary.
-  It checks the trained checkpoint and exact preprocessing/feature schema, applies
-  basic quality gates, compares consecutive visits and overall change, and records
-  hashes of the checkpoint, profile and images. It has no random-weight fallback.
-- `main.py`: FastAPI multipart adapter, metric-trajectory endpoint and local stored image sessions. Both
-  `python aimedic/main.py` and `uvicorn aimedic.main:app` work; imports in the
-  tracker and training module support both package and standalone execution.
-- `format_clinical_brief(visits, profile, provenance=None)` is independently testable:
-  deterministic context rules, tissue changes in **percentage points** and per day,
-  physician review suggestions, and explicit rule provenance. Historical worsening
-  remains visible even if the last visit improves; cumulative changes are checked too.
-
-`risk_deterioration_score` estimates an **invented seven-day simulator event**:
-necrotic +5 pp or necrotic+slough +10 pp in a separately simulated future.
-The review thresholds are separate illustrative rules, not clinical thresholds.
-Diabetes with HbA1c >8 selects lower thresholds (necrotic +2 pp, slough +5 pp)
-to demonstrate baseline-dependent logic. No empirical claim of danger is attached.
-Blood type is encoded categorically but has no assumed causal effect in the generator.
-
-## Verification and limits
-
-Current macOS verification:
-
-```bash
-outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
-outputs/wound-venv/bin/python -B -m unittest discover -s aimedic -p 'test_*.py' -v
-```
-
-Both passed after retrieving `c269a89`: the integration script uses all three
-original checkpoint files; the existing suite passed **77/77** without test edits.
-Checkpoint digests were unchanged before and after the integration checks.
-Its supplied 10 pixels/cm scale is only a test input. These API checks do not
-establish all-pages browser coverage or clinical measurement performance.
-
-```powershell
-outputs/pwc-venv/Scripts/python.exe -B -m unittest discover -s aimedic -p test_pipeline.py -v
-```
-
-Historical original pipeline: 14 tests passed for train/save/reload/infer, four time points including day 30,
-patient split integrity, invalid checkpoints and paths, quality abstention,
-date validation, absolute change units, baseline-specific thresholds, cumulative
-and interim deterioration, and no false safety claim when no rule fires.
-
-The full five-epoch run used 2,100 train / 450 validation / 450 test visits.
-Epoch 5 was selected. Held-out **synthetic** tissue MAE was 1.146 / 1.836 / 1.957 pp
-(necrotic/slough/granulation), risk Brier 0.0887. These are software/demo results,
-not clinical performance estimates or patient-level uncertainty bounds.
-
-The late-fusion model learns colored synthetic masks, not hospital photographs.
-The API now supplies a masked wound crop and discards the global tissue head in
-favor of masked pixel counts. Legacy CLI defaults retain the original crop path.
-The new rule score is separate from the model score. There is no clinically validated segmentation, area calibration,
-clinical quality model, OOD detector, calibrated risk probability or diagnostic
-capability. Simple exposure/contrast/detail checks reject obvious unusable images;
-passing these checks does not establish that a clinical image is suitable.
-
-Every brief marks estimates as unconfirmed, includes `clinical_use_allowed: false`,
-and requires human review. The code makes no FDA clearance/compliance claim.
-Medical-image analysis does not become non-device CDS just by changing the wording
-of the output; see [FDA's CDS guidance](https://www.fda.gov/media/109618/download).
-Checkpoint loading uses `weights_only=True`; see
-[PyTorch serialization guidance](https://docs.pytorch.org/docs/2.14/notes/serialization.html).
-
-Before any clinical integration, replace the simulator with appropriately governed
-data, perform external validation and calibration, validate uncertainty/quality,
-review the regulatory intended use, and follow `docs/WOUND_RESEARCH_ARCHITECTURE.md`.
-Keep model outputs separate from clinician-confirmed observations.
+**Running the latest updates:** refer to [`docs/WOUND_AI_INTEGRATION.md`](https://www.google.com/search?q=docs/WOUND_AI_INTEGRATION.md).
+Both the frontend server on port **3001** and the Python service on port **8000** must run concurrently on the same host machine.
