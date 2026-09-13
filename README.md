@@ -1,54 +1,47 @@
-# MediPass — Medical Assistant demo
+# MediPass — Medical Assistant Demo
 
-Wound backend update (2026-09-11): masked tissue counts, persistent local image
-sessions, multi-day baseline-aware trajectory rules, risk/uncertainty and evidence
-provenance are implemented. Bilingual patient explanations now explain the mechanism,
-possible consequences and safe next steps; **77 Python tests passed.** See
-[trajectory API, runnable example and handoff](docs/WOUND_TRAJECTORY_ENGINE.md).
-The website uploader supports multi-day wound sessions and renders chronological
-changes in the research dashboard. Scores are uncalibrated research outputs.
+Wound backend update (2026-09-11): masked tissue counts, persistent local image sessions, multi-day baseline-aware trajectory rules, risk/uncertainty, and evidence provenance are implemented. Bilingual patient explanations now explain the mechanism, possible consequences, and safe next steps; **77 Python tests passed.** See [trajectory API, runnable example and handoff](https://www.google.com/search?q=docs/WOUND_TRAJECTORY_ENGINE.md). The website uploader supports multi-day wound sessions and renders chronological changes in the research dashboard. Scores are uncalibrated research outputs.
 
-> Bắt đầu cho AI/cộng tác viên mới: đọc [`AGENTS.md`](AGENTS.md), [đối chiếu tính năng và Supabase](docs/PORTAL_AUDIT.md), rồi [tầm nhìn/whitepaper do chủ dự án cung cấp](docs/PROJECT_VISION_WHITEPAPER_VI.md).
+> Quickstart for new AIs/contributors: read [`AGENTS.md`](AGENTS.md), [feature-to-Supabase alignment](https://www.google.com/search?q=docs/PORTAL_AUDIT.md), then [the project vision/whitepaper provided by the project owner](https://www.google.com/search?q=docs/PROJECT_VISION_WHITEPAPER_VI.md).
 
-
-MediPass là bản demo hoạt động được của một **patient-controlled medical record**: người dùng xem, tìm, thêm, sửa và soft-delete lịch sử y tế; tải ảnh/PDF riêng tư; và tạo một “Medical Passport” cô đọng cho lần khám tiếp theo.
+MediPass is a working demo of a **patient-controlled medical record**: users can view, search, add, edit, and soft-delete medical history; upload private images/PDFs; and generate a concise "Medical Passport" for their next visit.
 
 Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
 
-Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy cập từ điện thoại: [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
+How to open with Chrome, run locally on a fixed port `3001`, and access from a mobile phone: [`docs/RUN_APP_VI.md`](https://www.google.com/search?q=docs/RUN_APP_VI.md).
 
-> **Giới hạn bắt buộc:** đây là research/startup prototype, không phải thiết bị y tế, không chẩn đoán, không tư vấn điều trị và chưa được tuyên bố HIPAA compliant. Chỉ dùng dữ liệu giả hoặc đã de-identify.
+> **Mandatory Disclaimer:** This is a research/startup prototype. It is not a medical device, does not provide diagnoses or treatment advice, and has not been declared HIPAA compliant. Use synthetic or de-identified data only.
 
-## Những gì đang chạy
+## What is Currently Running
 
-- Trang sảnh tối giản `/`: chọn cổng bệnh viện, góc nhìn bệnh nhân, khung điện thoại, dữ liệu hoặc yêu cầu chỉnh sửa trước khi vào hồ sơ.
-- Cổng bệnh viện `/editor`: 5 bệnh nhân giả lập, thêm/sửa hồ sơ chung và từng lần khám đầy đủ.
-- Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích bệnh và xét nghiệm bằng lời dễ hiểu, gồm ảnh hưởng, mục tiêu theo dõi, ăn uống/sinh hoạt và dấu hiệu cần chú ý.
-- Từ hồ sơ đang chọn ở `/editor` hoặc `/patient`, nút **Xuất IPS** tạo PDF song ngữ dễ đọc và FHIR R4 document Bundle theo HL7 International Patient Summary 2.0.1. PDF dùng trang đầu ưu tiên nhận diện người bệnh, dị ứng/bệnh/thuốc, sinh hiệu và kế hoạch; các trang sau trình bày chi tiết lâm sàng, provenance và lưu ý sử dụng an toàn. PDF đính kèm chính JSON Bundle. Dữ liệu thiếu dùng Data Absent Reason/`unavailable`, không biến mảng rỗng thành “không có bệnh, dị ứng hay thuốc”; bản xuất luôn ghi rõ sơ bộ và chưa được clinician ký/xác nhận.
-- Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
-- Chế độ **Chú thích giao diện**: chọn vùng bằng chuột/chạm, ghim comment vào đúng bệnh nhân/lần khám và mở lại ở `/feedback`.
-- Giao diện responsive và khung thử điện thoại `/mobile` ở 360/390/430 px.
-- Demo `/medications` đối chiếu 20 nhóm thuốc giữa Việt Nam, Ấn Độ, Mỹ và Trung Quốc theo hoạt chất chuẩn, hàm lượng, dạng dùng và Rx/OTC; luôn yêu cầu pharmacist/người kê đơn xác nhận và không tuyên bố tự động tương đương điều trị.
-- `/insurance` lưu SBC PDF riêng tư để người dùng chọn lại hoặc tải xuống, trích xuất văn bản, nhận mô tả tình trạng/dịch vụ và tạo ước tính deductible, copay/coinsurance, network, prior authorization, phần plan trả và phần người dùng trả. Kết quả cùng lịch sử được lưu theo patient trong D1; PDF nằm trong R2. PDF scan/không đọc được chỉ dùng hồ sơ quyền lợi mô phỏng và được gắn nhãn rõ.
-- Chế độ Sáng/Tối dùng chung cho desktop và điện thoại; lựa chọn được lưu trong trình duyệt.
-- Mỗi lần khám là một card gồm lý do, triệu chứng, chẩn đoán/chú giải, vital signs, labs, thuốc, dịch vụ, kế hoạch và bác sĩ.
-- Chú giải y khoa hiện bao phủ 5 bệnh nền mẫu và 6 xét nghiệm chính. App chỉ ghép đúng thuật ngữ đã được kiểm duyệt, dùng khoảng tham chiếu trên chính phiếu xét nghiệm và không tự đoán thuật ngữ lạ.
-- Dashboard tổng quan theo một bệnh nhân hư cấu thống nhất.
-- 5 loại hồ sơ: Allergy, Condition, Medication, Lab Result và Encounter.
-- Thêm, đọc, sửa và soft-delete dữ liệu.
-- Tìm kiếm và lọc timeline theo loại hồ sơ.
-- Clinical summary / “Medical Passport”.
-- Upload PDF, JPEG, PNG tối đa 8 MB vào private object storage và mở lại qua API có ownership check.
-- Dữ liệu tồn tại sau khi refresh.
-- Seed dữ liệu giả tự động cho mỗi tài khoản demo mới.
-- Ownership check phía server và audit log cho read/write/upload/download.
-- Responsive cho desktop/mobile, keyboard shortcut `Cmd/Ctrl + K`, loading/error/empty states.
+* Minimalist lobby `/`: select hospital portal, patient view, mobile frame, data, or edit requests before entering a record.
+* Hospital portal `/editor`: 5 simulated patients, add/edit general records, and complete visit entries.
+* Patient view `/patient`: identical data, read-only, includes plain-language disease and lab test explanations covering impact, monitoring goals, diet/lifestyle, and red-flag symptoms.
+* From the selected record in `/editor` or `/patient`, the **Export IPS** button generates a human-readable bilingual PDF and an HL7 International Patient Summary (IPS) 2.0.1 compliant FHIR R4 document Bundle. The first page of the PDF prioritizes patient identification, allergies/conditions/medications, vitals, and plan; subsequent pages detail clinical specifics, provenance, and safe-use notices. The PDF embeds the FHIR JSON Bundle itself. Missing data uses Data Absent Reason/`unavailable` without collapsing empty arrays into "no conditions, allergies, or medications"; exports are always clearly marked as preliminary and uncertified/unsigned by a clinician.
+* The portal and UI comments are stored in the Supabase project `gsllxxdewmksjbcnxgvp` via the backend; API keys are never exposed on the client or in Git.
+* **UI Annotation** mode: select an area via mouse/touch, pin a comment to a specific patient/visit, and review it at `/feedback`.
+* Responsive interface and mobile test frame `/mobile` at 360/390/430 px.
+* `/medications` demo compares 20 medication classes across Vietnam, India, the US, and China by standardized active ingredient, strength, dosage form, and Rx/OTC status; always mandates pharmacist/prescriber verification and does not assert automatic therapeutic equivalence.
+* `/insurance` securely stores SBC PDFs for user retrieval or download, extracts text, accepts condition/service descriptions, and generates estimates for deductible, copay/coinsurance, network status, prior authorization, plan share, and user share. Results and query history are saved per patient in D1; PDFs reside in R2. Scanned/unreadable PDFs default to simulated coverage profiles and are explicitly labeled.
+* Light/Dark mode shared across desktop and mobile; user preference is persisted in the browser.
+* Each visit is represented as a card detailing reason for encounter, symptoms, diagnosis/annotations, vital signs, labs, medications, procedures/services, care plan, and practitioner.
+* Medical annotations currently cover 5 sample underlying conditions and 6 primary lab tests. The app strictly matches verified terminology, uses reference ranges directly from the lab report, and avoids guessing unknown terms.
+* Unified overview dashboard tracking a consistent fictional patient.
+* 5 record types: Allergy, Condition, Medication, Lab Result, and Encounter.
+* Add, read, edit, and soft-delete records.
+* Search and timeline filtering by record type.
+* Clinical summary / "Medical Passport".
+* Upload PDFs, JPEGs, and PNGs (up to 8 MB) to private object storage, retrievable via an ownership-verified API.
+* Data persists across page refreshes.
+* Automated synthetic data seeding for every new demo account.
+* Server-side ownership verification and audit logs for read/write/upload/download operations.
+* Responsive for desktop/mobile, `Cmd/Ctrl + K` keyboard shortcut, and explicit loading/error/empty states.
 
-Wound Lab có AI cục bộ học từ ảnh giả lập, Patient/Developer Mode, lớp phân vùng U-Net nghiên cứu và luồng lưu ảnh/lịch sử riêng. Computer Vision đã xác nhận lâm sàng, pose model, insurance eligibility/EDI thời gian thực và catalog thuốc thời gian thực vẫn là roadmap; Motion Lab hiện có camera preview, `/insurance` dùng bộ phân tích điều khoản có quy tắc và `/medications` dùng bộ dữ liệu demo có tuyển chọn.
+Wound Lab features local AI trained on simulated imagery, Patient/Developer Mode, a research U-Net segmentation layer, and an isolated image/history storage pipeline. Clinically validated computer vision, pose estimation models, real-time insurance eligibility/EDI, and live medication catalogs remain on the roadmap; Motion Lab currently provides a live camera preview, `/insurance` utilizes a rule-based policy parser, and `/medications` operates on a curated demo dataset.
 
-Hướng dẫn để tự đưa các commit lên GitHub: [`docs/GITHUB_PUSH_GUIDE_VI.md`](docs/GITHUB_PUSH_GUIDE_VI.md).
+Guide for pushing commits to GitHub: [`docs/GITHUB_PUSH_GUIDE_VI.md`](https://www.google.com/search?q=docs/GITHUB_PUSH_GUIDE_VI.md).
 
-## Kiến trúc bản demo
+## Demo Architecture
 
 ```text
 Browser / mobile PWA
@@ -57,8 +50,8 @@ Browser / mobile PWA
         v
 Vinext / React UI
         |
-        | /api/records             /api/files
-        v                              v
+        | /api/records               /api/files
+        v                             v
 Cloudflare D1 (SQLite)          Cloudflare R2 (private files)
         |
         +-- app_users
@@ -67,87 +60,88 @@ Cloudflare D1 (SQLite)          Cloudflare R2 (private files)
         +-- health_records
         +-- storage_objects
         +-- audit_events
+
 ```
 
-Frontend không được truy cập database trực tiếp. Mỗi request resolve người dùng → membership → patient, rồi mọi query đều kèm `patient_id`. Đây là lớp thay thế RLS ở bản D1 demo.
+The frontend never accesses the database directly. Each request resolves user → membership → patient, appending `patient_id` to every downstream query. This serves as the RLS abstraction layer for the D1 demo.
 
-### API hiện tại
+### Current APIs
 
-| Endpoint | Method | Chức năng |
+| Endpoint | Method | Function |
 | --- | --- | --- |
-| `/api/records` | GET | Lấy patient + toàn bộ hồ sơ chưa bị xóa |
-| `/api/records` | POST | Tạo bản ghi mới |
-| `/api/records` | PATCH | Sửa bản ghi thuộc patient hiện tại |
-| `/api/records` | DELETE | Soft-delete bản ghi |
-| `/api/files` | POST | Upload tệp vào R2 và lưu metadata vào D1 |
-| `/api/files?id=...` | GET | Mở tệp sau khi kiểm tra quyền sở hữu |
-| `/api/files` | DELETE | Xóa object và soft-delete metadata |
-| `/api/portal/ips?patient_id=...&format=pdf` | GET | Xuất PDF IPS sau ownership check; PDF chứa FHIR JSON attachment |
-| `/api/portal/ips?patient_id=...&format=json` | GET | Xuất riêng FHIR R4 document Bundle |
+| `/api/records` | GET | Retrieve patient + all non-deleted records |
+| `/api/records` | POST | Create a new record |
+| `/api/records` | PATCH | Update a record belonging to the current patient |
+| `/api/records` | DELETE | Soft-delete a record |
+| `/api/files` | POST | Upload a file to R2 and store metadata in D1 |
+| `/api/files?id=...` | GET | Retrieve a file after ownership verification |
+| `/api/files` | DELETE | Delete object and soft-delete metadata |
+| `/api/portal/ips?patient_id=...&format=pdf` | GET | Export IPS PDF following ownership check; PDF embeds FHIR JSON |
+| `/api/portal/ips?patient_id=...&format=json` | GET | Export standalone FHIR R4 document Bundle |
 
-Migration Drizzle nằm trong `drizzle/`. Schema nguồn nằm trong `db/schema.ts`; runtime initialization idempotent nằm trong `db/runtime.ts` để local demo có thể chạy ngay.
+Drizzle migrations reside in `drizzle/`. Source schema is located at `db/schema.ts`; idempotent runtime initialization is defined in `db/runtime.ts` to allow immediate local demo execution.
 
-## Trạng thái Supabase
+## Supabase Status
 
-Portal hiện đã kết nối Supabase project `gsllxxdewmksjbcnxgvp`. Các bảng `mp_*` lưu bệnh nhân, bệnh nền, dị ứng, bác sĩ, lần khám, labs, thuốc, dịch vụ, audit và comment giao diện. Backend dùng server secret; client không nhận key. Dữ liệu `/records`, Wound Lab và file riêng tư vẫn có phần dùng D1/R2 như mô tả trong tài liệu audit.
+The portal is currently connected to Supabase project `gsllxxdewmksjbcnxgvp`. The `mp_*` tables store patients, conditions, allergies, practitioners, encounters, labs, medications, services, audit trails, and UI feedback comments. The backend uses a server secret; the client receives no keys. `/records` data, Wound Lab, and private files partially utilize D1/R2 as outlined in the audit documentation.
 
-Các bước production còn lại cho Supabase:
+Remaining production steps for Supabase:
 
-1. Đổi D1 thành PostgreSQL và giữ các bảng quan hệ hiện có.
-2. Dùng Supabase Auth; tạo `patient_memberships` cho owner/patient/caregiver.
-3. Bật RLS trên **mọi** bảng có patient data; policy phải kiểm tra active membership hoặc access grant.
-4. Chuyển R2 sang private Supabase Storage; chỉ backend tạo signed URL ngắn hạn.
-5. Thêm `access_grants`, `consents`, `share_links` với token hash, expiry, scope và revoke.
-6. Tách bảng lâm sàng thành `conditions`, `allergy_intolerances`, `observations`, `diagnostic_reports`, `encounters`, `procedures`, `medication_statements`, `document_references`.
-7. Giữ trường chuẩn hóa để query nhanh và `source_fhir_json JSONB` để import/export; không biến toàn bộ database thành một bảng JSONB lớn.
-8. Thêm `pgvector` cho insurance RAG sau khi upload/search hồ sơ đã ổn định.
+1. Migrate D1 to PostgreSQL while preserving current relational schemas.
+2. Integrate Supabase Auth; configure `patient_memberships` for owner/patient/caregiver roles.
+3. Enable RLS across **all** tables containing patient data; enforce policies that verify active membership or explicit access grants.
+4. Transition R2 to private Supabase Storage; restrict generation of short-lived signed URLs to the backend.
+5. Add `access_grants`, `consents`, and `share_links` featuring token hashing, expiration, scoping, and revocation capabilities.
+6. Deconstruct clinical tables into `conditions`, `allergy_intolerances`, `observations`, `diagnostic_reports`, `encounters`, `procedures`, `medication_statements`, and `document_references`.
+7. Retain normalized fields for query performance alongside `source_fhir_json JSONB` for imports/exports; avoid flattening the entire schema into a single monolithic JSONB table.
+8. Integrate `pgvector` for insurance RAG once document ingestion and search stabilize.
 
-Supabase yêu cầu signed BAA và cấu hình HIPAA/High Compliance nếu xử lý PHI; dùng Supabase **không tự động** làm app compliant. Xem [Supabase HIPAA guidance](https://supabase.com/docs/guides/security/hipaa-compliance), [HIPAA projects](https://supabase.com/docs/guides/platform/hipaa-projects) và [Row-Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security).
+Supabase mandates a signed BAA and a HIPAA/High Compliance configuration when handling PHI; using Supabase **does not automatically** ensure HIPAA compliance. Refer to the [Supabase HIPAA guidance](https://supabase.com/docs/guides/security/hipaa-compliance), [HIPAA projects](https://supabase.com/docs/guides/platform/hipaa-projects), and [Row-Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security).
 
-## Data model production nên có
+## Recommended Production Data Model
 
-### Identity, consent và chia sẻ
+### Identity, Consent, and Sharing
 
-- `app_users`, `patients`, `patient_memberships`
-- `organizations`, `practitioners`, `practitioner_roles`
-- `access_grants`, `share_links`, `consents`
-- `resource_provenance`, append-only `audit_events`
+* `app_users`, `patients`, `patient_memberships`
+* `organizations`, `practitioners`, `practitioner_roles`
+* `access_grants`, `share_links`, `consents`
+* `resource_provenance`, append-only `audit_events`
 
-QR share chỉ chứa opaque one-time token; database chỉ lưu token hash. Token phải read-only theo scope, hết hạn nhanh và revoke được. Không nhúng tên, patient ID hay PHI vào QR.
+QR code shares should carry only an opaque, single-use token; the database stores solely the token hash. Tokens must be read-only, scoped, short-lived, and revokable. Never embed names, patient IDs, or PHI directly in the QR code.
 
-### Hồ sơ lâm sàng
+### Clinical Records
 
-- `encounters`
-- `conditions`
-- `allergy_intolerances`
-- `observations` + `observation_components`
-- `diagnostic_reports` + links tới observations
-- `procedures`
-- `medication_statements`
-- `storage_objects` + `document_references`
-- `insurance_coverages` + `insurance_benefits`
+* `encounters`
+* `conditions`
+* `allergy_intolerances`
+* `observations` + `observation_components`
+* `diagnostic_reports` + links to observations
+* `procedures`
+* `medication_statements`
+* `storage_objects` + `document_references`
+* `insurance_coverages` + `insurance_benefits`
 
-Mã y khoa lưu bộ ba `code_system`, `code`, `display`: ICD-10-CM, SNOMED CT, LOINC, RxNorm và UCUM. UI không bắt người dùng phổ thông nhập code; code nằm trong Advanced details hoặc được map khi import.
+Medical codes are stored as a triad of `code_system`, `code`, and `display`: ICD-10-CM, SNOMED CT, LOINC, RxNorm, and UCUM. The UI does not require non-clinical users to enter codes directly; codes reside in Advanced Details or are resolved during import mapping.
 
-FHIR là chuẩn trao đổi, không phải security protocol. Demo đã có export sơ bộ theo [International Patient Summary 2.0.1](https://hl7.org/fhir/uv/ips/en/): Bundle dạng `document`, Composition đứng đầu, Patient và ba section bắt buộc Problem List, Allergies/Intolerances, Medication Summary; section trống dùng `emptyReason=unavailable`. Tám fixture tổng hợp đã đạt 0 error/0 warning với HL7 FHIR Validator 6.9.12, FHIR R4 4.0.1, package IPS 2.0.1 và `tx.fhir.org`; đây là kiểm định profile của fixture, không phải chứng nhận sản phẩm hay clinician attestation. Import, kiểm thử với hệ thống nhận độc lập và đồng bộ bệnh viện thật vẫn cần SMART/OAuth, consent, patient matching, terminology mapping và thỏa thuận tích hợp. Tham khảo [FHIR overview](https://hl7.org/fhir/overview.html), [US Core](https://www.hl7.org/fhir/us/core/) và [FHIR security](https://hl7.org/fhir/R4/security.html).
+FHIR is a data exchange standard, not a security protocol. The demo implements preliminary export aligned with [International Patient Summary 2.0.1](https://hl7.org/fhir/uv/ips/en/): a `document`-type Bundle led by a Composition resource, Patient, and the three mandatory sections: Problem List, Allergies/Intolerances, and Medication Summary; empty sections apply `emptyReason=unavailable`. Eight synthetic test fixtures achieved 0 errors/0 warnings using the HL7 FHIR Validator 6.9.12, FHIR R4 4.0.1, IPS 2.0.1 package, and `tx.fhir.org`; this confirms fixture profile conformance, not product certification or clinician attestation. Ingestion, independent consumer validation, and live hospital EHR integration still necessitate SMART/OAuth, consent management, patient matching, terminology normalization, and formal integration agreements. Reference: [FHIR overview](https://hl7.org/fhir/overview.html), [US Core](https://www.hl7.org/fhir/us/core/), and [FHIR security](https://hl7.org/fhir/R4/security.html).
 
-## Roadmap bốn nhóm tính năng
+## Four-Pillar Feature Roadmap
 
-### 1. Medical Passport và đồng bộ hồ sơ
+### 1. Medical Passport and Record Synchronization
 
-**MVP kế tiếp**
+**Next MVP**
 
-- Patient profile, caregiver membership, consent và time-limited share link.
-- **Đã có bản demo:** FHIR IPS document Bundle export + PDF có JSON đính kèm; tám fixture bất lợi đã qua HL7 Validator. Bước production tiếp theo là release gate tự động, kiểm thử với consumer độc lập, clinician attestation/signature, import và provenance chi tiết.
-- Provenance hiển thị rõ: self-reported, provider document, imported, verified.
-- Medication reconciliation và clinician view riêng.
-- Không tự kết luận bệnh; mọi alert quan trọng cần clinical rules engine đã được thẩm định.
+* Patient profile, caregiver membership, consent management, and time-limited share links.
+* **Implemented in demo:** FHIR IPS document Bundle export + PDF with embedded JSON; eight adverse test fixtures validated by HL7 Validator. Next production milestones include automated release gates, independent consumer integration testing, clinician digital signatures/attestations, import pipelines, and granular provenance tracking.
+* Clear provenance labeling: self-reported, provider document, imported, verified.
+* Medication reconciliation and dedicated clinician view.
+* No automated clinical diagnoses; all critical alerts require a validated clinical rules engine.
 
 ### 2. Insurance Policy Checker
 
-**Đã có bản demo:** `/insurance` tải SBC PDF vào R2, lưu metadata/phân tích trong D1, cho chọn lại và tải xuống tài liệu, trích xuất văn bản bằng PDF parser chạy trong Worker, rồi ước tính cost sharing theo dịch vụ mô tả và network. Kết quả giữ citation theo trang khi trích xuất được; nếu không đọc được bảng PDF, giao diện bắt buộc ghi rõ đang dùng dữ liệu mô phỏng. Số deductible đã dùng, allowed amount thực, mã CPT/HCPCS, eligibility và claim chưa được kết nối thời gian thực.
+**Implemented in demo:** `/insurance` uploads SBC PDFs to R2, persists metadata/parsing results in D1, supports document selection and download, parses text via an in-Worker PDF engine, and calculates cost-sharing estimates based on described services and network status. Parsed citations retain page-level provenance; unreadable tables trigger explicit warnings of simulated data usage. Real-time deductible accumulators, negotiated allowed amounts, CPT/HCPCS crosswalks, eligibility (270/271), and claims processing are not yet integrated live.
 
-Pipeline nên là:
+Target pipeline:
 
 ```text
 Private PDF upload
@@ -157,13 +151,14 @@ Private PDF upload
   -> embedding
   -> vector retrieval
   -> answer with page/section citation + uncertainty
+
 ```
 
-MVP tập trung deductible, out-of-pocket maximum, copay, coinsurance, network, formulary, visit limit và prior authorization. Câu trả lời phải luôn trích page/section và nói rõ đây không phải quyết định coverage hay cost estimate cuối cùng. CMS giải thích tài liệu SBC tại [Summary of Benefits and Coverage](https://www.cms.gov/marketplace/health-plans-issuers/summary-benefits-coverage).
+MVP scope covers deductible, out-of-pocket maximum, copay, coinsurance, network limits, formulary tiering, visit caps, and prior authorizations. Responses must cite page/section numbers and explicitly state that estimates do not constitute a formal coverage determination. CMS guidelines on SBC documents: [Summary of Benefits and Coverage](https://www.cms.gov/marketplace/health-plans-issuers/summary-benefits-coverage).
 
-### 3A. Wound monitoring / UB research
+### 3A. Wound Monitoring / UB Research
 
-Để khớp hướng Precision Wound Care tại UB, đừng bắt đầu bằng claim “chẩn đoán nhiễm trùng”. Hãy xây **longitudinal capture + annotation pipeline**:
+To align with UB's Precision Wound Care initiative, avoid early claims of "infection diagnosis." Instead, construct a **longitudinal capture + annotation pipeline**:
 
 ```text
 wound_case
@@ -172,116 +167,115 @@ wound_case
   -> clinician annotation / segmentation mask
   -> area and tissue measurements
   -> healing trajectory for research review
+
 ```
 
-AI milestone đầu: segment vết thương và đo area trend; sau đó mới tissue classification, multimodal fusion và forecasting. Kết quả model nằm trong `ai_inferences`, không ghi đè hồ sơ clinician đã xác nhận. Mọi ảnh train cần consent nghiên cứu riêng, patient-level split, versioned dataset và external validation.
+Initial AI milestone: wound margin segmentation and surface area trajectory; progressing sequentially to tissue classification, multimodal fusion, and predictive forecasting. Model inferences reside in `ai_inferences` without overwriting verified clinician records. Training imagery requires dedicated study consent, patient-level data splits, versioned datasets, and external multi-center validation.
 
-Đề tài UB nhấn mạnh multimodal sensing, objective metrics, early deterioration và predictive/preventive healing: [Precision Wound Care opportunity](https://www.buffalo.edu/undergrad-research/opportunities.host.html/content/shared/www/undergrad-research/research-opportunities/precision-wound-care-collaborative-ai-powered-multimodal-monitoring-for-predictive-preventive-healing.detail.html).
+The UB initiative emphasizes multimodal sensing, objective metrics, early deterioration detection, and predictive/preventive wound healing: [Precision Wound Care opportunity](https://www.buffalo.edu/undergrad-research/opportunities.host.html/content/shared/www/undergrad-research/research-opportunities/precision-wound-care-collaborative-ai-powered-multimodal-monitoring-for-predictive-preventive-healing.detail.html).
 
-### 3B. Physical therapy pose tracking
+### 3B. Physical Therapy Pose Tracking
 
-- MediaPipe Pose/TensorFlow.js chạy on-device trong browser.
-- Tính joint angle từ hip–knee–ankle hoặc shoulder–elbow–wrist.
-- Finite-state machine đếm rep; exercise-specific rules đánh dấu deviation.
-- Lưu reps, range of motion, session summary và detected issues; **không lưu raw video mặc định**.
-- Nếu lưu video, cần consent riêng, retention policy, private storage và clinician review.
+* MediaPipe Pose/TensorFlow.js running client-side in the browser.
+* Joint angle calculation derived from hip–knee–ankle or shoulder–elbow–wrist coordinates.
+* Finite-state machine for rep counting; exercise-specific heuristics to flag form deviation.
+* Store reps, range of motion (ROM), session aggregates, and form anomalies; **do not store raw video streams by default**.
+* If video retention is required, implement explicit consent protocols, retention lifecycle policies, encrypted private storage, and clinician-only access tiers.
 
-### 4. Thuốc tương ứng xuyên quốc gia
+### 4. Cross-Border Medication Reconciliation
 
-Pipeline:
+Target pipeline:
 
 ```text
-OCR nhãn / đơn thuốc
+Prescription / label OCR
   -> extract ingredient + strength + dose form + route
   -> WHO INN normalization
   -> country-specific regulatory catalog
   -> U.S. RxNorm/NDC mapping
   -> candidate match
   -> pharmacist verification
+
 ```
 
-UI nên ghi “candidate matching ingredients/strength/form — pharmacist verification required”, không gọi là “thuốc thay thế tương đương” chỉ vì cùng hoạt chất. [WHO INN](https://www.who.int/teams/health-product-and-policy-standards/inn/) là anchor toàn cầu; [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/overview.html) phù hợp để chuẩn hóa thuốc tại Mỹ.
+The UI must explicitly display: "candidate matching ingredients/strength/form — pharmacist verification required"; avoid labeling items as "equivalent substitutes" solely on the basis of shared active ingredients. [WHO INN](https://www.who.int/teams/health-product-and-policy-standards/inn/) provides the global baseline; [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/overview.html) handles standard US drug mapping.
 
-Lưu ý: RxNav đã dừng drug–drug interaction feature từ 02/01/2024; không nên thiết kế DDI mới dựa vào endpoint đó. Xem [RxNav FAQ](https://lhncbc.nlm.nih.gov/RxNav/information/FAQs.html).
+Note: RxNav deprecated its drug–drug interaction (DDI) API endpoint on 2024-01-02; do not design new DDI pipelines against that service. See the [RxNav FAQ](https://lhncbc.nlm.nih.gov/RxNav/information/FAQs.html).
 
-## Hạ tầng production tối thiểu
+## Minimum Production Infrastructure
 
-| Lớp | Lựa chọn khuyến nghị |
+| Layer | Recommended Architecture |
 | --- | --- |
-| Web/PWA | Next.js/React, TypeScript, Tailwind |
-| Auth + relational DB | Supabase Auth + PostgreSQL + RLS |
-| Files | Private Supabase Storage hoặc R2 |
-| FHIR | FHIR R4/US Core mapping + IPS export; HAPI FHIR khi integration phức tạp |
-| AI API | Python FastAPI, container riêng, async job queue |
-| Insurance RAG | PDF parser, structured chunks, embeddings, pgvector/Vectorize, cited answers |
-| CV research | PyTorch, experiment tracking, dataset/model versioning, human review |
-| Pose | MediaPipe Pose/TensorFlow.js on-device |
-| Observability | Structured logs không chứa PHI, error tracking, metrics, immutable audit trail |
-| Security | TLS, secrets manager, MFA, least privilege, encryption, backup/PITR, incident response |
-| Delivery | Dev/staging/prod tách riêng, migrations, CI tests, IaC, dependency scanning |
+| Web/PWA | Next.js/React, TypeScript, Tailwind CSS |
+| Auth + Relational DB | Supabase Auth + PostgreSQL + RLS |
+| File Storage | Private Supabase Storage or Cloudflare R2 |
+| Interoperability / FHIR | FHIR R4/US Core mapping + IPS export; HAPI FHIR for complex integrations |
+| AI / Inference APIs | Python FastAPI, isolated container runtime, async task queue |
+| Insurance RAG | PDF parser, structured chunking, vector embeddings, pgvector/Vectorize, attributed outputs |
+| Computer Vision Research | PyTorch, experiment tracking (MLflow/W&B), dataset/model versioning, clinician-in-the-loop validation |
+| Pose Estimation | On-device MediaPipe Pose / TensorFlow.js |
+| Observability | Structured PHI-redacted logs, error tracing, performance metrics, immutable audit trails |
+| Security & Compliance | TLS termination, secret managers, MFA, least-privilege RBAC, encryption at rest/in transit, automated backups/PITR, incident response runbooks |
+| CI/CD & Delivery | Segregated dev/staging/prod environments, automated migrations, CI test suites, IaC, vulnerability/dependency scanning |
 
-Không dùng database vận hành chứa định danh làm thẳng training dataset. Tạo pipeline de-identification + consent + dataset snapshot riêng. HHS mô tả hai phương pháp HIPAA de-identification tại [HHS De-identification Guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html). Consumer health apps ngoài HIPAA vẫn có thể chịu [FTC Health Breach Notification Rule](https://www.ftc.gov/business-guidance/resources/health-breach-notification-rule-basics-business).
+Never ingest production relational databases containing identifiers directly into model training datasets. Build dedicated de-identification pipelines, consent tracking, and isolated dataset snapshots. HHS details both HIPAA de-identification pathways in the [HHS De-identification Guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html). Non-covered consumer health applications remain subject to the [FTC Health Breach Notification Rule](https://www.ftc.gov/business-guidance/resources/health-breach-notification-rule-basics-business).
 
-## Thứ tự build thực tế
+## Realistic Implementation Sequence
 
-1. **Đã hoàn thành:** responsive frontend, database, private files, per-user ownership, CRUD, timeline, search/filter, demo seed.
-2. Supabase production schema + RLS tests + consent/share/audit.
-3. Nâng bản FHIR/IPS export demo thành luồng đã validate/ký; thêm import và clinician read-only share flow.
-4. **Đã có demo:** Insurance PDF ingestion + trích điều khoản/citation + lịch sử ước tính; bước production tiếp theo là retrieval theo section, EDI 270/271, CPT/HCPCS và xác minh claim/eligibility.
-5. Wound longitudinal data collection/annotation; IRB/consent trước khi lấy dữ liệu người thật.
-6. Segmentation model + research validation; không gắn diagnostic claim.
-7. On-device physical-therapy proof of concept.
-8. Ingredient normalization và country catalogs; pharmacist review workflow.
-9. Clinical, privacy, security và regulatory review trước pilot thật.
+1. **Completed:** Responsive frontend, database schema, private file storage, per-user ownership enforcement, CRUD operations, timeline, search/filter, synthetic demo seeding.
+2. Supabase production schema + RLS test harness + consent/sharing/audit frameworks.
+3. Upgrade the demo FHIR/IPS export into a validated and cryptographically signed pipeline; add import functionality and clinician read-only access.
+4. **Demo implemented:** Insurance PDF ingestion + clause extraction/citation + cost estimation history; next production stage requires section-level vector retrieval, EDI 270/271 integration, CPT/HCPCS crosswalks, and live eligibility/claim checks.
+5. Wound longitudinal data collection and labeling pipeline; secure IRB approval and research consent prior to acquiring real patient data.
+6. Wound segmentation model training and research validation; strictly omit diagnostic claims.
+7. Client-side physical therapy pose estimation proof of concept.
+8. Active ingredient normalization and cross-border drug catalog mappings; build pharmacist review workflows.
+9. Formal clinical safety, data privacy, cybersecurity, and regulatory compliance audits prior to clinical pilot deployment.
 
-## Chạy local
+## Running Locally
 
-Yêu cầu Node.js `>=22.13` và pnpm.
+Prerequisites: Node.js `>=22.13` and pnpm.
 
 ```powershell
 corepack enable
 pnpm install --frozen-lockfile
 pnpm run demo
+
 ```
 
-Mở `http://localhost:3001/editor`. Có thể dùng Chrome, Edge, Safari hoặc trình duyệt điện thoại; server không phụ thuộc trình duyệt. Xem hướng dẫn đầy đủ tại [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
+Open `http://localhost:3001/editor`. Compatible with Chrome, Edge, Safari, or mobile browsers; the server operates independently of the browser environment. For detailed setup instructions, see [`docs/RUN_APP_VI.md`](https://www.google.com/search?q=docs/RUN_APP_VI.md).
 
-Kiểm tra build và schema:
+Validate build and schema:
 
 ```bash
 pnpm run db:generate
 pnpm run build
 pnpm run lint
+
 ```
 
-## Demo pitch 90 giây
+## 90-Second Demo Pitch Flow
 
-1. Mở Overview; chỉ ngay Penicillin allergy và active conditions.
-2. Mở Medical Passport để cho thấy cross-provider summary.
-3. Vào Medical records; search `Hemoglobin`, filter Lab results.
-4. Thêm một lab record hư cấu và đính kèm PDF/ảnh giả.
-5. Refresh: dữ liệu vẫn còn; mở lại attachment.
-6. Sửa record rồi soft-delete; giải thích audit trail và ownership check.
-7. Mở `/insurance`, chọn SBC đã lưu, nhập tình huống MRI trong network và chỉ rõ phần plan/người dùng dự kiến trả cùng prior authorization và citation.
+1. Open Overview; highlight the Penicillin allergy and active medical conditions immediately.
+2. Navigate to the Medical Passport to show the consolidated cross-provider summary.
+3. Go to Medical Records; search `Hemoglobin`, filter by Lab Results.
+4. Add a synthetic lab result and attach a mock PDF/image.
+5. Refresh the page: demonstrate data persistence; reopen the attachment.
+6. Edit the record, then soft-delete it; explain the audit trail and ownership validation logic.
+7. Open `/insurance`, select a saved SBC, input an in-network MRI scenario, and highlight the estimated plan/patient cost shares, prior authorization requirements, and source citations.
 
-## Wound Lab và Motion Lab hiện tại
+## Wound Lab and Motion Lab Current Status
 
-- `/wounds` và `/wound-analyzer` mở chung giao diện AI: **Patient Mode** khóa một hồ sơ mẫu và chỉ hiện tải ảnh/tóm tắt dễ đọc; **Developer Mode** cho chọn 5 hồ sơ giả lập, xem dữ liệu nền và lưới 4 bước (ảnh gốc, vùng U-Net, lớp phủ mô, kết luận kết hợp hồ sơ). Bật Developer Mode → **Thử ảnh & hồ sơ mẫu** → **Phân tích ảnh** để gọi FastAPI thật tại `127.0.0.1:8000`.
-- Phân vùng dùng checkpoint U-Net/ResNet34 được cung cấp ở `outputs/wound_unet_fusd.pt` (CPU, ImageNet, 256×256, sigmoid >0.35). Mô hình mô giả lập riêng chỉ tô màu bên trong mask; kết quả trả về đúng kích thước ảnh gốc. Các hình này không phải giải thích đặc trưng hay bước trung gian của mô hình late fusion. Thiếu checkpoint phụ không làm hỏng Clinical Brief; xem `aimedic/README.md` để phân biệt hai checkpoint.
-- `/wounds/history` giữ luồng chụp/chọn ảnh cũ, xóa EXIF bằng cách tái mã hóa trong trình duyệt, lưu ảnh riêng tư vào R2 và nhóm các lần đánh giá theo `wound_case`. Liên kết **Lịch sử & ghi nhận** nằm ngay trên màn hình AI.
-- Safety review trong luồng lưu lịch sử chỉ dùng triệu chứng khai báo và bệnh lý/thuốc đã lưu. Kết quả AI riêng dùng mô hình học ảnh giả lập, chưa được xác nhận lâm sàng và không tự lưu vào hồ sơ.
-- Ba bảng D1 mới là `wound_cases`, `wound_assessments` và `ai_inferences`. Bảng `ai_inferences` được dành sẵn cho model thật và mặc định bắt buộc human review.
-- `/therapy` là scaffold camera chạy tại thiết bị; video không được ghi hoặc upload. Rep count, range of motion và form deviation để trống cho tới khi pose model thật được nối.
-- Code huấn luyện/preprocessing nằm trong `aimedic/`, weights và bộ dữ liệu tạo ra nằm trong `outputs/` bị Git bỏ qua. Trình duyệt gọi inference, không huấn luyện model. Contract lưu trữ cũ trong `lib/vision/` vẫn tách khỏi Clinical Brief của API Python.
+* `/wounds` and `/wound-analyzer` share a unified AI interface: **Patient Mode** isolates a sample profile, presenting simple image uploads and plain-language summaries; **Developer Mode** exposes 5 synthetic test profiles, clinical background parameters, and a 4-step diagnostic grid (original image, U-Net mask, tissue overlay, fused multimodal output). Toggle Developer Mode → **Sample Image & Profile** → **Analyze Image** to dispatch requests to the live local FastAPI backend at `127.0.0.1:8000`.
+* Tissue segmentation utilizes the U-Net/ResNet34 checkpoint provided at `outputs/wound_unet_fusd.pt` (CPU runtime, ImageNet backbone, 256×256, sigmoid threshold >0.35). A standalone synthetic tissue heuristic recolors areas within the generated mask; inferences return mapped to the original image dimensions. These visualizations represent standalone segmented regions rather than feature-attribution maps or intermediate activations of the late-fusion model. Missing auxiliary weights will not interrupt Clinical Brief generation; refer to `aimedic/README.md` to distinguish between the checkpoints.
+* `/wounds/history` retains the legacy capture/upload pipeline, strips EXIF data via in-browser canvas re-encoding, writes securely to private R2 storage, and groups evaluations under distinct `wound_case` entities. The **History & Records** entry point is accessible directly within the AI dashboard.
+* The history safety review pipeline relies exclusively on self-reported patient symptoms and documented diagnoses/medications. Standalone AI predictions stem from synthetic training benchmarks, lack clinical validation, and are not automatically committed to medical records.
+* Three new D1 tables: `wound_cases`, `wound_assessments`, and `ai_inferences`. The `ai_inferences` table is reserved for production model inferences and enforces human-in-the-loop review by default.
+* `/therapy` provides a client-side device camera scaffold; raw video streams are neither recorded nor uploaded. Rep counts, range of motion metrics, and form deviation indicators remain mock placeholders pending integration with a validated pose model.
+* Model training and data preprocessing code reside in `aimedic/`; generated model weights and synthesized datasets are stored in `outputs/` (ignored by Git). The browser client executes inference only, never local training. The legacy storage contract in `lib/vision/` remains separate from the Python API Clinical Brief schema.
 
-Chi tiết kiến trúc, nguyên tắc an toàn và workflow cộng tác GitHub nằm tại [`docs/WOUND_RESEARCH_ARCHITECTURE.md`](docs/WOUND_RESEARCH_ARCHITECTURE.md).
+For in-depth architectural details, safety guardrails, and GitHub collaboration guidelines, refer to [`docs/WOUND_RESEARCH_ARCHITECTURE.md`](https://www.google.com/search?q=docs/WOUND_RESEARCH_ARCHITECTURE.md).
 
-Bản nghiên cứu Python chạy riêng trong [`aimedic/`](aimedic/README.md) hiện đã có đủ
-bốn script: tạo 1.000 bệnh nhân giả lập, mô hình ảnh + hồ sơ nền, huấn luyện PyTorch,
-và theo dõi thay đổi mô theo thời gian để xuất JSON cho người nghiên cứu xem lại.
-Đã chạy huấn luyện, đọc checkpoint và kiểm thử; đây là kết quả trên dữ liệu giả lập,
-chưa phải phân tích ảnh lâm sàng. Wound Lab hiện gọi mô hình qua API Python cục bộ;
-một ảnh chỉ có ước tính hiện tại, không tạo lịch sử hay kết luận lành/xấu đi.
+The standalone Python research codebase in [`aimedic/`](https://www.google.com/search?q=aimedic/README.md) includes all four required scripts: generating 1,000 synthetic patient profiles, multimodal image + demographic feature modeling, PyTorch training pipelines, and longitudinal tissue change tracking to export JSON reports for investigator review. Model training, checkpoint restoration, and evaluation suites have executed successfully; these metrics reflect synthetic data baselines, not clinical diagnostic performance. Wound Lab currently queries the model via the local Python API; single-image inputs generate point-in-time estimates without populating historical trends or asserting wound healing/deterioration trajectories.
 
-**Chạy tính năng mới:** xem [`docs/WOUND_AI_INTEGRATION.md`](docs/WOUND_AI_INTEGRATION.md).
-Cần giữ cả frontend cổng **3001** và Python cổng **8000** chạy trên cùng máy.
+**Running the latest updates:** refer to [`docs/WOUND_AI_INTEGRATION.md`](https://www.google.com/search?q=docs/WOUND_AI_INTEGRATION.md).
+Both the frontend server on port **3001** and the Python service on port **8000** must run concurrently on the same host machine.
