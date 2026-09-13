@@ -1,19 +1,63 @@
 # MediPass — Medical Assistant Demo
 
+MediPass is a Patient-Controlled Medical Record platform functioning as a digital "Medical Passport." It allows individuals to maintain, understand, and securely share their health data with clinicians across different healthcare systems. Rather than focusing purely on technical infrastructure, the system is designed to solve medical record fragmentation, translate complex clinical jargon into plain language, and offer practical, at-home AI monitoring tools.
+
+How MediPass Operates
+Centralized Data Aggregation: Users gather their entire medical history—diagnoses, allergies, medications, lab tests, and attached files (wound photos, paper records, insurance PDFs)—into one unified, patient-owned space.
+Automated Clinical Translation: Raw medical observations and test markers are automatically translated into accessible explanations: how a condition affects the body, what dietary/lifestyle adjustments are recommended, and which red-flag symptoms require immediate emergency care.
+
+Patient-Governed Access: The patient dictates who sees what. When visiting a new provider, they can generate a temporary summary link or standardized export without exposing their entire life history.
+Context-Aware Assistance: Built-in AI tools track wound healing progress from serial photos, interpret complex insurance policy benefits, and cross-reference medications when traveling or relocating internationally.
+
+Detailed Feature Breakdown
+
+1. Medical Passport & Core Health Records
+
+Five Essential Record Categories: Organizes health data into Allergies, Conditions, Medications, Lab Results, and Encounters (clinical visits).
+Visit Cards: Every encounter is stored as a self-contained card containing the reason for the visit, reported symptoms, provider diagnosis, vital signs, ordered labs, prescribed medications, and follow-up care plans.
+International Patient Summary (IPS Export): Generates a bilingual, human-readable PDF accompanied by standardized HL7 FHIR IPS data. The first page prioritizes critical safety information—allergies, active conditions, current medications, and baseline vitals—so any clinician can grasp the patient’s profile in seconds.
+Timeline Search & Filters: Quickly locate specific historical data (e.g., searching "Hemoglobin") or filter records across a chronological care timeline.
+
+2. Dual-Interface Experience: Hospital vs. Patient
+Hospital Portal (/editor): Built for comprehensive clinical data entry and management, displaying full clinical terminology, standardized codes, and administrative edit controls.
+Patient View (/patient): A read-only, patient-friendly environment that suppresses confusing medical code structures and emphasizes:
+Clear explanations of active conditions.
+What abnormal lab values signify.
+Practical lifestyle/dietary guidance and specific warning signs that demand clinical attention.
+
+3. Wound Monitoring Assistant (Wound Lab)
+Image Segmentation: Patients photograph wounds over time; the tool isolates the wound boundary, measures surface area, and assesses tissue composition.
+Healing Trajectory Tracking: Compares serial images across days to determine whether a wound is closing normally or showing signs of deterioration, providing an objective trajectory along with confidence notes.
+Privacy-First Ingestion: Automatically scrubs device and location metadata (EXIF data) within the browser before images are encrypted and stored.
+
+4. Insurance Policy Decoder (/insurance)
+Benefits Document Intake: Users upload standard Summary of Benefits and Coverage (SBC) documents.
+Out-of-Pocket Cost Estimation: When a user inputs a routine care scenario (such as "in-network knee MRI"), the system parses the document to estimate:
+Remaining deductible.
+
+Copay or coinsurance responsibility.
+Estimated plan coverage versus out-of-pocket costs.
+Prior authorization requirements, complete with page-specific policy citations.
+
+5. Cross-Border Medication Crosswalk (/medications)
+Active Ingredient Mapping: Enables patients (such as international students or travelers) to match 20 major drug categories across Vietnam, the United States, India, and China.
+Safety Over Brand Names: Normalizes commercial brand names to standard active molecules, strengths, and dosage forms (tablets, syrups). It highlights prescription (Rx) versus over-the-counter (OTC) status while explicitly mandating professional pharmacist sign-off before substitution.
+
+6. Physical Therapy Form Checker (Motion Lab — Prototype)
+Joint Tracking: Leverages the user's camera to identify skeletal landmark coordinates (shoulders, elbows, hips, knees).
+Repetition Counting & Alignment Feedback: Supports guided home exercises by counting completed reps and flagging posture deviations.
+On-Device Processing: Analyzes motion entirely within the local browser session without recording, streaming, or saving raw video feeds.
 Wound backend update (2026-09-11): masked tissue counts, persistent local image sessions, multi-day baseline-aware trajectory rules, risk/uncertainty, and evidence provenance are implemented. Bilingual patient explanations now explain the mechanism, possible consequences, and safe next steps; **77 Python tests passed.** See [trajectory API, runnable example and handoff](https://www.google.com/search?q=docs/WOUND_TRAJECTORY_ENGINE.md). The website uploader supports multi-day wound sessions and renders chronological changes in the research dashboard. Scores are uncalibrated research outputs.
 
 > Quickstart for new AIs/contributors: read [`AGENTS.md`](AGENTS.md), [feature-to-Supabase alignment](https://www.google.com/search?q=docs/PORTAL_AUDIT.md), then [the project vision/whitepaper provided by the project owner](https://www.google.com/search?q=docs/PROJECT_VISION_WHITEPAPER_VI.md).
 
 MediPass is a working demo of a **patient-controlled medical record**: users can view, search, add, edit, and soft-delete medical history; upload private images/PDFs; and generate a concise "Medical Passport" for their next visit.
-
 Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
 
 How to open with Chrome, run locally on a fixed port `3001`, and access from a mobile phone: [`docs/RUN_APP_VI.md`](https://www.google.com/search?q=docs/RUN_APP_VI.md).
 
 > **Mandatory Disclaimer:** This is a research/startup prototype. It is not a medical device, does not provide diagnoses or treatment advice, and has not been declared HIPAA compliant. Use synthetic or de-identified data only.
-
 ## What is Currently Running
-
 * Minimalist lobby `/`: select hospital portal, patient view, mobile frame, data, or edit requests before entering a record.
 * Hospital portal `/editor`: 5 simulated patients, add/edit general records, and complete visit entries.
 * Patient view `/patient`: identical data, read-only, includes plain-language disease and lab test explanations covering impact, monitoring goals, diet/lifestyle, and red-flag symptoms.
