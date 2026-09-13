@@ -158,33 +158,33 @@ export function FeedbackWidget() {
     return () => { observer.disconnect(); window.removeEventListener('scroll', schedule, true); window.removeEventListener('resize', schedule); cancelAnimationFrame(frame); };
   }, [enabled, requests, draft]);
 
-  function close() { if (!saving && (!draft?.description || draft.version > 0 || window.confirm('Bình luận chưa được lưu. Bỏ nội dung đang nhập?'))) setDraft(null); }
+  function close() { if (!saving && (!draft?.description || draft.version > 0 || window.confirm('This comment has not been saved. Discard it?'))) setDraft(null); }
   async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault(); if (!draft) return; setSaving(true); setError('');
-    try { const result = await api<{ request: Feedback }>('/api/feedback', draft); setRequests(old => [...old.filter(r => r.id !== result.request.id), result.request]); setDraft(null); setSuccess('Đã ghim bình luận tại vị trí bạn chọn.'); window.dispatchEvent(new Event('medipass-feedback-saved')); } catch (e) { setError((e as Error).message); } finally { setSaving(false); }
+    try { const result = await api<{ request: Feedback }>('/api/feedback', draft); setRequests(old => [...old.filter(r => r.id !== result.request.id), result.request]); setDraft(null); setSuccess('Comment pinned to the selected location.'); window.dispatchEvent(new Event('medipass-feedback-saved')); } catch (e) { setError((e as Error).message); } finally { setSaving(false); }
   }
   if (mobileShell) return null;
   return <>
     <div data-annotation-ui className="mp-review-tools mp-no-print">
-      {success && <output className="mp-feedback-toast">{success}<button onClick={() => setSuccess('')} aria-label="Ẩn thông báo"><X size={16} /></button></output>}
-      {enabled && <div className="mp-review-hint"><b>Chọn vị trí cần chỉnh sửa</b><span>Di chuột để xem viền, bấm để ghim bình luận. Tắt chế độ để dùng các nút bình thường.</span><ErrorBox message={error} /></div>}
+      {success && <output className="mp-feedback-toast">{success}<button onClick={() => setSuccess('')} aria-label="Dismiss notification"><X size={16} /></button></output>}
+      {enabled && <div className="mp-review-hint"><b>Select an area to change</b><span>Move the pointer to highlight a region, then click to pin a comment. Turn off annotation mode to use controls normally.</span><ErrorBox message={error} /></div>}
       <div className="mp-review-toolbar">
-        {!embedded && <Button variant="outline" onClick={() => window.location.assign(`/mobile?path=${encodeURIComponent(window.location.pathname + window.location.search)}`)}><Smartphone />Giao diện điện thoại</Button>}
-        <Button aria-pressed={enabled} onClick={toggleMode}><MousePointer2 />{enabled ? 'Tắt chú thích' : 'Chú thích giao diện'}</Button>
-        {enabled && <Button variant="outline" onClick={() => setListOpen(!listOpen)} aria-expanded={listOpen}><MessageSquare />Bình luận ({requests.filter(r => r.status !== 'done' && requestMatches(r)).length})</Button>}
+        {!embedded && <Button variant="outline" onClick={() => window.location.assign(`/mobile?path=${encodeURIComponent(window.location.pathname + window.location.search)}`)}><Smartphone />Mobile preview</Button>}
+        <Button aria-pressed={enabled} onClick={toggleMode}><MousePointer2 />{enabled ? 'Turn off annotations' : 'Annotate interface'}</Button>
+        {enabled && <Button variant="outline" onClick={() => setListOpen(!listOpen)} aria-expanded={listOpen}><MessageSquare />Comments ({requests.filter(r => r.status !== 'done' && requestMatches(r)).length})</Button>}
       </div>
-      {enabled && listOpen && <aside className="mp-review-list"><strong>Bình luận trên trang này</strong>{requests.filter(requestMatches).map(r => <button key={r.id} onClick={() => reveal(r)}><b>{r.section || r.title}</b><span>{r.description}</span><small>{feedbackStatuses[r.status as keyof typeof feedbackStatuses]}</small></button>)}<Link href="/feedback">Xem tất cả yêu cầu ↗</Link></aside>}
+      {enabled && listOpen && <aside className="mp-review-list"><strong>Comments on this page</strong>{requests.filter(requestMatches).map(r => <button key={r.id} onClick={() => reveal(r)}><b>{r.section || r.title}</b><span>{r.description}</span><small>{feedbackStatuses[r.status as keyof typeof feedbackStatuses]}</small></button>)}<Link href="/feedback">View all requests ↗</Link></aside>}
     </div>
     {enabled && !draft && box && <div data-annotation-ui className="mp-annotation-outline" style={box} />}
     {enabled && !draft && <svg data-annotation-ui className="mp-annotation-leaders mp-no-print" aria-hidden="true">{pins.map(pin => <line key={pin.request.id} x1={pin.anchorLeft} y1={pin.anchorTop} x2={pin.left} y2={pin.top} />)}</svg>}
-    {enabled && !draft && pins.map(pin => <button data-annotation-ui className="mp-annotation-pin mp-no-print" key={pin.request.id} style={{ left: pin.left, top: pin.top }} onClick={() => reveal(pin.request)} aria-label={`Mở bình luận ${pin.number}: ${pin.request.title}`} title={pin.request.description}>{pin.number}</button>)}
-    {draft && <Dialog open onOpenChange={value => { if (!value) close(); }}><DialogContent data-annotation-ui className="mp-form-dialog sm:max-w-[620px]" showCloseButton={!saving} initialFocus={descriptionField}><DialogTitle>{draft.version ? 'Bình luận đã ghim' : 'Ghim bình luận tại đây'}</DialogTitle><DialogDescription>{draft.section || 'Ghi yêu cầu chỉnh sửa cho trang này.'}</DialogDescription><form onSubmit={submit}><fieldset disabled={saving}>
+    {enabled && !draft && pins.map(pin => <button data-annotation-ui className="mp-annotation-pin mp-no-print" key={pin.request.id} style={{ left: pin.left, top: pin.top }} onClick={() => reveal(pin.request)} aria-label={`Open comment ${pin.number}: ${pin.request.title}`} title={pin.request.description}>{pin.number}</button>)}
+    {draft && <Dialog open onOpenChange={value => { if (!value) close(); }}><DialogContent data-annotation-ui className="mp-form-dialog sm:max-w-[620px]" showCloseButton={!saving} initialFocus={descriptionField}><DialogTitle>{draft.version ? 'Pinned comment' : 'Pin a comment here'}</DialogTitle><DialogDescription>{draft.section || 'Describe a change request for this page.'}</DialogDescription><form onSubmit={submit}><fieldset disabled={saving}>
       {draft.annotation && <blockquote className="mp-selected-quote">{draft.annotation.quote.slice(0,250)}</blockquote>}
-      {!draft.annotation && <Field label="Vị trí / tiêu đề"><Input required maxLength={160} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></Field>}
-      <Field label="Bạn muốn chỉnh sửa thế nào?"><textarea ref={descriptionField} className="mp-input" required rows={5} maxLength={8000} placeholder="Ví dụ: Thu gọn thẻ này, đặt ngày khám và bác sĩ cùng một dòng…" value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} /></Field>
-      <Field label="Mức ưu tiên"><select className="mp-input" value={draft.priority} onChange={e => setDraft({ ...draft, priority: e.target.value })}><option value="normal">Bình thường</option><option value="high">Cần xử lý sớm</option></select></Field>
-      {draft.resolution && <p className="mp-clinician-note">Phản hồi: {draft.resolution}</p>}
-      <p className="mp-footnote">{draft.page_path} · {draft.annotation ? `Ghim ở giao diện ${draft.annotation.viewport_width}px` : 'Bình luận chung'}</p>
-    </fieldset><ErrorBox message={error} /><div className="mp-form-footer"><Button type="button" variant="outline" disabled={saving} onClick={close}>Đóng</Button><Button type="submit" disabled={saving}><Send />{saving ? 'Đang lưu…' : 'Lưu bình luận'}</Button></div></form></DialogContent></Dialog>}
+      {!draft.annotation && <Field label="Location / title"><Input required maxLength={160} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></Field>}
+      <Field label="How should this change?"><textarea ref={descriptionField} className="mp-input" required rows={5} maxLength={8000} placeholder="Example: Make this card more compact and place the visit date and clinician on one line…" value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} /></Field>
+      <Field label="Priority"><select className="mp-input" value={draft.priority} onChange={e => setDraft({ ...draft, priority: e.target.value })}><option value="normal">Normal</option><option value="high">Needs attention soon</option></select></Field>
+      {draft.resolution && <p className="mp-clinician-note">Response: {draft.resolution}</p>}
+      <p className="mp-footnote">{draft.page_path} · {draft.annotation ? `Pinned at ${draft.annotation.viewport_width}px viewport` : 'General comment'}</p>
+    </fieldset><ErrorBox message={error} /><div className="mp-form-footer"><Button type="button" variant="outline" disabled={saving} onClick={close}>Close comment</Button><Button type="submit" disabled={saving}><Send />{saving ? 'Saving…' : 'Save comment'}</Button></div></form></DialogContent></Dialog>}
   </>;
 }

@@ -79,7 +79,7 @@ void test('preserves backend string errors and HTTP status', async () => {
 
 void test('handles a non-JSON server error', async () => {
   globalThis.fetch = async () => new Response('<html>Bad gateway</html>', { status: 502 });
-  await assert.rejects(analyzeWound(file(), baseline), { status: 502, message: 'Máy chủ báo lỗi HTTP 502.' });
+  await assert.rejects(analyzeWound(file(), baseline), { status: 502, message: 'The service returned HTTP 502.' });
 });
 
 void test('handles network failures with an actionable local-server message', async () => {
@@ -99,8 +99,8 @@ void test('rejects malformed success payloads instead of inventing metrics', asy
 void test('rejects unsupported files and invalid days before a request', async () => {
   globalThis.fetch = async () => { throw new Error('Must not fetch'); };
   await assert.rejects(analyzeWound(new File(['x'], 'a.pdf', { type: 'application/pdf' }), baseline), /PNG/);
-  await assert.rejects(analyzeWound(new File([], 'a.png', { type: 'image/png' }), baseline), /trống/);
+  await assert.rejects(analyzeWound(new File([], 'a.png', { type: 'image/png' }), baseline), /empty/i);
   await assert.rejects(analyzeWound(new File([new Uint8Array(8 * 1024 * 1024 + 1)], 'a.png', { type: 'image/png' }), baseline), /8 MiB/);
-  await assert.rejects(analyzeWound(file(), baseline, -1), /Ngày/);
-  await assert.rejects(analyzeWound(file(), baseline, NaN), /Ngày/);
+  await assert.rejects(analyzeWound(file(), baseline, -1), /day/i);
+  await assert.rejects(analyzeWound(file(), baseline, NaN), /day/i);
 });

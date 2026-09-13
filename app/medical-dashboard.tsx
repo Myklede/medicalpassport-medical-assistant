@@ -684,7 +684,7 @@ export function MedicalDashboard({ portal = 'patient', returnPatientId }: {
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-blue-600"
-            aria-label="Về sảnh MediPass"
+            aria-label="Back to MediPass lobby"
           >
             <MediPassBrand compact />
           </Link>
@@ -723,13 +723,13 @@ export function MedicalDashboard({ portal = 'patient', returnPatientId }: {
                 {data?.patient.display_name ?? 'Demo patient'}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {portal === 'editor' ? 'Hồ sơ cũ · chỉnh sửa' : 'Hồ sơ cũ · chỉ đọc'}
+                {portal === 'editor' ? 'Previous records · edit' : 'Previous records · read only'}
               </p>
             </div>
           </div>
         </div>
         <nav
-          aria-label="Điều hướng hồ sơ trước đây"
+          aria-label="Previous records navigation"
           className="mx-auto flex max-w-[1440px] items-center gap-3 border-t border-border/60 px-4 py-2 text-xs sm:px-6 sm:text-sm lg:px-8"
         >
           <Link
@@ -737,10 +737,10 @@ export function MedicalDashboard({ portal = 'patient', returnPatientId }: {
             data-testid="records-hospital-link"
             className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-primary px-3 font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
           >
-            <ArrowLeft className="size-4" aria-hidden="true" />Cổng bệnh viện
+            <ArrowLeft className="size-4" aria-hidden="true" />Clinical portal
           </Link>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <span aria-current="page" className="min-w-0 font-medium text-foreground">Hồ sơ trước đây</span>
+          <span aria-current="page" className="min-w-0 font-medium text-foreground">Previous records</span>
         </nav>
         {mobileNav && (
           <nav className="border-t border-border bg-card p-3 shadow-lg lg:hidden" aria-label="Mobile navigation">
@@ -825,15 +825,15 @@ export function MedicalDashboard({ portal = 'patient', returnPatientId }: {
             )}>
               <div>
                 <p className={cx('text-xs font-bold uppercase tracking-[0.12em]', portal === 'editor' ? 'text-sky-800 dark:text-sky-200' : 'text-blue-800 dark:text-blue-200')}>
-                  Hồ sơ trước đây · module riêng
+                  Previous records · separate module
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Dữ liệu tại đây thuộc module hồ sơ cũ, không phải hồ sơ bệnh nhân đang chọn ở cổng bệnh viện.
+                  This data belongs to the previous-records module and is separate from the patient selected in the clinical portal.
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {portal === 'editor'
                     ? canEdit
-                      ? 'Bạn có thể thêm, sửa và xóa hồ sơ cũ theo quyền truy cập hiện tại.'
+                      ? 'You can add, edit, and delete previous records within your current access permissions.'
                       : 'Your account is not authorized to change this patient record.'
                     : 'This view can search, open, print, and download saved information, but it cannot change the medical record.'}
                 </p>
@@ -842,7 +842,7 @@ export function MedicalDashboard({ portal = 'patient', returnPatientId }: {
                 href={patientHref}
                 className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted"
               >
-                Góc nhìn bệnh nhân
+                Patient view
               </Link>
             </div>
 

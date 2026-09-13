@@ -50,18 +50,18 @@ void test('rejects mismatched identity, unsafe image paths and inconsistent brie
   const badDay = snapshot(); badDay.brief.objective_measurements.visits[0].day = 7;
   for (const payload of [badIdentity, badPath, badDay]) {
     globalThis.fetch = async () => Response.json(payload);
-    await assert.rejects(getWoundSession(sid, patient), /không khớp|không hợp lệ/);
+    await assert.rejects(getWoundSession(sid, patient), /does not match|invalid/i);
   }
 });
 
 void test('server discovery rejects another patient even without browser session references', async () => {
   globalThis.fetch = async () => Response.json({ storage_provider: 'local_sqlite', sessions: [{ session_id: sid, patient_id: 'OTHER', created_at: '2026-09-01', visit_count: 1, storage_provider: 'local_sqlite', baseline_locked: true }] });
-  await assert.rejects(listWoundSessions(patient), /không khớp bệnh nhân/);
+  await assert.rejects(listWoundSessions(patient), /does not match the patient/i);
 });
 
 void test('selected historical analysis cannot be replaced by another capture response', async () => {
   globalThis.fetch = async () => Response.json({ session_id: sid, patient_id: patient, visit_id: 'c'.repeat(32), brief: snapshot().brief });
-  await assert.rejects(getWoundVisit(sid, vid, patient), /không khớp lần chụp/);
+  await assert.rejects(getWoundVisit(sid, vid, patient), /does not match the selected capture/i);
 });
 
 void test('retry analyzes stored bytes by ID and deletion requires explicit server acknowledgement', async () => {
@@ -73,7 +73,7 @@ void test('retry analyzes stored bytes by ID and deletion requires explicit serv
   };
   await retryWoundVisit(sid, vid, patient);
   globalThis.fetch = async () => Response.json({ deleted: true, session_id: 'c'.repeat(32) });
-  await assert.rejects(deleteWoundSession(sid, patient), /Chưa xác nhận/);
+  await assert.rejects(deleteWoundSession(sid, patient), /could not be confirmed/i);
 });
 
 void test('validation errors preserve status but never echo submitted patient data', async () => {

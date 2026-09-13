@@ -5,9 +5,9 @@ import { InsuranceWorkspace } from './insurance-workspace';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Kiểm tra chính sách bảo hiểm — MediPass',
+  title: 'Insurance Policy Check — MediPass',
   description:
-    'Lưu và tái sử dụng SBC để tạo ước tính quyền lợi có điều kiện và dẫn chiếu nguồn.',
+    'Save and reuse SBC documents to create conditional benefit estimates with source references.',
 };
 
 export default function InsurancePage() {

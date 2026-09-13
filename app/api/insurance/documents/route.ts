@@ -107,9 +107,9 @@ export async function GET(request: Request) {
           original_filename: string;
           mime_type: string;
         }>();
-      if (!document) return Response.json({ error: 'Không tìm thấy tài liệu SBC.' }, { status: 404 });
+      if (!document) return Response.json({ error: 'SBC document not found.' }, { status: 404 });
       const object = await env.FILES.get(document.object_key);
-      if (!object) return Response.json({ error: 'Không tìm thấy tệp SBC.' }, { status: 404 });
+      if (!object) return Response.json({ error: 'SBC file not found.' }, { status: 404 });
       await writeAudit(context, 'download', 'InsuranceSBC', document.id);
       return new Response(object.body, {
         headers: {
@@ -178,7 +178,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error(error);
-    return Response.json({ error: 'Không thể tải thư viện SBC lúc này.' }, { status: 500 });
+    return Response.json({ error: 'Unable to load the SBC library right now.' }, { status: 500 });
   }
 }
 
@@ -189,17 +189,17 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file');
     if (!(file instanceof File)) {
-      return Response.json({ error: 'Vui lòng chọn một tài liệu SBC.' }, { status: 400 });
+      return Response.json({ error: 'Choose an SBC document.' }, { status: 400 });
     }
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      return Response.json({ error: 'SBC phải là tài liệu PDF.' }, { status: 400 });
+      return Response.json({ error: 'The SBC must be a PDF document.' }, { status: 400 });
     }
     if (!file.size || file.size > maxPdfBytes) {
-      return Response.json({ error: 'Tài liệu PDF phải có dung lượng từ 1 byte đến 8 MB.' }, { status: 400 });
+      return Response.json({ error: 'The PDF must be between 1 byte and 8 MB.' }, { status: 400 });
     }
     const bytes = new Uint8Array(await file.arrayBuffer());
     if (!isPdf(bytes)) {
-      return Response.json({ error: 'Tệp đã chọn không có cấu trúc PDF hợp lệ.' }, { status: 400 });
+      return Response.json({ error: 'The selected file does not have a valid PDF structure.' }, { status: 400 });
     }
     if (!env.FILES) throw new Error('The R2 file binding is unavailable.');
 
@@ -274,6 +274,6 @@ export async function POST(request: Request) {
       }
     }
     console.error(error);
-    return Response.json({ error: 'Không thể lưu tài liệu SBC này.' }, { status: 500 });
+    return Response.json({ error: 'Unable to save this SBC document.' }, { status: 500 });
   }
 }

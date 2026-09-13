@@ -159,7 +159,7 @@ function ruleFromPages(
         pages,
         options.patterns,
         options.label,
-        'Không tìm thấy dòng quyền lợi tương ứng trong phần văn bản có thể trích xuất.',
+        'No matching benefit line was found in the extractable text.',
       ),
     } satisfies BenefitRule,
   };
@@ -177,16 +177,16 @@ export function buildPolicyProfile(
   const outOfPocketMaximum = moneyNear(pages, outOfPocketPatterns);
 
   const ruleEntries = [
-    ruleFromPages(pages, { key: 'primary-care', label: 'Khám chăm sóc ban đầu', patterns: [/primary care visit/i, /primary care.*injury or illness/i], fallbackMethod: 'copay', fallbackValue: demoValues.primaryCareCopay }),
-    ruleFromPages(pages, { key: 'specialist', label: 'Khám bác sĩ chuyên khoa', patterns: [/specialist visit/i, /specialist care/i], fallbackMethod: 'copay', fallbackValue: demoValues.specialistCopay }),
-    ruleFromPages(pages, { key: 'urgent-care', label: 'Khám urgent care', patterns: [/urgent care/i], fallbackMethod: 'copay', fallbackValue: demoValues.urgentCareCopay }),
-    ruleFromPages(pages, { key: 'emergency', label: 'Cấp cứu', patterns: [/emergency room care/i, /emergency medical/i], fallbackMethod: 'copay', fallbackValue: demoValues.emergencyCopay }),
-    ruleFromPages(pages, { key: 'lab', label: 'Xét nghiệm chẩn đoán', patterns: [/diagnostic test/i, /blood work/i, /laboratory/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance }),
-    ruleFromPages(pages, { key: 'imaging', label: 'Chẩn đoán hình ảnh nâng cao', patterns: [/imaging.*ct.*pet/i, /mri/i, /diagnostic imaging/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance, priorAuthorization: true }),
-    ruleFromPages(pages, { key: 'therapy', label: 'Vật lý trị liệu', patterns: [/physical therapy/i, /rehabilitation services/i], fallbackMethod: 'copay', fallbackValue: demoValues.therapyCopay, visitLimit: 20 }),
-    ruleFromPages(pages, { key: 'outpatient-surgery', label: 'Phẫu thuật ngoại trú', patterns: [/outpatient surgery/i, /facility fee.*surgery/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance, priorAuthorization: true }),
-    ruleFromPages(pages, { key: 'inpatient', label: 'Nằm viện', patterns: [/inpatient hospital/i, /hospital stay/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance, priorAuthorization: true }),
-    ruleFromPages(pages, { key: 'preventive', label: 'Chăm sóc dự phòng', patterns: [/preventive care/i, /screening.*immunization/i], fallbackMethod: 'covered', fallbackValue: 0 }),
+    ruleFromPages(pages, { key: 'primary-care', label: 'Primary care visit', patterns: [/primary care visit/i, /primary care.*injury or illness/i], fallbackMethod: 'copay', fallbackValue: demoValues.primaryCareCopay }),
+    ruleFromPages(pages, { key: 'specialist', label: 'Specialist visit', patterns: [/specialist visit/i, /specialist care/i], fallbackMethod: 'copay', fallbackValue: demoValues.specialistCopay }),
+    ruleFromPages(pages, { key: 'urgent-care', label: 'Urgent care visit', patterns: [/urgent care/i], fallbackMethod: 'copay', fallbackValue: demoValues.urgentCareCopay }),
+    ruleFromPages(pages, { key: 'emergency', label: 'Emergency care', patterns: [/emergency room care/i, /emergency medical/i], fallbackMethod: 'copay', fallbackValue: demoValues.emergencyCopay }),
+    ruleFromPages(pages, { key: 'lab', label: 'Diagnostic laboratory testing', patterns: [/diagnostic test/i, /blood work/i, /laboratory/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance }),
+    ruleFromPages(pages, { key: 'imaging', label: 'Advanced diagnostic imaging', patterns: [/imaging.*ct.*pet/i, /mri/i, /diagnostic imaging/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance, priorAuthorization: true }),
+    ruleFromPages(pages, { key: 'therapy', label: 'Physical therapy', patterns: [/physical therapy/i, /rehabilitation services/i], fallbackMethod: 'copay', fallbackValue: demoValues.therapyCopay, visitLimit: 20 }),
+    ruleFromPages(pages, { key: 'outpatient-surgery', label: 'Outpatient surgery', patterns: [/outpatient surgery/i, /facility fee.*surgery/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance, priorAuthorization: true }),
+    ruleFromPages(pages, { key: 'inpatient', label: 'Inpatient hospital stay', patterns: [/inpatient hospital/i, /hospital stay/i], fallbackMethod: 'coinsurance', fallbackValue: demoValues.coinsurance, priorAuthorization: true }),
+    ruleFromPages(pages, { key: 'preventive', label: 'Preventive care', patterns: [/preventive care/i, /screening.*immunization/i], fallbackMethod: 'covered', fallbackValue: 0 }),
   ];
 
   const extractedSignals = Number(deductible !== null)
@@ -194,8 +194,8 @@ export function buildPolicyProfile(
     + ruleEntries.filter((entry) => entry.extracted).length;
   const extractionMode = extractedSignals >= 2 ? 'document-text' : 'demo-fallback';
   const fallbackCitation = extractionMode === 'demo-fallback'
-    ? 'PDF đã được lưu nhưng bảng quyền lợi không đủ rõ để trích xuất tự động. Giá trị này thuộc hồ sơ quyền lợi mô phỏng MediPass.'
-    : 'Không tìm thấy giá trị rõ ràng; bộ phân tích dùng giả định demo và đánh dấu trong kết quả.';
+    ? 'The PDF was saved, but its benefit table was not clear enough for automatic extraction. This value comes from the simulated MediPass benefit profile.'
+    : 'No clear value was found; the analyzer uses a marked demo assumption.';
 
   const rules = Object.fromEntries(
     ruleEntries.map(({ key, rule, extracted }) => [
@@ -209,18 +209,18 @@ export function buildPolicyProfile(
   const firstLine = rawPages.flatMap((page) => page.split(/\n+/)).map(compact).find((line) => line.length >= 4 && line.length <= 120);
   return {
     version: 1,
-    planName: firstLine || filename.replace(/\.pdf$/i, '') || 'SBC đã đăng tải',
+    planName: firstLine || filename.replace(/\.pdf$/i, '') || 'Uploaded SBC',
     pageCount: pagesInput.length,
     extractionMode,
     extractionConfidence: extractedSignals >= 5 ? 'medium' : 'low',
     deductible: deductible ?? demoValues.deductible,
     outOfPocketMaximum: outOfPocketMaximum ?? demoValues.outOfPocketMaximum,
     deductibleCitation: deductible !== null
-      ? pageCitation(pages, deductiblePatterns, 'Mức khấu trừ', fallbackCitation)
-      : { label: 'Mức khấu trừ', page: null, excerpt: fallbackCitation },
+      ? pageCitation(pages, deductiblePatterns, 'Deductible', fallbackCitation)
+      : { label: 'Deductible', page: null, excerpt: fallbackCitation },
     outOfPocketCitation: outOfPocketMaximum !== null
-      ? pageCitation(pages, outOfPocketPatterns, 'Giới hạn tự chi trả', fallbackCitation)
-      : { label: 'Giới hạn tự chi trả', page: null, excerpt: fallbackCitation },
+      ? pageCitation(pages, outOfPocketPatterns, 'Out-of-pocket limit', fallbackCitation)
+      : { label: 'Out-of-pocket limit', page: null, excerpt: fallbackCitation },
     rules,
   };
 }
@@ -235,21 +235,21 @@ type ServiceMatch = {
 function classifyService(condition: string): ServiceMatch {
   const value = condition.toLocaleLowerCase('vi');
   const matches: Array<[RegExp, Omit<ServiceMatch, 'inferred'>]> = [
-    [/(mri|ct scan|pet scan|chụp cộng hưởng|chụp cắt lớp|chẩn đoán hình ảnh)/i, { key: 'imaging', label: 'Chẩn đoán hình ảnh nâng cao', defaultCost: 1200 }],
-    [/(phẫu thuật|surgery|mổ ngoại trú)/i, { key: 'outpatient-surgery', label: 'Phẫu thuật ngoại trú', defaultCost: 5000 }],
-    [/(nhập viện|nằm viện|inpatient|hospital stay)/i, { key: 'inpatient', label: 'Nằm viện', defaultCost: 8500 }],
-    [/(cấp cứu|emergency|er visit)/i, { key: 'emergency', label: 'Cấp cứu', defaultCost: 3200 }],
-    [/(urgent care|khám khẩn)/i, { key: 'urgent-care', label: 'Khám urgent care', defaultCost: 240 }],
-    [/(vật lý trị liệu|physical therapy|phục hồi chức năng)/i, { key: 'therapy', label: 'Một buổi vật lý trị liệu', defaultCost: 180 }],
-    [/(xét nghiệm|blood test|lab work|laboratory)/i, { key: 'lab', label: 'Xét nghiệm chẩn đoán', defaultCost: 420 }],
-    [/(dự phòng|preventive|vaccine|tiêm chủng|screening)/i, { key: 'preventive', label: 'Chăm sóc dự phòng', defaultCost: 180 }],
-    [/(chuyên khoa|specialist|tim mạch|da liễu|chấn thương chỉnh hình|nội tiết)/i, { key: 'specialist', label: 'Khám bác sĩ chuyên khoa', defaultCost: 260 }],
-    [/(khám|bác sĩ|doctor|primary care|hen|asthma|tiểu đường|diabetes|đau|pain)/i, { key: 'primary-care', label: 'Khám chăm sóc ban đầu', defaultCost: 190 }],
+    [/(mri|ct scan|pet scan|chụp cộng hưởng|chụp cắt lớp|chẩn đoán hình ảnh)/i, { key: 'imaging', label: 'Advanced diagnostic imaging', defaultCost: 1200 }],
+    [/(phẫu thuật|surgery|mổ ngoại trú)/i, { key: 'outpatient-surgery', label: 'Outpatient surgery', defaultCost: 5000 }],
+    [/(nhập viện|nằm viện|inpatient|hospital stay)/i, { key: 'inpatient', label: 'Inpatient hospital stay', defaultCost: 8500 }],
+    [/(cấp cứu|emergency|er visit)/i, { key: 'emergency', label: 'Emergency care', defaultCost: 3200 }],
+    [/(urgent care|khám khẩn)/i, { key: 'urgent-care', label: 'Urgent care visit', defaultCost: 240 }],
+    [/(vật lý trị liệu|physical therapy|phục hồi chức năng)/i, { key: 'therapy', label: 'Physical therapy session', defaultCost: 180 }],
+    [/(xét nghiệm|blood test|lab work|laboratory)/i, { key: 'lab', label: 'Diagnostic laboratory testing', defaultCost: 420 }],
+    [/(dự phòng|preventive|vaccine|tiêm chủng|screening)/i, { key: 'preventive', label: 'Preventive care', defaultCost: 180 }],
+    [/(chuyên khoa|specialist|tim mạch|da liễu|chấn thương chỉnh hình|nội tiết)/i, { key: 'specialist', label: 'Specialist visit', defaultCost: 260 }],
+    [/(khám|bác sĩ|doctor|primary care|hen|asthma|tiểu đường|diabetes|đau|pain)/i, { key: 'primary-care', label: 'Primary care visit', defaultCost: 190 }],
   ];
   for (const [pattern, match] of matches) {
     if (pattern.test(value)) return { ...match, inferred: false };
   }
-  return { key: 'specialist', label: 'Khám bác sĩ chuyên khoa (giả định)', defaultCost: 260, inferred: true };
+  return { key: 'specialist', label: 'Specialist visit (assumed)', defaultCost: 260, inferred: true };
 }
 
 function roundMoney(value: number) {
@@ -269,21 +269,21 @@ export function analyzeCoverage(input: {
     : service.defaultCost;
   const effectiveNetwork = input.networkStatus === 'unknown' ? 'in-network' : input.networkStatus;
   const conditions = [
-    'Dịch vụ phải là quyền lợi đủ điều kiện và được xem là cần thiết theo quy định của plan.',
-    'Cơ sở và bác sĩ cần thuộc network nếu plan không có quyền lợi ngoài network.',
+    'The service must be an eligible benefit and meet the plan’s medical-necessity requirements.',
+    'The facility and clinician must be in network unless the plan includes out-of-network benefits.',
   ];
-  if (rule.priorAuthorization) conditions.push('Cần xác nhận prior authorization trước khi thực hiện dịch vụ.');
-  if (rule.visitLimit) conditions.push(`Quyền lợi có thể bị giới hạn số lượt; hồ sơ demo dùng mốc ${rule.visitLimit} lượt/năm.`);
+  if (rule.priorAuthorization) conditions.push('Prior authorization must be confirmed before the service is performed.');
+  if (rule.visitLimit) conditions.push(`The benefit may have a visit limit; this demo profile uses ${rule.visitLimit} visits per year.`);
 
   const assumptions = [
     input.estimatedCost
-      ? 'Chi phí được tính từ số tiền người dùng nhập và chưa chắc bằng allowed amount của hãng bảo hiểm.'
-      : `Chưa nhập chi phí nên hệ thống dùng allowed amount mô phỏng ${cost.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}.`,
-    'SBC không cho biết số deductible đã dùng trong năm; ước tính thận trọng giả định deductible vẫn còn nguyên.',
+      ? 'The estimate uses the amount entered by the user, which may differ from the insurer’s allowed amount.'
+      : `No cost was entered, so the system uses a simulated allowed amount of ${cost.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}.`,
+    'The SBC does not show how much deductible has already been used this year; this conservative estimate assumes the full deductible remains.',
   ];
-  if (input.networkStatus === 'unknown') assumptions.push('Chưa biết network nên phép tính tạm giả định cơ sở trong network.');
-  if (service.inferred) assumptions.push('Mô tả chưa nêu dịch vụ cụ thể; hệ thống tạm giả định một lần khám chuyên khoa.');
-  if (input.profile.extractionMode === 'demo-fallback') assumptions.push('PDF chưa cung cấp đủ văn bản có thể đọc tự động; quyền lợi và con số đang dùng là dữ liệu mô phỏng MediPass, không lấy từ tài liệu.');
+  if (input.networkStatus === 'unknown') assumptions.push('Network status is unknown, so the estimate temporarily assumes an in-network facility.');
+  if (service.inferred) assumptions.push('The description did not identify a specific service, so the system assumes one specialist visit.');
+  if (input.profile.extractionMode === 'demo-fallback') assumptions.push('The PDF did not provide enough machine-readable text; the benefit rules and amounts are simulated MediPass data and were not read from the document.');
 
   let planPays = 0;
   let memberPays = cost;
@@ -294,7 +294,7 @@ export function analyzeCoverage(input: {
 
   if (effectiveNetwork === 'out-of-network') {
     status = 'possibly-not-covered';
-    conditions.push('Kết quả tạm tính xem dịch vụ ngoài network là không được cover; cần gọi hãng bảo hiểm để xác nhận ngoại lệ.');
+    conditions.push('This estimate treats the out-of-network service as uncovered; call the insurer to confirm any exception.');
   } else if (rule.method === 'covered') {
     memberPays = 0;
     planPays = cost;
@@ -315,15 +315,15 @@ export function analyzeCoverage(input: {
   }
 
   const statusLabel = status === 'likely-covered'
-    ? 'Có khả năng được cover'
+    ? 'Likely covered'
     : status === 'conditional'
-      ? 'Có thể được cover nếu đủ điều kiện'
-      : 'Có thể không được cover';
+      ? 'May be covered if conditions are met'
+      : 'May not be covered';
   const coverageSummary = effectiveNetwork === 'out-of-network'
-    ? 'Plan có thể không thanh toán cho dịch vụ ngoài network theo giả định demo.'
+    ? 'Under the demo assumption, the plan may not pay for an out-of-network service.'
     : rule.priorAuthorization
-      ? 'Quyền lợi được ước tính theo mức trong network, với điều kiện prior authorization được chấp thuận.'
-      : 'Quyền lợi được ước tính theo mức trong network và vẫn phụ thuộc claim thực tế.';
+      ? 'Benefits are estimated at the in-network level and depend on approved prior authorization.'
+      : 'Benefits are estimated at the in-network level and still depend on the submitted claim.';
 
   return {
     version: 1,

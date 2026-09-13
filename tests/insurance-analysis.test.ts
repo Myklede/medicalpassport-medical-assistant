@@ -30,7 +30,7 @@ void test('estimates in-network MRI cost with deductible and coinsurance', () =>
   const profile = buildPolicyProfile(samplePages, 'sample-sbc.pdf');
   const result = analyzeCoverage({
     profile,
-    condition: 'Đau đầu gối, bác sĩ đề nghị chụp MRI.',
+    condition: 'Knee pain; the clinician recommended an MRI.',
     networkStatus: 'in-network',
     estimatedCost: 4000,
   });
@@ -46,7 +46,7 @@ void test('keeps out-of-network estimate conservative', () => {
   const profile = buildPolicyProfile(samplePages, 'sample-sbc.pdf');
   const result = analyzeCoverage({
     profile,
-    condition: 'Khám bác sĩ chuyên khoa tim mạch.',
+    condition: 'Cardiology specialist visit.',
     networkStatus: 'out-of-network',
     estimatedCost: 300,
   });
@@ -59,10 +59,10 @@ void test('labels unreadable documents as demo fallback', () => {
   const profile = buildPolicyProfile([], 'scan-only-sbc.pdf');
   const result = analyzeCoverage({
     profile,
-    condition: 'Vật lý trị liệu cho đau đầu gối.',
+    condition: 'Physical therapy for knee pain.',
     networkStatus: 'in-network',
   });
   assert.equal(profile.extractionMode, 'demo-fallback');
   assert.equal(result.extractionMode, 'demo-fallback');
-  assert.ok(result.assumptions.some((item) => item.includes('dữ liệu mô phỏng')));
+  assert.ok(result.assumptions.some((item) => item.includes('simulated')));
 });

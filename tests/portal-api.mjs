@@ -26,7 +26,7 @@ for (const p of portal.patients) {
 }
 let savedPatient, savedVisit;
 try {
-  savedPatient = (await request('/api/portal/patients', { ...patient, general_note: 'Kiểm tra lưu tiếng Việt: bệnh nền, dị ứng, tái khám.' })).patient;
+  savedPatient = (await request('/api/portal/patients', { ...patient, general_note: 'Verify UTF-8 persistence: baseline conditions, allergies, and follow-up.' })).patient;
   assert.equal(savedPatient.version, patient.version + 1);
   const reloaded = (await request('/api/portal')).patients.find(p => p.id === patient.id);
   assert.equal(reloaded.general_note, savedPatient.general_note);
@@ -34,7 +34,7 @@ try {
   await request('/api/portal/patients', { ...patient, id: 'qa-duplicate-patient', version: 0 }, 409);
   await request('/api/portal/patients', savedPatient, 403, { Origin: 'https://external.invalid' });
   const encounter = originalVisits[0];
-  savedVisit = (await request('/api/portal/encounters', { ...encounter, symptoms: 'Kiểm tra: ho nhẹ, không bỏ dấu tiếng Việt.' })).encounter;
+  savedVisit = (await request('/api/portal/encounters', { ...encounter, symptoms: 'Verification: mild cough and complete text persistence.' })).encounter;
   const after = (await request(`/api/portal/encounters?patient_id=${patient.id}`)).encounters.find(e => e.id === encounter.id);
   assert.equal(after.symptoms, savedVisit.symptoms);
   assert.deepEqual(after.medications, encounter.medications);

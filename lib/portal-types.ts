@@ -30,5 +30,5 @@ export type Feedback = {
 };
 export type StorageStatus = { provider: 'supabase' | 'd1'; connected: boolean; project_url: string | null; label: string; schema_version: number };
 export type PortalData = { patients: Patient[]; clinicians: Clinician[]; storage: StorageStatus; demo: true };
-export const feedbackStatuses = { open: 'Mới gửi', planned: 'Đã ghi nhận', in_progress: 'Đang chỉnh sửa', done: 'Đã hoàn thành' } as const;
-export const feedbackCategories = { interface: 'Giao diện', workflow: 'Luồng sử dụng', content: 'Nội dung', bug: 'Báo lỗi', other: 'Khác' } as const;
+export const feedbackStatuses = { open: 'New', planned: 'Acknowledged', in_progress: 'In progress', done: 'Completed' } as const;
+export const feedbackCategories = { interface: 'Interface', workflow: 'Workflow', content: 'Content', bug: 'Bug report', other: 'Other' } as const;

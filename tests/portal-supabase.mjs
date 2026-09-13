@@ -20,9 +20,9 @@ async function rpc(name, args) {
 const seed = {
   patients: demoPatients(), clinicians: demoClinicians,
   encounters: demoEncounters().map(e => ({ ...e, labs: e.labs.map((l, i) => ({ ...l, id: `lab-${i}` })), medications: e.medications.map((m, i) => ({ ...m, id: `med-${i}` })) })),
-  feedback: [{ id: 'feedback-demo', version: 4, title: 'Góp ý đã lưu', description: 'Giữ góp ý khi nối Supabase', category: 'interface', priority: 'normal', status: 'open', page_path: '/patient', section: 'Hồ sơ', patient_id: '', encounter_id: '', resolution: '', created_at: '', updated_at: '' }],
+  feedback: [{ id: 'feedback-demo', version: 4, title: 'Saved feedback', description: 'Keep feedback while connecting Supabase', category: 'interface', priority: 'normal', status: 'open', page_path: '/patient', section: 'Record', patient_id: '', encounter_id: '', resolution: '', created_at: '', updated_at: '' }],
 };
-seed.patients[0].general_note = 'Ghi chú đã chỉnh trước khi kết nối';
+seed.patients[0].general_note = 'Note edited before connection';
 try {
   const initial = await rpc('mp_portal_bootstrap', ['workspace-a', seed]);
   assert.equal(initial.patients.length, 5);
@@ -30,13 +30,13 @@ try {
   assert.equal(initial.feedback[0].title, seed.feedback[0].title);
   assert.equal(initial.patients[0].general_note, seed.patients[0].general_note);
   const patient = initial.patients[0];
-  const updated = await rpc('mp_portal_save', ['workspace-a', 'patient', { ...patient, general_note: 'Lưu vào PostgreSQL' }, patient.version]);
+  const updated = await rpc('mp_portal_save', ['workspace-a', 'patient', { ...patient, general_note: 'Saved to PostgreSQL' }, patient.version]);
   assert.equal(updated.version, 2);
   await assert.rejects(rpc('mp_portal_save', ['workspace-a', 'patient', patient, patient.version]), /VERSION_CONFLICT/);
   const repeat = await rpc('mp_portal_bootstrap', ['workspace-a', seed]);
-  assert.equal(repeat.patients[0].general_note, 'Lưu vào PostgreSQL');
+  assert.equal(repeat.patients[0].general_note, 'Saved to PostgreSQL');
   assert.equal(repeat.feedback.length, 1);
-  const pin = { selector: '[data-annotate="general-note"]', quote: 'Ghi chú chung', x: 0.25, y: 0.5, viewport_width: 390, viewport_height: 844 };
+  const pin = { selector: '[data-annotate="general-note"]', quote: 'General note', x: 0.25, y: 0.5, viewport_width: 390, viewport_height: 844 };
   const note = repeat.feedback[0];
   const pinned = await rpc('mp_portal_save', ['workspace-a', 'feedback', { ...note, annotation: pin }, note.version]);
   const checkedPin = (await rpc('mp_portal_read', ['workspace-a'])).feedback[0];
@@ -44,19 +44,19 @@ try {
   await rpc('mp_portal_save', ['workspace-a', 'feedback', { ...pinned, annotation: { ...pin, x: 0.75 } }, pinned.version]);
   assert.equal((await rpc('mp_portal_read', ['workspace-a'])).feedback[0].annotation.x, 0.75);
   assert.deepEqual((await rpc('mp_portal_read', ['workspace-b'])).patients, []);
-  const newcomer = { ...patient, id: 'new-patient', medical_record_number: 'MP-0006', display_name: 'Bệnh nhân thêm mới' };
+  const newcomer = { ...patient, id: 'new-patient', medical_record_number: 'MP-0006', display_name: 'New Sample Patient' };
   await rpc('mp_portal_save', ['workspace-a', 'patient', newcomer, 0]);
   assert.equal((await rpc('mp_portal_read', ['workspace-a'])).patients.length, 6);
   const visit = repeat.encounters[0];
-  const changed = await rpc('mp_portal_save', ['workspace-a', 'encounter', { ...visit, symptoms: 'Triệu chứng cập nhật', labs: [] }, visit.version]);
+  const changed = await rpc('mp_portal_save', ['workspace-a', 'encounter', { ...visit, symptoms: 'Updated symptoms', labs: [] }, visit.version]);
   assert.equal(changed.version, 2);
   const after = (await rpc('mp_portal_read', ['workspace-a'])).encounters.find(e => e.id === visit.id);
-  assert.equal(after.symptoms, 'Triệu chứng cập nhật');
+  assert.equal(after.symptoms, 'Updated symptoms');
   assert.deepEqual(after.medications, visit.medications);
   await assert.rejects(rpc('mp_portal_save', ['workspace-a', 'encounter', { ...changed, patient_id: 'new-patient' }, changed.version]), /PATIENT_CHANGE_NOT_ALLOWED/);
   const bad = { ...changed, symptoms: 'Must roll back', labs: [{ id: 'same', name: 'Test', value: '1' }, { id: 'same', name: 'Test', value: '2' }] };
   await assert.rejects(rpc('mp_portal_save', ['workspace-a', 'encounter', bad, changed.version]));
-  assert.equal((await rpc('mp_portal_read', ['workspace-a'])).encounters.find(e => e.id === visit.id).symptoms, 'Triệu chứng cập nhật');
+  assert.equal((await rpc('mp_portal_read', ['workspace-a'])).encounters.find(e => e.id === visit.id).symptoms, 'Updated symptoms');
   await db.exec('set role anon');
   await assert.rejects(db.query('select * from mp_portal_patients'), /permission denied/);
   await assert.rejects(rpc('mp_portal_read', ['workspace-a']), /permission denied/);

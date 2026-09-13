@@ -17,18 +17,18 @@ try {
   await page.locator('.mp-lobby').waitFor({ timeout: 60000 });
   assert.equal(await page.locator('.mp-lobby-choice').count(), 2);
   assert.equal(await page.locator('.mp-lobby-links a').count(), 3);
-  assert.equal(await page.getByRole('link', { name: /Cổng bệnh viện/ }).getAttribute('href'), '/editor');
-  assert.equal(await page.getByRole('link', { name: /Góc nhìn bệnh nhân/ }).getAttribute('href'), '/patient');
+  assert.equal(await page.getByRole('link', { name: /Clinical portal/ }).getAttribute('href'), '/editor');
+  assert.equal(await page.getByRole('link', { name: /Patient view/ }).getAttribute('href'), '/patient');
   await page.screenshot({ path: 'outputs/qa/lobby.png', fullPage: true });
 
   await page.goto(base + '/editor');
   await page.locator('.mp-patient-row').first().waitFor({ timeout: 60000 });
   await page.locator('.mp-patient-row').nth(1).click();
   await page.locator('.mp-education').first().waitFor();
-  assert.match(await page.locator('.mp-education-simple').first().innerText(), /NÓI ĐƠN GIẢN/);
+  assert.match(await page.locator('.mp-education-simple').first().innerText(), /IN PLAIN LANGUAGE/);
   await page.locator('.mp-lab-verdict').first().waitFor();
-  assert.match(await page.locator('.mp-lab-plain-grid').first().innerText(), /Vì sao cần chú ý\?/);
-  assert.match(await page.locator('.mp-lab-plain-grid').first().innerText(), /Ăn uống & sinh hoạt/);
+  assert.match(await page.locator('.mp-lab-plain-grid').first().innerText(), /Why does it matter\?/);
+  assert.match(await page.locator('.mp-lab-plain-grid').first().innerText(), /Food & daily habits/);
   await page.evaluate(() => localStorage.removeItem('medipass-theme'));
   await page.reload();
   await page.locator('.mp-patient-row').first().waitFor();
@@ -49,7 +49,7 @@ try {
   assert.equal(await page.locator('.mp-theme-toggle').getAttribute('aria-pressed'), 'true');
 
   await page.goto(base + '/mobile?path=/patient');
-  const phone = page.frameLocator('iframe[title="MediPass trên điện thoại"]');
+  const phone = page.frameLocator('iframe[title="MediPass mobile preview"]');
   await phone.locator('.mp-patient-row').first().waitFor({ timeout: 60000 });
   await phone.locator('html.dark').waitFor();
   await phone.locator('.mp-theme-toggle').click();

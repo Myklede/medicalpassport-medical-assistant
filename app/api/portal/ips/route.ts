@@ -34,7 +34,7 @@ async function fontBytes(
 ): Promise<Uint8Array> {
   const response = await fetch(new URL(assetUrl, requestUrl));
   if (!response.ok)
-    throw new PortalError('Không tải được phông chữ để tạo PDF.', 500);
+    throw new PortalError('Unable to load the font required to create the PDF.', 500);
   return new Uint8Array(await response.arrayBuffer());
 }
 
@@ -44,12 +44,12 @@ export async function GET(request: Request) {
     const patientId = safeId(url.searchParams.get('patient_id'));
     const format = url.searchParams.get('format') || 'pdf';
     if (format !== 'pdf' && format !== 'json') {
-      throw new PortalError('Định dạng xuất phải là PDF hoặc FHIR JSON.');
+      throw new PortalError('Export format must be PDF or FHIR JSON.');
     }
 
     const data = await readPortal(await workspaceFor(request));
     const patient = data.patients.find((item) => item.id === patientId);
-    if (!patient) throw new PortalError('Không tìm thấy bệnh nhân.', 404);
+    if (!patient) throw new PortalError('Patient not found.', 404);
     const snapshot = createIpsSnapshot(
       patient,
       data.encounters,

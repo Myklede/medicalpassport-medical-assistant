@@ -5,7 +5,7 @@ export async function GET(request: Request) {
     const workspace = await workspaceFor(request);
     const patientId = safeId(new URL(request.url).searchParams.get('patient_id'));
     const data = await readPortal(workspace);
-    if (!data.patients.some(p => p.id === patientId)) throw new PortalError('Không tìm thấy bệnh nhân.', 404);
+    if (!data.patients.some(p => p.id === patientId)) throw new PortalError('Patient not found.', 404);
     return portalJson({ encounters: data.encounters.filter(e => e.patient_id === patientId).sort((a, b) => b.visit_date.localeCompare(a.visit_date) || b.created_at.localeCompare(a.created_at)) });
   } catch (error) { return portalError(error); }
 }

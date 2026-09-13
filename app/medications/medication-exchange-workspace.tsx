@@ -94,13 +94,13 @@ export function MedicationExchangeWorkspace() {
           <Link
             href="/patient"
             className="grid size-11 place-items-center rounded-xl border border-border text-muted-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
-            aria-label="Trở lại MediPass"
+            aria-label="Return to MediPass"
           >
             <ArrowLeft className="size-4" />
           </Link>
-          <Link href="/" className="flex min-h-11 items-center rounded-xl focus-visible:outline-2 focus-visible:outline-primary" aria-label="MediPass · Trang chủ"><MediPassBrand compact subtitle="MEDICATION PASSPORT" /></Link>
+          <Link href="/" className="flex min-h-11 items-center rounded-xl focus-visible:outline-2 focus-visible:outline-primary" aria-label="MediPass · Home"><MediPassBrand compact subtitle="MEDICATION PASSPORT" /></Link>
           <div className="ml-auto hidden items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200 sm:flex">
-            <ShieldCheck className="size-3.5" /> 20 nhóm thuốc demo
+            <ShieldCheck className="size-3.5" /> 20 demo medication groups
           </div>
         </div>
       </header>
@@ -110,23 +110,23 @@ export function MedicationExchangeWorkspace() {
           <div
             className="rounded-3xl bg-[#0F172A] p-6 text-white shadow-xl shadow-slate-950/10 sm:p-8"
             data-annotate="medication-exchange-intro"
-            data-annotation-label="Giới thiệu đối chiếu thuốc"
+            data-annotation-label="Medication comparison introduction"
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-blue-300/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-blue-200">
                 Research demo
               </span>
               <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
-                Việt Nam · Ấn Độ · Mỹ · Trung Quốc
+                Vietnam · India · United States · China
               </span>
             </div>
             <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-              Tìm ứng viên cùng hoạt chất, không tự kết luận “thuốc thay thế”.
+              Find candidates with the same active ingredient without claiming automatic substitution.
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-              Tên thương mại chỉ là điểm bắt đầu. Kết quả an toàn phải khớp hoạt
-              chất, muối, hàm lượng, dạng và đường dùng, cơ chế giải phóng, nhãn
-              Rx/OTC và tá dược của đúng sản phẩm.
+              A brand name is only a starting point. A safe comparison must verify
+              the active ingredient, salt, strength, dosage form, route, release mechanism,
+              Rx/OTC status, and inactive ingredients for the exact product.
             </p>
           </div>
 
@@ -134,17 +134,17 @@ export function MedicationExchangeWorkspace() {
             <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
               <ShieldAlert className="size-5" />
               <h2 className="font-semibold">
-                Không dùng để tự đổi thuốc hoặc tự đổi liều
+                Do not use this tool to switch medicines or change a dose on your own
               </h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-amber-950/80 dark:text-amber-100/80">
-              Tình trạng lưu hành và Rx/OTC có thể thay đổi theo hàm lượng, dạng
-              bào chế và địa phương. Hãy mang vỏ hộp/đơn thuốc và danh sách dị
-              ứng để pharmacist kiểm tra trước khi mua.
+              Market availability and Rx/OTC status can vary by strength, dosage form,
+              and location. Bring the package or prescription and your allergy list
+              for a pharmacist to verify before purchase.
             </p>
             <div className="mt-4 rounded-2xl border border-amber-200 bg-white/70 p-3 text-xs leading-5 text-amber-950 dark:border-amber-300/20 dark:bg-slate-950/20 dark:text-amber-100">
-              Thuốc kê đơn, kháng sinh, insulin, thuốc tuyến giáp và ống hít
-              luôn cần kế hoạch từ người kê đơn khi chuyển quốc gia.
+              Prescription medicines, antibiotics, insulin, thyroid medicines, and inhalers
+              always require a prescriber’s plan when moving between countries.
             </div>
           </article>
         </section>
@@ -152,12 +152,12 @@ export function MedicationExchangeWorkspace() {
         <section
           className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card sm:p-6"
           data-annotate="medication-country-selector"
-          data-annotation-label="Chọn quốc gia đối chiếu"
+          data-annotation-label="Choose countries to compare"
         >
           <div className="grid items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
             <CountrySelect
               id="country-from"
-              label="Quốc gia hiện tại"
+              label="Current country"
               value={from}
               onChange={changeFrom}
             />
@@ -167,39 +167,39 @@ export function MedicationExchangeWorkspace() {
               size="icon-lg"
               onClick={swapCountries}
               className="mb-0.5 justify-self-center rounded-xl"
-              aria-label="Đổi chiều hai quốc gia"
+              aria-label="Swap source and destination countries"
             >
               <ArrowLeftRight />
             </Button>
             <CountrySelect
               id="country-to"
-              label="Quốc gia đích đến"
+              label="Destination country"
               value={to}
               onChange={changeTo}
             />
           </div>
           <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 dark:border-white/10 lg:flex-row lg:items-center">
             <label htmlFor="medication-search" className="relative flex-1">
-              <span className="sr-only">Tìm thuốc theo tên hoặc hoạt chất</span>
+              <span className="sr-only">Search by medication name or active ingredient</span>
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input
                 id="medication-search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Tìm Panadol, Tylenol, paracetamol…"
+                placeholder="Search Panadol, Tylenol, paracetamol…"
                 className="h-11 rounded-xl bg-white pl-10 text-base dark:bg-slate-950/30"
               />
             </label>
             <div
               className="flex flex-wrap gap-2"
-              aria-label="Lọc theo phân loại tại quốc gia hiện tại"
+              aria-label="Filter by status in the current country"
             >
               {(
                 [
-                  ['all', 'Tất cả'],
+                  ['all', 'All'],
                   ['otc', 'OTC'],
                   ['rx', 'Rx'],
-                  ['verify', 'Cần xác minh'],
+                  ['verify', 'Verify'],
                 ] as const
               ).map(([value, label]) => (
                 <button
@@ -219,15 +219,15 @@ export function MedicationExchangeWorkspace() {
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(330px,0.7fr)_minmax(0,1.3fr)]">
           <section
             className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
-            aria-label="Danh sách thuốc demo"
+            aria-label="Demo medication list"
           >
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-white/10">
               <div>
                 <p className="text-sm font-semibold">
-                  Thuốc tại {COUNTRIES[from].name}
+                  Medications in {COUNTRIES[from].name}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  {results.length} trong 20 nhóm demo
+                  {results.length} of 20 demo groups
                 </p>
               </div>
               <Pill className="size-5 text-blue-700 dark:text-blue-300" />
@@ -269,10 +269,10 @@ export function MedicationExchangeWorkspace() {
                 <div className="px-5 py-14 text-center">
                   <Search className="mx-auto size-7 text-slate-300" />
                   <p className="mt-3 text-sm font-semibold">
-                    Không tìm thấy thuốc
+                    No medication found
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    Thử tên thương mại, hoạt chất hoặc bỏ bộ lọc.
+                    Try a brand name, active ingredient, or clear the filter.
                   </p>
                 </div>
               )}
@@ -284,7 +284,7 @@ export function MedicationExchangeWorkspace() {
           ) : (
             <section className="grid min-h-72 place-items-center rounded-3xl border border-dashed border-slate-300 p-8 text-center dark:border-white/15">
               <p className="text-sm text-slate-500">
-                Chọn một thuốc để xem đối chiếu.
+                Select a medication to compare products.
               </p>
             </section>
           )}
@@ -298,12 +298,12 @@ export function MedicationExchangeWorkspace() {
               <strong className="text-slate-900 dark:text-white">
                 Disclaimer:
               </strong>{' '}
-              Đây là dữ liệu giả lập có tuyển chọn cho nghiên cứu UX, không phải
-              danh mục lưu hành thời gian thực, chẩn đoán, đơn thuốc hay khuyến
-              nghị mua thuốc. Không mang thuốc qua biên giới hoặc thay đơn chỉ
-              dựa vào màn hình này. Luôn xác minh với pharmacist tại quốc gia
-              đích; với thuốc Rx, liên hệ người kê đơn để có đơn và kế hoạch
-              chuyển đổi phù hợp.
+              This curated synthetic dataset supports UX research. It is not a live
+              market-availability list, diagnosis, prescription, or purchase recommendation.
+              Do not carry medicine across a border or change a prescription based only
+              on this screen. Always verify with a pharmacist in the destination country;
+              for prescription medicine, contact the prescriber for an appropriate prescription
+              and transition plan.
             </p>
           </div>
         </footer>
@@ -381,12 +381,12 @@ function MedicationDetail({
     <section
       className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card sm:p-7"
       data-annotate={`medication-${medication.id}`}
-      data-annotation-label={`Đối chiếu thuốc ${medication.inn}`}
+      data-annotation-label={`Medication comparison: ${medication.inn}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700 dark:text-blue-300">
-            Hoạt chất chuẩn · ATC {medication.atc}
+            Standard active ingredient · ATC {medication.atc}
           </p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
             {medication.inn}
@@ -400,7 +400,7 @@ function MedicationDetail({
           className="h-auto border-blue-200 bg-blue-50 px-3 py-1.5 text-blue-800 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
         >
           <ShieldCheck />
-          Cùng hoạt chất
+          Same active ingredient
         </Badge>
       </div>
 
@@ -408,7 +408,7 @@ function MedicationDetail({
         <ProductCard
           country={from}
           product={source}
-          label="Đang dùng / đang tìm"
+          label="Current / searched product"
         />
         <div className="grid place-items-center">
           <span className="grid size-10 place-items-center rounded-full border border-slate-200 bg-slate-50 text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-blue-300">
@@ -418,7 +418,7 @@ function MedicationDetail({
         <ProductCard
           country={to}
           product={target}
-          label="Ứng viên tại điểm đến"
+          label="Destination candidate"
         />
       </div>
 
@@ -432,41 +432,41 @@ function MedicationDetail({
         <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
           <ReviewLine
             ok
-            label="Hoạt chất chuẩn (INN)"
-            value="Khớp trong demo"
+            label="Standard active ingredient (INN)"
+            value="Matched in demo"
           />
           <ReviewLine
             ok={review.sameStrength}
-            label="Hàm lượng ghi nhãn"
+            label="Labeled strength"
             value={
               review.sameStrength
-                ? 'Mô tả giống nhau'
-                : 'Khác — cần quy đổi chuyên môn'
+                ? 'Same description'
+                : 'Different — professional conversion required'
             }
           />
           <ReviewLine
             ok={review.sameForm}
-            label="Dạng/đường dùng"
-            value={review.sameForm ? 'Mô tả giống nhau' : 'Khác — không tự đổi'}
+            label="Dosage form / route"
+            value={review.sameForm ? 'Same description' : 'Different — do not switch independently'}
           />
           <ReviewLine
             ok={!review.accessChanged}
             label="Rx/OTC"
             value={
               review.accessChanged
-                ? 'Phân loại thay đổi'
-                : 'Cùng nhóm trong demo'
+                ? 'Classification differs'
+                : 'Same demo classification'
             }
           />
           <ReviewLine
             warning
-            label="Tá dược & sinh khả dụng"
-            value="Chưa xác nhận — đọc đúng nhãn"
+            label="Inactive ingredients & bioavailability"
+            value="Not confirmed — check the exact label"
           />
           <ReviewLine
             warning
-            label="Kết luận thay thế"
-            value="Pharmacist/người kê đơn quyết định"
+            label="Substitution decision"
+            value="Pharmacist or prescriber decides"
           />
         </div>
       </div>
@@ -475,7 +475,7 @@ function MedicationDetail({
         <article className="rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-400/20 dark:bg-rose-400/10">
           <div className="flex items-center gap-2 text-rose-800 dark:text-rose-200">
             <TriangleAlert className="size-4" />
-            <h3 className="text-sm font-semibold">Cảnh báo hoạt chất</h3>
+            <h3 className="text-sm font-semibold">Active-ingredient safety notes</h3>
           </div>
           <p className="mt-2 text-sm leading-6 text-rose-950/75 dark:text-rose-100/75">
             {medication.safetyNote}
@@ -484,7 +484,7 @@ function MedicationDetail({
         <article className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-400/20 dark:bg-amber-400/10">
           <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
             <CircleAlert className="size-4" />
-            <h3 className="text-sm font-semibold">Tá dược cần đối chiếu</h3>
+            <h3 className="text-sm font-semibold">Inactive ingredients to compare</h3>
           </div>
           <p className="mt-2 text-sm leading-6 text-amber-950/75 dark:text-amber-100/75">
             {medication.excipientWatch}
@@ -496,7 +496,7 @@ function MedicationDetail({
         <div className="flex items-center gap-2">
           <Stethoscope className="size-4 text-blue-700 dark:text-blue-300" />
           <h3 className="text-sm font-semibold">
-            Hỏi pharmacist trước khi mua
+            Ask a pharmacist before purchase
           </h3>
         </div>
         <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
@@ -508,10 +508,10 @@ function MedicationDetail({
           ))}
         </ul>
         <blockquote className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 dark:bg-slate-950/30 dark:text-slate-200">
-          “Tôi đang dùng <strong>{source.exampleName}</strong>. Xin kiểm tra{' '}
-          <strong>{target.exampleName}</strong> có cùng hoạt chất, hàm lượng,
-          dạng/đường dùng và cơ chế giải phóng không; đồng thời đối chiếu tá
-          dược với dị ứng của tôi.”
+          “I use <strong>{source.exampleName}</strong>. Please check whether{' '}
+          <strong>{target.exampleName}</strong> has the same active ingredient, strength,
+          dosage form, route, and release mechanism, and compare its inactive ingredients
+          with my allergies.”
         </blockquote>
         <div className="mt-4 flex flex-wrap gap-3">
           <a
@@ -520,7 +520,7 @@ function MedicationDetail({
             rel="noreferrer"
             className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
           >
-            Tra nhãn DailyMed <ExternalLink className="size-3.5" />
+            Search DailyMed labels <ExternalLink className="size-3.5" />
           </a>
           <a
             href={COUNTRIES[to].registryUrl}
@@ -528,7 +528,7 @@ function MedicationDetail({
             rel="noreferrer"
             className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
           >
-            Kiểm tra {COUNTRIES[to].regulator}{' '}
+            Check {COUNTRIES[to].regulator}{' '}
             <ExternalLink className="size-3.5" />
           </a>
         </div>
@@ -570,11 +570,11 @@ function ProductCard({
       </p>
       <dl className="mt-4 grid gap-2 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-500">Hàm lượng</dt>
+          <dt className="text-slate-500">Strength</dt>
           <dd className="text-right font-medium">{product.strength}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-500">Dạng dùng</dt>
+          <dt className="text-slate-500">Dosage form</dt>
           <dd className="max-w-[65%] text-right font-medium">{product.form}</dd>
         </div>
       </dl>
@@ -622,48 +622,48 @@ function Methodology() {
   const steps = [
     [
       '1',
-      'Nhận dạng đúng sản phẩm',
-      'Chụp/đọc tên, nhà sản xuất, số đăng ký và toàn bộ hoạt chất; không đoán từ màu viên.',
+      'Identify the exact product',
+      'Photograph or read the name, manufacturer, registration number, and every active ingredient; never guess from pill color.',
     ],
     [
       '2',
-      'Chuẩn hóa hoạt chất',
-      'Dùng INN; ghi rõ muối/ester và thuốc phối hợp. ATC chỉ hỗ trợ phân nhóm.',
+      'Standardize the active ingredient',
+      'Use the INN and record the exact salt or ester and any combination ingredients. ATC only supports classification.',
     ],
     [
       '3',
-      'Khớp cấu hình liều',
-      'So hàm lượng, dạng, đường dùng, IR/XR/ER, thiết bị và đơn vị dose.',
+      'Match the dosage configuration',
+      'Compare strength, form, route, IR/XR/ER mechanism, device, and dose units.',
     ],
     [
       '4',
-      'Kiểm tra quốc gia đích',
-      'Tra cơ quan quản lý để xác nhận lưu hành và Rx/OTC của đúng sản phẩm.',
+      'Check the destination country',
+      'Use the regulator’s source to confirm current availability and Rx/OTC status for the exact product.',
     ],
     [
       '5',
-      'Đọc nhãn & tá dược',
-      'So chống chỉ định, tương tác, dị ứng và inactive ingredients của hai nhãn.',
+      'Read labels and inactive ingredients',
+      'Compare contraindications, interactions, allergies, and inactive ingredients on both labels.',
     ],
     [
       '6',
-      'Chuyên gia xác nhận',
-      'Pharmacist xác minh sản phẩm; người kê đơn quyết định chuyển thuốc Rx/liều.',
+      'Obtain professional confirmation',
+      'A pharmacist verifies the product; the prescriber decides any prescription-medicine or dose transition.',
     ],
   ];
   return (
     <section
       className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card sm:p-7"
       data-annotate="medication-methodology"
-      data-annotation-label="Quy trình đối chiếu thuốc"
+      data-annotation-label="Medication comparison workflow"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700 dark:text-blue-300">
-            Quy trình an toàn
+            Safety workflow
           </p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
-            Sáu bước trước khi coi hai sản phẩm là ứng viên đối chiếu
+            Six steps before treating two products as comparison candidates
           </h2>
         </div>
         <Badge
@@ -671,7 +671,7 @@ function Methodology() {
           className="h-auto border-slate-200 px-3 py-1.5 dark:border-white/10"
         >
           <Info />
-          Cập nhật demo: 10/09/2026
+          Demo updated: September 10, 2026
         </Badge>
       </div>
       <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -692,7 +692,7 @@ function Methodology() {
       </div>
       <details className="mt-5 rounded-2xl border border-slate-200 p-4 dark:border-white/10">
         <summary className="cursor-pointer text-sm font-semibold">
-          Nguồn phương pháp và cơ quan quản lý
+          Method and regulator sources
         </summary>
         <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div className="space-y-2">
@@ -725,9 +725,9 @@ function Methodology() {
           </div>
         </div>
         <p className="mt-4 text-xs leading-5 text-slate-500 dark:text-slate-400">
-          FDA Orange Book chỉ đánh giá tương đương trong hệ thống phê duyệt của
-          Mỹ. RxNorm chuẩn hóa tên thuốc tại Mỹ. Không dùng hai nguồn này để tự
-          suy ra tương đương pháp lý hoặc điều trị giữa các quốc gia.
+          The FDA Orange Book evaluates equivalence within the United States approval
+          system. RxNorm standardizes medication names in the United States. Neither
+          source should be used to infer legal or therapeutic equivalence across countries.
         </p>
       </details>
     </section>

@@ -39,7 +39,7 @@ export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribeTheme, currentTheme, (): Theme => 'light');
 
   const next = theme === 'dark' ? 'light' : 'dark';
-  const action = next === 'dark' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng';
+  const action = next === 'dark' ? 'Switch to dark mode' : 'Switch to light mode';
 
   return (
     <button
@@ -54,7 +54,7 @@ export function ThemeToggle() {
       }}
     >
       {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-      <span>{theme === 'dark' ? 'Sáng' : 'Tối'}</span>
+      <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
     </button>
   );
 }

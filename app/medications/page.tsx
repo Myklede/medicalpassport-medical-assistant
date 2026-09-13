@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { MedicationExchangeWorkspace } from './medication-exchange-workspace';
 
 export const metadata: Metadata = {
-  title: 'Đối chiếu thuốc quốc tế — MediPass',
+  title: 'International Medication Match — MediPass',
   description:
-    'Demo đối chiếu tên thuốc theo hoạt chất, hàm lượng, dạng dùng và phân loại Rx/OTC giữa bốn quốc gia.',
+    'Compare medication names by active ingredient, strength, dosage form, and Rx/OTC status across four countries.',
 };
 
 export default function MedicationExchangePage() {

@@ -1,6 +1,6 @@
 import { MedicalDashboard } from '../medical-dashboard';
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Hồ sơ trước đây — MediPass' };
+export const metadata = { title: 'Previous records — MediPass' };
 
 export default async function PreviousRecords({ searchParams }: {
   searchParams: Promise<{ patient?: string | string[] }>;

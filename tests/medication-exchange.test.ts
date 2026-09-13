@@ -61,7 +61,7 @@ void test('pair review never declares automatic substitution', () => {
         assert.equal(review.requiresExpertReview, true);
         assert.doesNotMatch(
           review.summary,
-          /tương đương điều trị|thay thế an toàn/i,
+          /therapeutically equivalent|safe replacement/i,
         );
       }
     }

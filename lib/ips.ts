@@ -209,7 +209,7 @@ function latestVitals(encounters: Encounter[]): IpsVital[] {
   }> = [
     {
       key: 'blood-pressure',
-      label: 'Blood pressure / Huyết áp',
+      label: 'Blood pressure',
       unit: 'mmHg',
       read: (encounter) => encounter.blood_pressure,
       valid: (value) =>
@@ -217,21 +217,21 @@ function latestVitals(encounters: Encounter[]): IpsVital[] {
     },
     {
       key: 'pulse',
-      label: 'Heart rate / Nhịp tim',
+      label: 'Heart rate',
       unit: '/min',
       read: (encounter) => encounter.pulse,
       valid: (value) => numeric(value) !== null,
     },
     {
       key: 'temperature',
-      label: 'Body temperature / Nhiệt độ',
+      label: 'Body temperature',
       unit: '°C',
       read: (encounter) => encounter.temperature,
       valid: (value) => numeric(value) !== null,
     },
     {
       key: 'weight',
-      label: 'Body weight / Cân nặng',
+      label: 'Body weight',
       unit: 'kg',
       read: (encounter) => encounter.weight,
       valid: (value) => numeric(value) !== null,

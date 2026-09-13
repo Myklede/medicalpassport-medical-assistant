@@ -34,13 +34,13 @@ export async function POST(request: Request) {
       ? null
       : Number(rawCost);
 
-    if (!documentId) return Response.json({ error: 'Vui lòng chọn một SBC đã lưu.' }, { status: 400 });
-    if (condition.length < 5) return Response.json({ error: 'Hãy mô tả tình trạng và dịch vụ dự kiến rõ hơn.' }, { status: 400 });
+    if (!documentId) return Response.json({ error: 'Select a saved SBC.' }, { status: 400 });
+    if (condition.length < 5) return Response.json({ error: 'Describe the condition and expected service in more detail.' }, { status: 400 });
     if (!['in-network', 'out-of-network', 'unknown'].includes(networkStatus)) {
-      return Response.json({ error: 'Trạng thái network không hợp lệ.' }, { status: 400 });
+      return Response.json({ error: 'Invalid network status.' }, { status: 400 });
     }
     if (estimatedCost !== null && (!Number.isFinite(estimatedCost) || estimatedCost <= 0 || estimatedCost > 100000)) {
-      return Response.json({ error: 'Chi phí dự kiến phải lớn hơn 0 và không quá 100.000 USD.' }, { status: 400 });
+      return Response.json({ error: 'Estimated cost must be greater than $0 and no more than $100,000.' }, { status: 400 });
     }
 
     const document = await env.DB.prepare(
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     )
       .bind(documentId, context.patientId)
       .first<{ id: string; benefits_json: string; original_filename: string }>();
-    if (!document) return Response.json({ error: 'Không tìm thấy tài liệu SBC đã chọn.' }, { status: 404 });
+    if (!document) return Response.json({ error: 'The selected SBC document was not found.' }, { status: 404 });
 
     const result = analyzeCoverage({
       profile: parseProfile(document.benefits_json, document.original_filename),
@@ -97,6 +97,6 @@ export async function POST(request: Request) {
     }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return Response.json({ error: 'Không thể tạo ước tính quyền lợi lúc này.' }, { status: 500 });
+    return Response.json({ error: 'Unable to create a benefit estimate right now.' }, { status: 500 });
   }
 }

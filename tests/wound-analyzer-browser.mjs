@@ -62,15 +62,15 @@ function makeBrief(session, captures = session.captures) {
     pixel_comparison_supports_trend: comparable && last.capture_conditions_consistent && prev.capture_conditions_consistent,
   } : null;
   const locale = language => ({
-    simple_explanation: `${language} · Kết quả ngày ${last.day}; ${visits.length} ảnh được đánh giá.`,
-    baseline_context: `${language} · Hồ sơ ghi HbA1c ${profile.hba1c_level}%; đái tháo đường típ 2: ${profile.has_diabetes_type_2 ? 'có' : 'không ghi nhận'}.`,
-    why_this_matters: `${language} · Cơ chế sinh học từ máy chủ; phần giải thích phải hiện đầy đủ.`,
-    possible_consequences: `${language} · Hệ quả có điều kiện từ máy chủ, không phải chẩn đoán.`,
-    what_to_do: Array.from({ length: 6 }, (_, index) => ({ action_id: `action-${index}`, text: `${language} · Hướng dẫn đầy đủ số ${index + 1}.` })),
-    when_to_seek_care: `${language} · Dấu hiệu cần liên hệ bác sĩ từ kết quả đã lưu.`,
-    measurement_note: `${language} · Nhãn màu là ước tính từ ảnh, không xác nhận mô.`,
-    rule_note: highRisk ? `${language} · Mốc bảy ngày là quy tắc nghiên cứu.` : '',
-    safety_note: `${language} · Điểm chưa được hiệu chuẩn; cần người có chuyên môn xem lại.`,
+    simple_explanation: `${language} · Results for day ${last.day}; ${visits.length} images were evaluated.`,
+    baseline_context: `${language} · Recorded baseline HbA1c ${profile.hba1c_level}%; type 2 diabetes: ${profile.has_diabetes_type_2 ? 'recorded' : 'not recorded'}.`,
+    why_this_matters: `${language} · The biological mechanism supplied by the server must be displayed in full.`,
+    possible_consequences: `${language} · Conditional consequences from the server, not a diagnosis.`,
+    what_to_do: Array.from({ length: 6 }, (_, index) => ({ action_id: `action-${index}`, text: `${language} · Complete guidance item ${index + 1}.` })),
+    when_to_seek_care: `${language} · Signs that require contacting a clinician from the saved result.`,
+    measurement_note: `${language} · Color labels are image estimates and do not confirm tissue.`,
+    rule_note: highRisk ? `${language} · The seven-day threshold is a research rule.` : '',
+    safety_note: `${language} · Scores are uncalibrated and require professional review.`,
   });
   const explanation = { locales: { vi: locale('VI'), en: locale('EN') }, clinical_validation: false };
   const alerts = highRisk ? [{ rule_id: 'high_risk_non_healing_trajectory', scope: 'latest', elapsed_days: elapsed }] : [];
@@ -199,24 +199,24 @@ async function addCapture(day, marker, nextScenario = 'stagnant') {
   scenario = nextScenario;
   // PNG trailing bytes make distinct hashes while preserving a decodable raster;
   // the test verifies upload contracts, not the fully mocked model inference.
-  await page.getByLabel('Chọn một hoặc nhiều ảnh', { exact: true }).setInputFiles({ name: `synthetic-ui-${marker}.png`, mimeType: 'image/png', buffer: Buffer.concat([sample, Buffer.from(`\nsynthetic-ui-${marker}`)]) });
-  await page.getByLabel('Ngày giờ lần chụp 1', { exact: true }).fill(atDay(day).slice(0, 16));
-  await page.getByLabel('Thước ảnh lần chụp 1', { exact: true }).fill('100');
+  await page.getByLabel('Choose one or more images', { exact: true }).setInputFiles({ name: `synthetic-ui-${marker}.png`, mimeType: 'image/png', buffer: Buffer.concat([sample, Buffer.from(`\nsynthetic-ui-${marker}`)]) });
+  await page.getByLabel('Capture date and time 1', { exact: true }).fill(atDay(day).slice(0, 16));
+  await page.getByLabel('Image scale for capture 1', { exact: true }).fill('100');
   await page.getByTestId('visit-draft').getByRole('checkbox').check();
-  await page.getByRole('button', { name: 'Lưu & phân tích', exact: true }).click();
-  await page.getByRole('button', { name: 'Đang xử lý…', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Save & analyze', exact: true }).click();
+  await page.getByRole('button', { name: 'Processing…', exact: true }).waitFor();
   await page.locator('[data-slot="switch"][data-disabled]').waitFor({ timeout: 5_000 });
   assert.equal(await page.getByRole('switch', { name: 'Developer Mode' }).isDisabled(), true);
   await ready();
   await page.getByTestId('current-wound-measurements').waitFor();
 }
 async function assertSavedCount(count) {
-  await page.getByTestId('saved-visits').getByText(`${count} lần đã lưu`, { exact: true }).waitFor();
+  await page.getByTestId('saved-visits').getByText(`${count} saved captures`, { exact: true }).waitFor();
   assert.equal(await page.getByTestId('saved-visits').locator('article').count(), count);
 }
-async function assertEducation(language = 'VI') {
+async function assertEducation(language = 'EN') {
   const text = await page.getByTestId('patient-education').innerText();
-  for (const fragment of ['Kết quả', 'Hồ sơ ghi HbA1c', 'Cơ chế sinh học', 'Hệ quả có điều kiện', 'Hướng dẫn đầy đủ số 6.', 'Dấu hiệu cần liên hệ bác sĩ', 'Điểm chưa được hiệu chuẩn']) {
+  for (const fragment of ['Results for day', 'Recorded baseline HbA1c', 'The biological mechanism', 'Conditional consequences', 'Complete guidance item 6.', 'Signs that require contacting a clinician', 'Scores are uncalibrated']) {
     assert.ok(text.includes(`${language} · ${fragment}`), `Entire education field: ${fragment}`);
   }
 }
@@ -248,9 +248,9 @@ try {
   await page.goto(base + '/signin-with-chatgpt?return_to=/wound-analyzer');
   await openAnalyzer();
   assert.equal(await page.getByRole('switch', { name: 'Developer Mode' }).isChecked(), false);
-  assert.equal(await page.getByRole('combobox', { name: 'Chọn bệnh nhân giả lập' }).count(), 0);
-  assert.equal(await page.getByRole('button', { name: 'Lưu & phân tích', exact: true }).isDisabled(), true);
-  assert.equal(await page.getByLabel('Chụp ảnh bằng camera', { exact: true }).getAttribute('capture'), 'environment');
+  assert.equal(await page.getByRole('combobox', { name: 'Select simulated patient' }).count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Save & analyze', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByLabel('Take a photo with the camera', { exact: true }).getAttribute('capture'), 'environment');
   await addCapture(0, 'first');
   await assertSavedCount(1);
   const patientSession = [...sessions.values()][0];
@@ -260,18 +260,16 @@ try {
   assert.match(await page.getByTestId('fused-baseline-context').innerText(), /9\.6%/);
   assert.match(await page.getByTestId('current-wound-measurements').innerText(), /40\.0%/);
   await assertEducation();
-  await page.getByRole('button', { name: 'English', exact: true }).click();
   await assertEducation('EN');
-  await page.getByRole('button', { name: 'Tiếng Việt', exact: true }).click();
   await noOverflow();
   await page.screenshot({ path: 'outputs/qa/wound-patient-single-light.png', fullPage: true, animations: 'disabled' });
   await addCapture(7, 'second');
   await assertSavedCount(2);
   assert.equal(sessions.size, 1, 'Follow-up appends to the same session');
   await page.getByTestId('high-risk-non-healing-alert').waitFor();
-  assert.match(await page.getByTestId('healing-status').innerText(), /Đình trệ/);
+  assert.match(await page.getByTestId('healing-status').innerText(), /Stagnant/);
   assert.match(await page.getByTestId('longitudinal-tracking').innerText(), /0 cm²/);
-  assert.match(await page.getByTestId('longitudinal-tracking').innerText(), /Ngày 0 → ngày 7/);
+  assert.match(await page.getByTestId('longitudinal-tracking').innerText(), /Day 0 → day 7/);
 
   await page.evaluate(() => localStorage.clear());
   await page.reload(); await ready(); await assertSavedCount(2);
@@ -280,14 +278,14 @@ try {
   await page.getByTestId('pipeline-visualization').waitFor();
   assert.equal(await page.getByTestId('pipeline-visualization').getByRole('article').count(), 4);
   assert.equal(await page.getByTestId('pipeline-visualization').locator('img').count(), 3);
-  await page.getByTestId('saved-visits').getByRole('button', { name: /^Xem lần chụp/ }).first().click(); await ready();
-  await page.getByTestId('pipeline-visualization').getByRole('heading', { name: 'Pipeline Visualization · Ngày 0', exact: true }).waitFor();
+  await page.getByTestId('saved-visits').getByRole('button', { name: /^View capture/ }).first().click(); await ready();
+  await page.getByTestId('pipeline-visualization').getByRole('heading', { name: 'Pipeline Visualization · Day 0', exact: true }).waitFor();
   assert.equal(await page.getByTestId('longitudinal-tracking').count(), 0, 'Historical selection uses the matching cumulative brief');
   assert.equal(await page.getByTestId('pipeline-visualization').locator('img').first().getAttribute('src'), `/api/wound-sessions/${patientSession.session_id}/visits/${patientSession.captures[0].visit_id}/image?patient_id=SYN000014`);
   assert.equal(await page.getByTestId('pipeline-visualization').locator('img').nth(1).getAttribute('src'), `data:image/png;base64,${patientSession.captures[0].buffer.toString('base64')}`);
-  await page.getByTestId('saved-visits').getByRole('button', { name: /^Xem lần chụp/ }).last().click(); await ready();
+  await page.getByTestId('saved-visits').getByRole('button', { name: /^View capture/ }).last().click(); await ready();
 
-  const profiles = page.getByRole('combobox', { name: 'Chọn bệnh nhân giả lập' });
+  const profiles = page.getByRole('combobox', { name: 'Select simulated patient' });
   assert.equal(await profiles.locator('option').count(), 5);
   for (const patient of MOCK_WOUND_PATIENTS.slice(1)) {
     await profiles.selectOption(patient.patient_id); await ready();
@@ -307,7 +305,7 @@ try {
   for (let index = 0; index < await cards.count(); index++) {
     const encounter = cards.nth(index);
     if (!(await encounter.evaluate(element => element.open))) await encounter.locator('summary').click();
-    for (const label of ['Sinh hiệu & Xét nghiệm', 'Tình trạng & Can thiệp vết thương', 'Đơn thuốc & Băng gạc', 'Chăm sóc & Tái khám']) {
+    for (const label of ['Vitals & laboratory results', 'Wound status & procedures', 'Medications & dressings', 'Care & follow-up']) {
       assert.equal(await encounter.getByRole('heading', { name: label, exact: true }).isVisible(), true);
     }
     const sourceId = await encounter.getAttribute('data-encounter-id');
@@ -338,7 +336,7 @@ try {
   await cards.first().evaluate(element => element.scrollIntoView({ block: 'start' }));
   await page.screenshot({ path: 'outputs/qa/wound-mobile-dark-accordion-viewport.png', animations: 'disabled' });
   await page.getByRole('switch', { name: 'Developer Mode' }).check(); await ready();
-  await page.getByRole('combobox', { name: 'Chọn bệnh nhân giả lập' }).selectOption('SYN000014'); await ready();
+  await page.getByRole('combobox', { name: 'Select simulated patient' }).selectOption('SYN000014'); await ready();
   await page.getByTestId('pipeline-visualization').waitFor(); await noOverflow();
   await page.screenshot({ path: 'outputs/qa/wound-developer-mobile-dark.png', fullPage: true, animations: 'disabled' });
   await page.getByTestId('pipeline-visualization').evaluate(element => element.scrollIntoView({ block: 'start' }));
@@ -349,33 +347,33 @@ try {
   assert.match(await page.getByTestId('longitudinal-tracking').innerText(), /\+15/);
 
   const deleteBefore = requests.filter(request => request.method === 'DELETE').length;
-  const touchTarget = await page.getByTestId('saved-visits').getByRole('button', { name: /^Xóa lần chụp/ }).last().boundingBox();
+  const touchTarget = await page.getByTestId('saved-visits').getByRole('button', { name: /^Delete capture/ }).last().boundingBox();
   assert.ok(touchTarget?.height >= 44 && touchTarget.width >= 44, 'Delete remains a usable phone-sized touch target');
-  await page.getByTestId('saved-visits').getByRole('button', { name: /^Xóa lần chụp/ }).last().click();
-  await page.getByRole('alertdialog').waitFor(); await page.getByRole('button', { name: 'Hủy xóa', exact: true }).click();
+  await page.getByTestId('saved-visits').getByRole('button', { name: /^Delete capture/ }).last().click();
+  await page.getByRole('alertdialog').waitFor(); await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   assert.equal(requests.filter(request => request.method === 'DELETE').length, deleteBefore);
   await assertSavedCount(3);
-  await page.getByTestId('saved-visits').getByRole('button', { name: /^Xóa lần chụp/ }).last().click();
-  await page.getByRole('button', { name: 'Xác nhận xóa', exact: true }).click(); await ready(); await assertSavedCount(2);
+  await page.getByTestId('saved-visits').getByRole('button', { name: /^Delete capture/ }).last().click();
+  await page.getByRole('button', { name: 'Confirm deletion', exact: true }).click(); await ready(); await assertSavedCount(2);
   assert.equal(patientSession.captures.length, 2);
   assert.equal([...sessions.values()].find(session => session.patient_id === 'MOCK-002').captures.length, 1);
   await addCapture(15, 'poor-quality', 'quality'); await assertSavedCount(3);
-  assert.match(await page.getByTestId('healing-status').innerText(), /Chưa đủ dữ liệu/);
+  assert.match(await page.getByTestId('healing-status').innerText(), /Insufficient comparable data/);
   assert.ok(!(await page.getByTestId('current-wound-measurements').innerText()).includes('0.0%'));
   assert.equal(await page.getByTestId('pipeline-visualization').locator('img').count(), 1);
 
   const badSnapshot = snapshot(patientSession); badSnapshot.patient_id = 'WRONG-PATIENT';
   failure = { method: 'GET', matches: parts => parts.length === 1, payload: badSnapshot };
-  await page.getByRole('button', { name: 'Tải lại đợt', exact: true }).click();
-  await page.getByRole('alert').filter({ hasText: 'không khớp bệnh nhân' }).waitFor();
-  await page.getByRole('button', { name: 'Tải lại đợt', exact: true }).click(); await ready(); await assertSavedCount(3);
+  await page.getByRole('button', { name: 'Reload session', exact: true }).click();
+  await page.getByRole('alert').filter({ hasText: 'does not match the patient' }).waitFor();
+  await page.getByRole('button', { name: 'Reload session', exact: true }).click(); await ready(); await assertSavedCount(3);
   failure = { method: 'GET', matches: parts => parts.length === 0, abort: true };
-  await page.getByRole('button', { name: 'Tải lại đợt', exact: true }).click();
-  await page.getByRole('alert').filter({ hasText: 'Không kết nối được dịch vụ theo dõi' }).waitFor();
+  await page.getByRole('button', { name: 'Reload session', exact: true }).click();
+  await page.getByRole('alert').filter({ hasText: 'Cannot connect to the tracking service' }).waitFor();
   assert.equal(patientSession.captures.length, 3, 'A network failure preserves saved captures');
-  await page.getByRole('button', { name: 'Tải lại đợt', exact: true }).click(); await ready();
-  await page.getByRole('button', { name: 'Xóa đợt', exact: true }).click(); await page.getByRole('alertdialog').waitFor();
-  await page.getByRole('button', { name: 'Xác nhận xóa', exact: true }).click(); await ready();
+  await page.getByRole('button', { name: 'Reload session', exact: true }).click(); await ready();
+  await page.getByRole('button', { name: 'Delete session', exact: true }).click(); await page.getByRole('alertdialog').waitFor();
+  await page.getByRole('button', { name: 'Confirm deletion', exact: true }).click(); await ready();
   assert.equal(sessions.has(patientSession.session_id), false);
   assert.equal(sessions.size, 1, 'Other patient remains intact');
   assert.equal(await page.getByTestId('saved-visits').count(), 0);
@@ -384,10 +382,10 @@ try {
   await addCapture(0, 'missing-model', 'pending');
   await assertSavedCount(1);
   await page.getByTestId('pending-model-capture').waitFor();
-  assert.ok(!(await page.getByTestId('patient-brief').innerText()).includes('Ảnh đầu tiên đã được phân tích'));
+  assert.ok(!(await page.getByTestId('patient-brief').innerText()).includes('The first image has been analyzed'));
   assert.ok(!(await page.getByTestId('current-wound-measurements').innerText()).includes('0.0%'));
   const uploadCount = requests.filter(request => request.method === 'POST' && request.path.endsWith('/visits')).length;
-  await page.getByRole('button', { name: 'Phân tích lại ảnh đã lưu', exact: true }).click();
+  await page.getByRole('button', { name: 'Analyze saved image again', exact: true }).click();
   await ready();
   await page.getByTestId('pending-model-capture').waitFor({ state: 'detached' });
   await assertSavedCount(1);
@@ -397,32 +395,32 @@ try {
 
   // Shared-shell lint fixes must preserve region selection and closing a draft.
   // Feedback reads are mocked and every attempted write is blocked above.
-  await page.getByRole('button', { name: 'Chú thích giao diện', exact: true }).click();
-  await page.getByRole('button', { name: 'Tắt chú thích', exact: true }).waitFor();
-  await page.getByRole('heading', { name: 'Thêm lần theo dõi', exact: true }).click();
-  await page.getByRole('dialog').getByRole('heading', { name: 'Ghim bình luận tại đây', exact: true }).waitFor();
-  await page.getByRole('dialog').getByRole('button', { name: 'Đóng', exact: true }).click();
+  await page.getByRole('button', { name: 'Annotate interface', exact: true }).click();
+  await page.getByRole('button', { name: 'Turn off annotations', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Add a tracking visit', exact: true }).click();
+  await page.getByRole('dialog').getByRole('heading', { name: 'Pin a comment here', exact: true }).waitFor();
+  await page.getByRole('dialog').getByRole('button', { name: 'Close comment', exact: true }).click();
   await page.getByRole('dialog').waitFor({ state: 'detached' });
-  await page.getByRole('button', { name: 'Tắt chú thích', exact: true }).click();
+  await page.getByRole('button', { name: 'Turn off annotations', exact: true }).click();
   assert.equal(feedbackWrites, 0, 'Opening and closing annotation does not save');
 
   await page.setViewportSize({ width: 1200, height: 1000 });
   await page.goto(base + '/mobile?path=%2Fwounds');
-  const phone = page.frameLocator('iframe[title="MediPass trên điện thoại"]');
+  const phone = page.frameLocator('iframe[title="MediPass mobile preview"]');
   await phone.locator('[data-testid="wound-analyzer"][data-ready="true"]').waitFor({ timeout: 60_000 });
-  await phone.getByTestId('saved-visits').getByText('1 lần đã lưu', { exact: true }).waitFor();
+  await phone.getByTestId('saved-visits').getByText('1 saved captures', { exact: true }).waitFor();
   const wasDark = await page.locator('html').evaluate(element => element.classList.contains('dark'));
   await phone.locator(wasDark ? 'html.dark' : 'html:not(.dark)').waitFor();
   await page.locator('.mp-theme-toggle').click();
   await phone.locator(wasDark ? 'html:not(.dark)' : 'html.dark').waitFor();
   await phone.locator('.mp-theme-toggle').click();
   await page.locator(wasDark ? 'html.dark' : 'html:not(.dark)').waitFor();
-  const frame = await (await page.locator('iframe[title="MediPass trên điện thoại"]').elementHandle()).contentFrame();
+  const frame = await (await page.locator('iframe[title="MediPass mobile preview"]').elementHandle()).contentFrame();
   assert.equal(await frame.evaluate(() => innerWidth), 390);
   assert.ok(await frame.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   await page.screenshot({ path: 'outputs/qa/wound-mobile-preview-theme-sync.png', animations: 'disabled' });
   assert.deepEqual(errors, []);
-  console.log('PASS persistent single/multi-capture workflow, complete VI/EN education, exact deltas/high-risk alert, five scoped profiles, server restore, historical pipeline, complete clinical accordions, 390px light/dark, delete/cancel, quality/pending-model retry, mismatch/network handling, annotation open/close without save, mobile iframe two-way theme sync. Session and feedback storage mocked.');
+  console.log('PASS persistent single/multi-capture workflow, complete English education, exact deltas/high-risk alert, five scoped profiles, server restore, historical pipeline, complete clinical accordions, 390px light/dark, delete/cancel, quality/pending-model retry, mismatch/network handling, annotation open/close without save, mobile iframe two-way theme sync. Session and feedback storage mocked.');
   }
 } catch (error) {
   await page.screenshot({ path: 'outputs/qa/wound-analyzer-failure.png', fullPage: true }).catch(() => {});

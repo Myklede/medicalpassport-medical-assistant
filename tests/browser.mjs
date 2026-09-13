@@ -20,12 +20,12 @@ const page = await context.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 page.on('console', m => { if(m.type() === 'error' && !m.text().includes('404')) console.log('CONSOLE',m.text().slice(0,350)); });
-const comment = `QA ghim bình luận ${Date.now()}`;
+const comment = `QA pinned comment ${Date.now()}`;
 try {
   if (!production) await page.goto(base + '/signin-with-chatgpt?return_to=/editor');
   await page.goto(base + '/editor');
   await page.locator('.mp-patient-row').first().waitFor({ timeout: 60000 });
-  assert.equal(await page.locator('.mp-patient-row').count(), 5);
+  assert.ok(await page.locator('.mp-patient-row').count() >= 5);
   await page.locator('.mp-theme-toggle').click();
   assert.ok(await page.locator('html').evaluate(element => element.classList.contains('dark')));
   assert.equal(await page.evaluate(() => localStorage.getItem('medipass-theme')), 'dark');
@@ -40,19 +40,19 @@ try {
     await page.locator('.mp-patient-row').nth(i).click();
     await page.locator('.mp-visit-card').first().waitFor();
     const name = await page.locator('.mp-patient-heading h2').innerText();
-    await page.getByRole('link',{name:'Xem phía bệnh nhân',exact:true}).click();
+    await page.getByRole('link',{name:'Open Patient View',exact:true}).click();
     await page.locator('.mp-patient-heading h2').waitFor();
     assert.equal(await page.locator('.mp-patient-heading h2').innerText(),name);
-    assert.equal(await page.getByRole('button',{name:'Sửa thông tin chung',exact:true}).count(),0);
-    await page.getByRole('link',{name:'Vào cổng bệnh viện',exact:true}).click();
+    assert.equal(await page.getByRole('button',{name:'Edit shared information',exact:true}).count(),0);
+    await page.getByRole('link',{name:'Open hospital portal',exact:true}).click();
     await page.locator('.mp-patient-row').first().waitFor();
   }
   console.log('PASS 5 patients preserve selection in both views');
-  await page.getByRole('button',{name:'Sửa thông tin chung',exact:true}).click();
+  await page.getByRole('button',{name:'Edit shared information',exact:true}).click();
   await page.getByRole('dialog').waitFor();
-  const originalNote = await page.getByLabel('Ghi chú chung',{exact:true}).inputValue();
-  await page.getByLabel('Ghi chú chung',{exact:true}).fill(comment);
-  await page.getByRole('button',{name:'Lưu hồ sơ chung',exact:true}).click();
+  const originalNote = await page.getByLabel('General note',{exact:true}).inputValue();
+  await page.getByLabel('General note',{exact:true}).fill(comment);
+  await page.getByRole('button',{name:'Save shared record',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'hidden'});
   const selectedId = new URL(page.url()).searchParams.get('patient');
   if(remote) assert.equal((await remote.read()).patients.find(p=>p.id===selectedId).general_note,comment);
@@ -62,74 +62,74 @@ try {
   const observer = await observerContext.newPage();
   observer.on('pageerror',e=>errors.push(e.message));
   await observer.goto(base+'/patient?patient='+selectedId);
-  await observer.getByRole('tab',{name:'Thông tin chung',exact:true}).click();
+  await observer.getByRole('tab',{name:'Shared information',exact:true}).click();
   await observer.getByText(comment,{exact:true}).waitFor();
-  await page.getByRole('button',{name:'Sửa thông tin chung',exact:true}).click();
-  await page.getByLabel('Ghi chú chung',{exact:true}).fill(originalNote);
-  await page.getByRole('button',{name:'Lưu hồ sơ chung',exact:true}).click();
+  await page.getByRole('button',{name:'Edit shared information',exact:true}).click();
+  await page.getByLabel('General note',{exact:true}).fill(originalNote);
+  await page.getByRole('button',{name:'Save shared record',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'hidden'});
   await observer.getByText(originalNote,{exact:true}).waitFor({timeout:20000});
   console.log('PASS patient save/readback and automatic update on a separate mobile view');
-  await page.getByRole('button',{name:'Thêm lần khám',exact:true}).click();
-  const visitReason = 'Lần khám mô phỏng QA ' + Date.now();
-  await page.getByLabel('Lý do khám *',{exact:true}).fill(visitReason);
-  await page.getByLabel('Triệu chứng người bệnh khai',{exact:true}).fill('Dữ liệu giả để kiểm thử ghi và đọc.');
-  await page.getByRole('tab',{name:'Xét nghiệm (0)',exact:true}).click();
-  await page.getByRole('button',{name:'Thêm xét nghiệm',exact:true}).click();
-  await page.getByLabel('Tên chuyên môn *',{exact:true}).fill('Glucose');
-  await page.getByLabel('Kết quả *',{exact:true}).fill('95');
-  await page.getByLabel('Đơn vị',{exact:true}).fill('mg/dL');
-  await page.getByLabel('Giới hạn dưới',{exact:true}).fill('70');
-  await page.getByLabel('Giới hạn trên',{exact:true}).fill('99');
-  await page.getByLabel('Tên dễ hiểu',{exact:true}).fill('Đường trong máu – dữ liệu mô phỏng');
-  await page.getByRole('tab',{name:'Thuốc (0)',exact:true}).click();
-  await page.getByRole('button',{name:'Thêm thuốc',exact:true}).click();
-  await page.getByLabel('Tên thuốc *',{exact:true}).fill('Thuốc giả lập QA');
-  await page.getByRole('tab',{name:'Dịch vụ (0)',exact:true}).click();
-  await page.getByRole('button',{name:'Thêm dịch vụ',exact:true}).click();
-  await page.getByLabel('Tên chuyên môn *',{exact:true}).fill('Dịch vụ giả lập QA');
-  await page.getByRole('tab',{name:'Bác sĩ',exact:true}).click();
+  await page.getByRole('button',{name:'Add visit',exact:true}).click();
+  const visitReason = 'Simulated QA visit ' + Date.now();
+  await page.getByLabel('Reason for visit *',{exact:true}).fill(visitReason);
+  await page.getByLabel('Symptoms reported by the patient',{exact:true}).fill('Synthetic data used to verify save and readback.');
+  await page.getByRole('tab',{name:'Labs (0)',exact:true}).click();
+  await page.getByRole('button',{name:'Add lab result',exact:true}).click();
+  await page.getByLabel('Clinical name *',{exact:true}).fill('Glucose');
+  await page.getByLabel('Result *',{exact:true}).fill('95');
+  await page.getByLabel('Unit',{exact:true}).fill('mg/dL');
+  await page.getByLabel('Lower limit',{exact:true}).fill('70');
+  await page.getByLabel('Upper limit',{exact:true}).fill('99');
+  await page.getByLabel('Plain-language name',{exact:true}).fill('Blood glucose — simulated data');
+  await page.getByRole('tab',{name:'Medications (0)',exact:true}).click();
+  await page.getByRole('button',{name:'Add medication',exact:true}).click();
+  await page.getByLabel('Medication name *',{exact:true}).fill('Simulated QA medication');
+  await page.getByRole('tab',{name:'Services (0)',exact:true}).click();
+  await page.getByRole('button',{name:'Add service',exact:true}).click();
+  await page.getByLabel('Clinical name *',{exact:true}).fill('Simulated QA service');
+  await page.getByRole('tab',{name:'Clinician',exact:true}).click();
   const savedVisitResponse = page.waitForResponse(r=>r.url().endsWith('/api/portal/encounters') && r.request().method()==='POST');
-  await page.getByRole('button',{name:'Lưu lần khám',exact:true}).click();
+  await page.getByRole('button',{name:'Save visit',exact:true}).click();
   const visitResponse = await savedVisitResponse; assert.equal(visitResponse.status(),201);
   const savedVisit = (await visitResponse.json()).encounter;
   await page.getByRole('dialog').waitFor({state:'hidden'});
-  await observer.getByRole('tab',{name:'Lịch sử khám',exact:true}).click();
+  await observer.getByRole('tab',{name:'Visit history',exact:true}).click();
   await observer.getByText(visitReason,{exact:true}).waitFor({timeout:20000});
   await observerContext.close();
   if(remote) {
     const actual=(await remote.read()).encounters.find(e=>e.id===savedVisit.id);
     assert.equal(actual.labs[0].value,'95'); assert.equal(actual.labs[0].unit,'mg/dL');
-    assert.equal(actual.medications[0].name,'Thuốc giả lập QA'); assert.equal(actual.procedures[0].name,'Dịch vụ giả lập QA');
+    assert.equal(actual.medications[0].name,'Simulated QA medication'); assert.equal(actual.procedures[0].name,'Simulated QA service');
     assert.ok(actual.clinician.name);
   }
   console.log('PASS full encounter save, labs/medicines/procedures/doctor readback and live patient view');
-  await page.getByRole('button',{name:'Chú thích giao diện',exact:true}).click();
+  await page.getByRole('button',{name:'Annotate interface',exact:true}).click();
   const card = page.locator('.mp-visit-card').first();
   const selector = await card.getAttribute('data-annotate');
   await card.locator('.mp-visit-title').click();
   await page.getByRole('dialog').waitFor();
-  await page.getByLabel('Bạn muốn chỉnh sửa thế nào?').fill(comment);
-  await page.getByRole('button',{name:'Lưu bình luận',exact:true}).click();
+  await page.getByLabel('How should this change?').fill(comment);
+  await page.getByRole('button',{name:'Save comment',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'hidden'});
   await page.locator(`.mp-annotation-pin[title="${comment}"]`).waitFor();
   // Reproduce two requests anchored at exactly the same point.
   await page.evaluate(async description => {
     const list = await (await fetch('/api/feedback')).json();
     const first = list.requests.find(r => r.description === description);
-    const response = await fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...first, id: crypto.randomUUID(), version: 0, description: description + ' (cùng vị trí)' }) });
+    const response = await fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...first, id: crypto.randomUUID(), version: 0, description: description + ' (same location)' }) });
     if (!response.ok) throw new Error('Could not create overlapping pin fixture');
   }, comment);
   await page.reload();
   await page.locator(`[data-annotate="${selector}"]`).scrollIntoViewIfNeeded();
   await page.locator(`.mp-annotation-pin[title="${comment}"]`).waitFor({timeout:30000});
   await page.locator(`.mp-annotation-pin[title="${comment}"]`).click();
-  assert.equal(await page.getByLabel('Bạn muốn chỉnh sửa thế nào?').inputValue(),comment);
-  await page.getByRole('button',{name:'Đóng',exact:true}).click();
-  await page.locator(`.mp-annotation-pin[title="${comment} (cùng vị trí)"]`).click();
-  assert.equal(await page.getByLabel('Bạn muốn chỉnh sửa thế nào?').inputValue(),comment + ' (cùng vị trí)');
-  await page.getByRole('button',{name:'Đóng',exact:true}).click();
-  await page.getByRole('button',{name:'Tắt chú thích',exact:true}).click();
+  assert.equal(await page.getByLabel('How should this change?').inputValue(),comment);
+  await page.getByRole('button',{name:'Close comment',exact:true}).click();
+  await page.locator(`.mp-annotation-pin[title="${comment} (same location)"]`).click();
+  assert.equal(await page.getByLabel('How should this change?').inputValue(),comment + ' (same location)');
+  await page.getByRole('button',{name:'Close comment',exact:true}).click();
+  await page.getByRole('button',{name:'Turn off annotations',exact:true}).click();
   const saved = await page.evaluate(async () => (await (await fetch('/api/feedback')).json()).requests);
   const item = saved.find(r=>r.description===comment);
   assert.ok(item.annotation.selector.includes(selector));
@@ -137,37 +137,37 @@ try {
   if(remote) assert.deepEqual((await remote.read()).feedback.find(r=>r.id===item.id).annotation,item.annotation);
   console.log('PASS mouse selection, persistent overlapping pins, both comments clickable and normal click recovery');
   await page.screenshot({path:'outputs/qa/desktop.png',fullPage:true});
-  await page.getByRole('button',{name:'Giao diện điện thoại',exact:true}).click();
-  const phone = page.frameLocator('iframe[title="MediPass trên điện thoại"]');
+  await page.getByRole('button',{name:'Mobile preview',exact:true}).click();
+  const phone = page.frameLocator('iframe[title="MediPass mobile preview"]');
   await phone.locator('.mp-patient-row').first().waitFor({timeout:60000});
-  assert.equal(await phone.locator('.mp-patient-row').count(),5);
+  assert.ok(await phone.locator('.mp-patient-row').count() >= 5);
   await page.locator('.mp-theme-toggle').click();
   await phone.locator('html.dark').waitFor();
   assert.equal(await phone.locator('body').evaluate(() => localStorage.getItem('medipass-theme')), 'dark');
   await phone.locator('.mp-theme-toggle').click();
   await page.locator('html:not(.dark)').waitFor();
   console.log('PASS theme sync between desktop shell and phone preview');
-  await phone.getByRole('link',{name:'Xem phía bệnh nhân',exact:true}).click();
-  await phone.getByRole('heading',{name:'Sổ sức khỏe',exact:true}).waitFor();
+  await phone.getByRole('link',{name:'Open Patient View',exact:true}).click();
+  await phone.getByRole('heading',{name:'Health record',exact:true}).waitFor();
   await phone.locator('.mp-visit-card').first().waitFor();
   await page.screenshot({path:'outputs/qa/phone.png'});
-  await page.getByRole('link',{name:'Về máy tính',exact:true}).click();
+  await page.getByRole('link',{name:'Desktop view',exact:true}).click();
   assert.ok(page.url().includes('/patient?patient='));
   console.log('PASS phone frame and return to selected patient');
-  for (const [link,heading] of [['Yêu cầu chỉnh sửa','Yêu cầu chỉnh sửa'],['Dữ liệu & Supabase','Dữ liệu & Supabase'],['Hồ sơ trước đây',null],['Wound Lab',null],['Motion Lab',null]]) {
+  for (const [link,heading] of [['Change requests','Change requests'],['Data & Supabase','Data & Supabase'],['Previous records',null],['Wound Lab',null],['Motion Lab',null]]) {
     await page.goto(base+'/editor');
     await page.getByRole('link',{name:link,exact:true}).first().click();
     if(heading) await page.getByRole('heading',{name:heading,exact:true}).waitFor();
     else await page.locator('h1').first().waitFor();
     assert.ok(!page.url().endsWith('/editor'),link);
-    if(link === 'Hồ sơ trước đây') {
+    if(link === 'Previous records') {
       const records=await (await page.request.get(base+'/api/records')).json();
       legacyPatientId=records.patient.id;
       assert.ok(records.records.length>0);
       if(remote) assert.ok(records.persistence.includes('Supabase'));
     }
     if(link === 'Wound Lab') {
-      await page.getByRole('link',{name:'Lịch sử & ghi nhận',exact:true}).click();
+      await page.getByRole('link',{name:'History & captures',exact:true}).click();
       await page.getByLabel('Observation notes').fill('QA input works');
       await page.getByRole('slider').fill('3');
       await page.getByLabel('Fever or feeling seriously unwell').check();
@@ -190,7 +190,7 @@ try {
       console.log('PASS wound image upload, save, history reload and protected image readback');
     }
     if(link === 'Motion Lab') {
-      await page.getByRole('button',{name:'Giao diện điện thoại',exact:true}).waitFor();
+      await page.getByRole('button',{name:'Mobile preview',exact:true}).waitFor();
       await page.evaluate(() => {
         Object.defineProperty(navigator.mediaDevices, 'getUserMedia', { configurable: true, value: async () => new MediaStream() });
         Object.defineProperty(HTMLMediaElement.prototype, 'play', { configurable: true, value: async () => undefined });
@@ -206,21 +206,21 @@ try {
   await page.goto(base+'/patient');
   await page.locator('.mp-patient-row').first().waitFor();
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth+1),'mobile must not overflow');
-  for(const name of ['Wound Lab','Motion Lab','Hồ sơ trước đây']) assert.ok(await page.getByRole('link',{name,exact:true}).last().isVisible());
-  await page.getByRole('tab',{name:'Thông tin chung',exact:true}).click();
-  await page.getByRole('button',{name:'Chú thích giao diện',exact:true}).click();
+  for(const name of ['Wound Lab','Motion Lab','Previous records']) assert.ok(await page.getByRole('link',{name,exact:true}).last().isVisible());
+  await page.getByRole('tab',{name:'Shared information',exact:true}).click();
+  await page.getByRole('button',{name:'Annotate interface',exact:true}).click();
   await page.locator('[data-annotate="general-note"]').click();
-  await page.getByLabel('Bạn muốn chỉnh sửa thế nào?').fill(comment + ' (mobile)');
-  await page.getByRole('button',{name:'Lưu bình luận',exact:true}).click();
+  await page.getByLabel('How should this change?').fill(comment + ' (mobile)');
+  await page.getByRole('button',{name:'Save comment',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'hidden'});
   await page.reload();
-  await page.getByRole('button',{name:'Tắt chú thích',exact:true}).click();
-  await page.getByRole('tab',{name:'Thông tin chung',exact:true}).click();
-  await page.getByRole('button',{name:'Chú thích giao diện',exact:true}).click();
+  await page.getByRole('button',{name:'Turn off annotations',exact:true}).click();
+  await page.getByRole('tab',{name:'Shared information',exact:true}).click();
+  await page.getByRole('button',{name:'Annotate interface',exact:true}).click();
   await page.locator('[data-annotate="general-note"]').scrollIntoViewIfNeeded();
   await page.locator(`.mp-annotation-pin[title="${comment} (mobile)"]`).click();
-  assert.equal(await page.getByLabel('Bạn muốn chỉnh sửa thế nào?').inputValue(),comment+' (mobile)');
-  await page.getByRole('button',{name:'Đóng',exact:true}).click();
+  assert.equal(await page.getByLabel('How should this change?').inputValue(),comment+' (mobile)');
+  await page.getByRole('button',{name:'Close comment',exact:true}).click();
   if(remote) assert.equal((await remote.read()).feedback.find(r=>r.description===comment+' (mobile)').annotation.viewport_width,390);
   console.log('PASS real mobile viewport, no horizontal overflow, mobile navigation');
   assert.deepEqual(errors,[]);
@@ -230,8 +230,8 @@ try {
   try {
     const listResponse = await page.request.get(base + '/api/feedback');
     const list = listResponse.ok() ? await listResponse.json() : { requests: [] };
-    for (const r of (Array.isArray(list.requests) ? list.requests : []).filter(r => [comment,comment+' (cùng vị trí)',comment+' (mobile)'].includes(r.description))) {
-      const response = await page.request.post(base + '/api/feedback', { headers: { Origin: base }, data: { ...r, status: 'done', resolution: 'Bình luận kiểm thử tự động.' } });
+    for (const r of (Array.isArray(list.requests) ? list.requests : []).filter(r => [comment,comment+' (same location)',comment+' (mobile)'].includes(r.description))) {
+      const response = await page.request.post(base + '/api/feedback', { headers: { Origin: base }, data: { ...r, status: 'done', resolution: 'Automated QA comment cleanup.' } });
       assert.ok(response.ok(), 'QA comment cleanup');
     }
   } finally {

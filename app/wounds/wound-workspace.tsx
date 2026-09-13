@@ -343,13 +343,13 @@ export function WoundWorkspace() {
           <Link
             href="/wounds"
             className="grid size-11 place-items-center rounded-xl border border-border text-muted-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
-            aria-label="Về phân tích AI Wound Lab"
+            aria-label="Open Wound Lab AI analysis"
           >
             <ArrowLeft className="size-4" />
           </Link>
           <Link href="/" className="flex min-h-11 items-center rounded-xl focus-visible:outline-2 focus-visible:outline-primary" aria-label="MediPass home"><MediPassBrand compact subtitle="WOUND HISTORY" /></Link>
-          <Link href="/wounds" aria-label="Phân tích ảnh AI" className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-3 py-2 text-sm font-semibold text-blue-900 dark:text-blue-200 hover:bg-blue-100">
-            <Sparkles className="size-4" /><span className="hidden sm:inline">Phân tích ảnh AI</span><span className="sm:hidden">AI</span>
+          <Link href="/wounds" aria-label="AI image analysis" className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-3 py-2 text-sm font-semibold text-blue-900 dark:text-blue-200 hover:bg-blue-100">
+            <Sparkles className="size-4" /><span className="hidden sm:inline">AI image analysis</span><span className="sm:hidden">AI</span>
           </Link>
         </div>
       </header>
@@ -366,10 +366,10 @@ export function WoundWorkspace() {
               </span>
             </div>
             <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-              Lịch sử & ghi nhận vết thương
+              Wound history & captures
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-              Mỗi ảnh được lưu cùng ngày chụp, triệu chứng và ghi chú trong một hồ sơ vết thương. Mở Phân tích ảnh AI để thử mô hình ảnh + hồ sơ nền; phần lưu trữ này tiếp tục dùng kiểm tra triệu chứng theo quy tắc.
+              Each image is stored with its capture date, symptoms, and notes in one wound record. Open AI image analysis to test the image and baseline model; this history page continues to use a rule-based symptom safety review.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {[
@@ -697,10 +697,10 @@ export function WoundWorkspace() {
             <article className="rounded-3xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 p-5 sm:p-6">
               <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200">
                 <CircleHelp className="size-4" />
-                <h2 className="text-sm font-semibold">Lưu trữ và phân tích AI</h2>
+                <h2 className="text-sm font-semibold">Storage and AI analysis</h2>
               </div>
               <p className="mt-3 text-sm leading-6 text-blue-950/75 dark:text-blue-200">
-                Ảnh và ghi nhận ở đây được lưu vào lịch sử. Phân tích AI dùng dịch vụ Python cục bộ và không tự ghi kết quả vào hồ sơ đã lưu.
+                Images and observations entered here are saved to history. AI analysis uses the local Python service and does not automatically write its output into the saved record.
               </p>
               <div className="mt-4 grid gap-2 text-xs text-blue-900 dark:text-blue-200">
                 <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3">

@@ -73,7 +73,7 @@ function clean(value: string): string {
 }
 
 function humanDate(value: string | null | undefined): string {
-  if (!value) return 'Not recorded / Chưa ghi nhận';
+  if (!value) return 'Not recorded';
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return match ? match[3] + '/' + match[2] + '/' + match[1] : value;
 }
@@ -101,9 +101,9 @@ function shortDate(value: string | null | undefined): string {
 function sexLabel(value: string): string {
   const normalized = clean(value).toLowerCase();
   if (normalized === 'female' || normalized === 'nữ' || normalized === 'nu')
-    return 'Female / Nữ';
+    return 'Female';
   if (normalized === 'male' || normalized === 'nam') return 'Male / Nam';
-  return value || 'Not recorded / Chưa ghi nhận';
+  return value || 'Not recorded';
 }
 
 function patientInitials(value: string): string {
@@ -413,7 +413,7 @@ function drawHero(context: PdfContext, generatedAt: string): void {
     color: WHITE,
   });
   context.page.drawText(
-    'Tóm tắt Sức khỏe Quốc tế  |  Human-readable clinical summary',
+    'International Patient Summary  |  Human-readable clinical summary',
     {
       x: MARGIN,
       y: PAGE_HEIGHT - 99,
@@ -444,7 +444,7 @@ function drawHero(context: PdfContext, generatedAt: string): void {
     rgb(0.23, 0.38, 0.45),
     WHITE,
   );
-  const generated = 'Generated / Tạo lúc: ' + humanDate(generatedAt);
+  const generated = 'Generated: ' + humanDate(generatedAt);
   context.page.drawText(generated, {
     x: rightAlignedX(context.regular, generated, 7.3, PAGE_WIDTH - MARGIN),
     y: PAGE_HEIGHT - 130,
@@ -469,7 +469,7 @@ function drawPatientCard(context: PdfContext, snapshot: IpsSnapshot): void {
     BORDER,
   );
   const patientName =
-    clean(snapshot.patient.display_name) || 'Name unavailable / Chưa có tên';
+    clean(snapshot.patient.display_name) || 'Name unavailable';
   const mark = patientInitials(patientName);
   roundedRectangle(context.page, MARGIN + 14, top - 30, 30, 30, 6, TEAL_DARK);
   context.page.drawText(mark, {
@@ -493,7 +493,7 @@ function drawPatientCard(context: PdfContext, snapshot: IpsSnapshot): void {
     size: 17,
     color: INK,
   });
-  context.page.drawText('PATIENT / NGƯỜI BỆNH', {
+  context.page.drawText('PATIENT', {
     x: MARGIN + 57,
     y: top - 38,
     font: context.bold,
@@ -502,35 +502,35 @@ function drawPatientCard(context: PdfContext, snapshot: IpsSnapshot): void {
   });
 
   const emergency = clean(
-    snapshot.patient.emergency_contact || 'Not recorded / Chưa ghi nhận',
+    snapshot.patient.emergency_contact || 'Not recorded',
   );
   const fields = [
     {
-      label: 'MRN / MÃ HỒ SƠ',
+      label: 'MEDICAL RECORD NUMBER',
       value: context.medicalRecordNumber,
       x: MARGIN + 14,
       width: 98,
     },
     {
-      label: 'DOB / NGÀY SINH',
+      label: 'DATE OF BIRTH',
       value: humanDate(snapshot.patient.birth_date),
       x: MARGIN + 118,
       width: 98,
     },
     {
-      label: 'SEX / GIỚI TÍNH',
+      label: 'SEX',
       value: sexLabel(snapshot.patient.sex),
       x: MARGIN + 222,
       width: 84,
     },
     {
-      label: 'BLOOD / NHÓM MÁU',
+      label: 'BLOOD TYPE',
       value: snapshot.patient.blood_type || 'Not recorded',
       x: MARGIN + 311,
       width: 67,
     },
     {
-      label: 'EMERGENCY / LIÊN HỆ KHẨN',
+      label: 'EMERGENCY CONTACT',
       value: emergency,
       x: MARGIN + 392,
       width: 102,
@@ -714,7 +714,7 @@ function drawClinicalEssentials(
   context: PdfContext,
   snapshot: IpsSnapshot,
 ): EssentialDetails {
-  drawSectionHeading(context, 1, 'Clinical essentials', 'Thông tin cốt lõi');
+  drawSectionHeading(context, 1, 'Clinical essentials', 'Key information');
   const gap = 10;
   const width = (CONTENT_WIDTH - gap * 2) / 3;
   const height = 123;
@@ -726,7 +726,7 @@ function drawClinicalEssentials(
     x: MARGIN,
     width,
     height,
-    category: 'ALLERGY / DỊ ỨNG',
+    category: 'ALLERGY',
     icon: '!',
     title: allergy?.substance || 'No information recorded',
     details: allergy
@@ -744,7 +744,7 @@ function drawClinicalEssentials(
     x: MARGIN + width + gap,
     width,
     height,
-    category: 'ACTIVE PROBLEM / BỆNH',
+    category: 'ACTIVE PROBLEM',
     icon: 'P',
     title: condition?.name || 'No information recorded',
     details: condition
@@ -764,7 +764,7 @@ function drawClinicalEssentials(
     x: MARGIN + (width + gap) * 2,
     width,
     height,
-    category: 'MEDICATION / THUỐC',
+    category: 'MEDICATION',
     icon: 'Rx',
     title: medication?.name || 'No information recorded',
     details: medication
@@ -804,7 +804,7 @@ function drawMedicationSafety(context: PdfContext): void {
     size: 11,
     color: NAVY,
   });
-  context.page.drawText('Medication safety | An toàn thuốc', {
+  context.page.drawText('Medication safety', {
     x: MARGIN + 56,
     y: context.y - 22,
     font: context.bold,
@@ -833,7 +833,7 @@ function drawVitals(context: PdfContext, snapshot: IpsSnapshot): void {
     context,
     2,
     'Latest vital signs',
-    'Dấu hiệu sinh tồn gần nhất',
+    'Latest vital signs',
   );
   const height = 75;
   const bottom = context.y - height;
@@ -862,7 +862,7 @@ function drawVitals(context: PdfContext, snapshot: IpsSnapshot): void {
       size: 12,
       color: WHITE,
     });
-    context.page.drawText('No information recorded / Chưa ghi nhận', {
+    context.page.drawText('No information recorded', {
       x: MARGIN + 54,
       y: bottom + 42,
       font: context.bold,
@@ -925,7 +925,7 @@ function drawVitals(context: PdfContext, snapshot: IpsSnapshot): void {
       });
     });
     const recorded =
-      'Recorded / Ghi nhận: ' + humanDate(vitals[0].recordedDate);
+      'Recorded: ' + humanDate(vitals[0].recordedDate);
     context.page.drawText(recorded, {
       x: rightAlignedX(
         context.regular,
@@ -943,7 +943,7 @@ function drawVitals(context: PdfContext, snapshot: IpsSnapshot): void {
 }
 
 function drawCurrentPlan(context: PdfContext, snapshot: IpsSnapshot): void {
-  drawSectionHeading(context, 3, 'Current plan', 'Kế hoạch hiện tại');
+  drawSectionHeading(context, 3, 'Current plan', 'Follow-up and treatment');
   const height = 83;
   const bottom = context.y - height;
   roundedRectangle(
@@ -966,7 +966,7 @@ function drawCurrentPlan(context: PdfContext, snapshot: IpsSnapshot): void {
     6,
     plan ? GREEN : BLUE_LIGHT,
   );
-  context.page.drawText(plan ? 'FOLLOW-UP / TÁI KHÁM' : 'NO PLAN RECORDED', {
+  context.page.drawText(plan ? 'FOLLOW-UP' : 'NO PLAN RECORDED', {
     x: MARGIN + 25,
     y: bottom + 45,
     font: context.bold,
@@ -1043,7 +1043,7 @@ function detailCard(
   let part = 1;
   do {
     const partTitle =
-      part === 1 ? options.title : options.title + ' (continued / tiếp)';
+      part === 1 ? options.title : options.title + ' (continued)';
     const partTitleLines = wrap(partTitle, context.bold, 10, textWidth);
     const fullHeight =
       29 + partTitleLines.length * 12.5 + remaining.length * 10;
@@ -1132,8 +1132,8 @@ function drawCompleteLists(
         marker: '!',
         title: allergy.substance,
         details: [
-          'Reaction / Phản ứng: ' + (allergy.reaction || 'not recorded'),
-          'Severity / Mức độ: ' + allergy.severity,
+          'Reaction: ' + (allergy.reaction || 'not recorded'),
+          'Severity: ' + allergy.severity,
           'Status: active, unconfirmed',
           allergy.note,
         ],
@@ -1194,7 +1194,7 @@ function drawProcedures(context: PdfContext, snapshot: IpsSnapshot): void {
     detailCard(context, {
       label: 'PROCEDURE',
       marker: '--',
-      title: 'No information recorded / Chưa ghi nhận',
+      title: 'No information recorded',
       details: ['No procedure entries are recorded in the source record.'],
     });
     return;
@@ -1207,7 +1207,7 @@ function drawProcedures(context: PdfContext, snapshot: IpsSnapshot): void {
       details: [
         procedure.result ? 'Outcome: ' + procedure.result : '',
         procedure.explanation,
-        'Performed / Ghi nhận: ' +
+        'Performed: ' +
           humanDate(procedure.performedDate) +
           ' | FHIR status: unknown',
       ],
@@ -1293,7 +1293,7 @@ function drawDiagnostics(context: PdfContext, snapshot: IpsSnapshot): void {
     color: WHITE,
   });
   context.page.drawText(
-    'Latest diagnostic results | Kết quả chẩn đoán gần nhất',
+    'Latest diagnostic results',
     {
       x: MARGIN + 52,
       y: bottom + 41,
@@ -1302,7 +1302,7 @@ function drawDiagnostics(context: PdfContext, snapshot: IpsSnapshot): void {
       color: INK,
     },
   );
-  const missingLabel = 'No information recorded / Chưa ghi nhận.';
+  const missingLabel = 'No information recorded.';
   context.page.drawText(missingLabel, {
     x: MARGIN + 52,
     y: bottom + 23,
@@ -1332,7 +1332,7 @@ function drawProvenance(
     context,
     5,
     'Document status, scope & provenance',
-    'Phạm vi và nguồn',
+    'Scope and source',
   );
   const paragraphs = [
     'This is a system-generated, preliminary summary of selected portal fields - not the complete source chart, not a diagnosis, not a prescription, and not proof that no other information exists.',
@@ -1509,7 +1509,7 @@ function drawSafetyNotices(context: PdfContext): void {
     AMBER_LIGHT,
     AMBER_BORDER,
   );
-  context.page.drawText('Privacy | Quyền riêng tư', {
+  context.page.drawText('Privacy', {
     x: MARGIN + 14,
     y: context.y - 26,
     font: context.bold,
@@ -1524,7 +1524,7 @@ function drawSafetyNotices(context: PdfContext): void {
     color: MUTED,
     lineHeight: 10,
   });
-  context.page.drawText('Clinical check | Xác nhận chuyên môn', {
+  context.page.drawText('Clinical review', {
     x: MARGIN + width + gap + 14,
     y: context.y - 26,
     font: context.bold,
@@ -1598,7 +1598,7 @@ function addPageFurniture(context: PdfContext): void {
       color: BORDER,
     });
     page.drawText(
-      'Sensitive personal health information | Thông tin sức khỏe cá nhân nhạy cảm',
+      'Sensitive personal health information',
       {
         x: MARGIN,
         y: 27,
@@ -1645,7 +1645,7 @@ export async function buildIpsPdf(
   preparePage(firstPage);
   const medicalRecordNumber =
     clean(snapshot.patient.medical_record_number) ||
-    'Unavailable / Chưa ghi nhận';
+    'Unavailable';
   const context: PdfContext = {
     document,
     regular,
@@ -1682,7 +1682,7 @@ export async function buildIpsPdf(
   drawCurrentPlan(context, snapshot);
 
   addContinuationPage(context);
-  drawSectionHeading(context, 4, 'Clinical details', 'Chi tiết lâm sàng');
+  drawSectionHeading(context, 4, 'Clinical details', 'Detailed record');
   drawCompleteLists(context, snapshot, details);
   drawProcedures(context, snapshot);
   drawDiagnostics(context, snapshot);

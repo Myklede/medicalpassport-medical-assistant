@@ -98,12 +98,12 @@ void test('a selected historical visit cannot fall back to the newest capture or
   assert.equal(selectedPipelineVisuals(source, 0, selected), selected);
 });
 
-void test('bilingual education retains the entire selected locale without flattening or truncating actions', () => {
+void test('localized education retains the entire selected locale without flattening or truncating actions', () => {
   const source = brief();
   const vi = {
-    simple_explanation: 'Một ảnh', baseline_context: 'HbA1c 9.6%', why_this_matters: 'Vì sao',
-    possible_consequences: 'Hệ quả', what_to_do: Array.from({ length: 12 }, (_, index) => ({ action_id: String(index), text: `Việc ${index}` })),
-    when_to_seek_care: 'Gặp bác sĩ', measurement_note: 'Ước tính', rule_note: 'Quy tắc nghiên cứu', safety_note: 'Lưu ý',
+    simple_explanation: 'One image', baseline_context: 'HbA1c 9.6%', why_this_matters: 'Why it matters',
+    possible_consequences: 'Possible consequences', what_to_do: Array.from({ length: 12 }, (_, index) => ({ action_id: String(index), text: `Action ${index}` })),
+    when_to_seek_care: 'Contact a clinician', measurement_note: 'Estimate', rule_note: 'Research rule', safety_note: 'Safety note',
   };
   const en = { ...vi, simple_explanation: 'One image' };
   source.patient_explanation = { locales: { vi, en } };

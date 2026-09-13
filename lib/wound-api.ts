@@ -81,10 +81,10 @@ export function isClinicalBrief(value: unknown): value is ClinicalBrief {
 
 export async function analyzeWound(imageFile: File, patientData: object, day: number = 0,
   options: { includePipelineVisuals?: boolean; pixelsPerCm?: number } = {}): Promise<ClinicalBrief> {
-  if (!['image/png', 'image/jpeg'].includes(imageFile.type)) throw new WoundApiError('Vui lòng chọn ảnh PNG hoặc JPEG.');
-  if (!imageFile.size) throw new WoundApiError('Tệp ảnh đang trống.');
-  if (imageFile.size > MAX_WOUND_IMAGE_BYTES) throw new WoundApiError('Ảnh vượt quá giới hạn 8 MiB.');
-  if (!Number.isFinite(day) || day < 0) throw new WoundApiError('Ngày theo dõi phải là số từ 0 trở lên.');
+  if (!['image/png', 'image/jpeg'].includes(imageFile.type)) throw new WoundApiError('Choose a PNG or JPEG image.');
+  if (!imageFile.size) throw new WoundApiError('The image file is empty.');
+  if (imageFile.size > MAX_WOUND_IMAGE_BYTES) throw new WoundApiError('The image exceeds the 8 MiB limit.');
+  if (!Number.isFinite(day) || day < 0) throw new WoundApiError('The tracking day must be zero or greater.');
   const form = new FormData();
   form.append('image', imageFile);
   form.append('patient_data', JSON.stringify(patientData));
@@ -92,7 +92,7 @@ export async function analyzeWound(imageFile: File, patientData: object, day: nu
   // Default callers keep the original three-field request and response contract.
   if (options.includePipelineVisuals) form.append('include_pipeline_visuals', 'true');
   if (options.pixelsPerCm !== undefined) {
-    if (!Number.isFinite(options.pixelsPerCm) || options.pixelsPerCm <= 0 || options.pixelsPerCm > 100000) throw new WoundApiError('Thước ảnh phải là số pixel/cm lớn hơn 0.');
+    if (!Number.isFinite(options.pixelsPerCm) || options.pixelsPerCm <= 0 || options.pixelsPerCm > 100000) throw new WoundApiError('Image scale must be a pixels/cm value greater than zero.');
     form.append('pixels_per_cm', String(options.pixelsPerCm));
   }
   const controller = new AbortController();
@@ -102,21 +102,21 @@ export async function analyzeWound(imageFile: File, patientData: object, day: nu
     const response = await fetch(WOUND_API_URL, { method: 'POST', body: form, signal: controller.signal });
     let payload: unknown;
     try { payload = await response.json(); } catch {
-      if (controller.signal.aborted) throw new WoundApiError('Phân tích quá 60 giây. Hãy thử lại khi máy chủ sẵn sàng.');
-      throw new WoundApiError(response.ok ? 'Máy chủ trả về dữ liệu không hợp lệ.' : `Máy chủ báo lỗi HTTP ${response.status}.`, response.status);
+      if (controller.signal.aborted) throw new WoundApiError('Analysis exceeded 60 seconds. Try again when the service is ready.');
+      throw new WoundApiError(response.ok ? 'The service returned invalid data.' : `The service returned HTTP ${response.status}.`, response.status);
     }
     if (!response.ok) {
       const fallback = response.status === 503
-        ? 'Mô hình chưa sẵn sàng. Kiểm tra checkpoint của máy chủ Python.'
-        : `Phân tích thất bại (HTTP ${response.status}).`;
+        ? 'The model is not ready. Check the Python service checkpoint.'
+        : `Analysis failed (HTTP ${response.status}).`;
       throw new WoundApiError(validationMessage(payload) || fallback, response.status);
     }
-    if (!isClinicalBrief(payload)) throw new WoundApiError('Kết quả thiếu dữ liệu hoặc không đúng định dạng Clinical Brief.');
+    if (!isClinicalBrief(payload)) throw new WoundApiError('The response is incomplete or does not match the Clinical Brief schema.');
     return payload;
   } catch (error) {
     if (error instanceof WoundApiError) throw error;
-    if (controller.signal.aborted) throw new WoundApiError('Phân tích quá 60 giây. Hãy thử lại khi máy chủ sẵn sàng.');
-    throw new WoundApiError('Không kết nối được dịch vụ phân tích tại 127.0.0.1:8000. Hãy chạy aimedic/main.py trên cùng máy và kiểm tra CORS.');
+    if (controller.signal.aborted) throw new WoundApiError('Analysis exceeded 60 seconds. Try again when the service is ready.');
+    throw new WoundApiError('Cannot connect to the analysis service at 127.0.0.1:8000. Run aimedic/main.py on this computer and check CORS.');
   } finally {
     clearTimeout(timer);
   }

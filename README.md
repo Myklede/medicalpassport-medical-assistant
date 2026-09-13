@@ -1,252 +1,21 @@
-# MediPass — Medical Assistant demo
+# MediPass
 
-Wound workflow update (2026-09-12): `/wounds` now uses persistent SQLite image
-sessions for one or many captures, a thumbnail timeline, visit/session deletion,
-historical Developer Mode panels and Vietnamese/English four-step explanations.
-Image measurements are combined with each session's fixed diabetes/HbA1c/FPG,
-vascular and neuropathy baseline; five synthetic profiles include 20 full clinical
-encounters. Desktop and same-Wi-Fi phones use the web server's same-origin proxy.
-The existing **77 Python tests passed**. The three original checkpoints from
-`c269a89` are materialized through Git LFS and their SHA-256 digests are verified.
-`scripts/verify-wound-models.py` passed actual single/two-visit inference, pending
-retry, historical visuals and isolated SQLite persistence using those models.
-On another clone, run `git lfs install --local`, `git lfs pull` and verify
-`aimedic/checkpoints.sha256`. Missing models still preserve pending uploads without
-fabricated measurements. Scores are uncalibrated research outputs; these checks
-use synthetic fixtures, not clinical photographs. See
-[startup and integration](docs/WOUND_AI_INTEGRATION.md) and
-[trajectory contracts](docs/WOUND_TRAJECTORY_ENGINE.md).
+**Medical Passport & Precision Wound Care Research Demo**
 
-> Bắt đầu cho AI/cộng tác viên mới: đọc [`AGENTS.md`](AGENTS.md), [đối chiếu tính năng và Supabase](docs/PORTAL_AUDIT.md), rồi [tầm nhìn/whitepaper do chủ dự án cung cấp](docs/PROJECT_VISION_WHITEPAPER_VI.md).
+MediPass là nguyên mẫu HealthTech tập trung vào một hồ sơ y tế di động do bệnh
+nhân kiểm soát. Bản demo kết hợp cổng bệnh viện, góc nhìn bệnh nhân, bản tóm tắt
+FHIR International Patient Summary (IPS), công cụ đọc quyền lợi bảo hiểm, đối
+chiếu tên thuốc xuyên quốc gia và một Wound Lab nghiên cứu chạy cục bộ.
 
+> **Phạm vi sử dụng:** MediPass hiện là research/startup prototype. Sản phẩm
+> không phải thiết bị y tế, không chẩn đoán, không chỉ định điều trị, chưa được
+> chứng nhận lâm sàng và chưa được xác lập là HIPAA compliant. Chỉ sử dụng dữ
+> liệu tổng hợp hoặc đã khử định danh.
 
-MediPass là bản demo hoạt động được của một **patient-controlled medical record**: người dùng xem, tìm, thêm, sửa và soft-delete lịch sử y tế; tải ảnh/PDF riêng tư; và tạo một “Medical Passport” cô đọng cho lần khám tiếp theo.
+**Bản demo riêng tư:**
+[medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
 
-Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
-
-Cách mở bằng Chrome, chạy local ở cổng cố định `3001` và truy cập từ điện thoại: [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
-
-> **Giới hạn bắt buộc:** đây là research/startup prototype, không phải thiết bị y tế, không chẩn đoán, không tư vấn điều trị và chưa được tuyên bố HIPAA compliant. Chỉ dùng dữ liệu giả hoặc đã de-identify.
-
-## Những gì đang chạy
-
-- Trang sảnh tối giản `/`: chọn cổng bệnh viện, góc nhìn bệnh nhân, khung điện thoại, dữ liệu hoặc yêu cầu chỉnh sửa trước khi vào hồ sơ.
-- Cổng bệnh viện `/editor`: 5 bệnh nhân giả lập, thêm/sửa hồ sơ chung và từng lần khám đầy đủ.
-- `/records` là module **Hồ sơ trước đây**, có nút **Cổng bệnh viện** luôn hiện trên desktop/mobile và logo quay về sảnh. Khi mở từ portal, liên kết quay về giữ `?patient=`; tham số này chỉ giữ ngữ cảnh điều hướng, không thay đổi danh tính hoặc dữ liệu của module hồ sơ cũ.
-- Góc nhìn bệnh nhân `/patient`: cùng dữ liệu, chỉ đọc, có giải thích bệnh và xét nghiệm bằng lời dễ hiểu, gồm ảnh hưởng, mục tiêu theo dõi, ăn uống/sinh hoạt và dấu hiệu cần chú ý.
-- Từ hồ sơ đang chọn ở `/editor` hoặc `/patient`, nút **Xuất IPS** tạo PDF song ngữ dễ đọc và FHIR R4 document Bundle theo HL7 International Patient Summary 2.0.1. PDF dùng trang đầu ưu tiên nhận diện người bệnh, dị ứng/bệnh/thuốc, sinh hiệu và kế hoạch; các trang sau trình bày chi tiết lâm sàng, provenance và lưu ý sử dụng an toàn. PDF đính kèm chính JSON Bundle. Dữ liệu thiếu dùng Data Absent Reason/`unavailable`, không biến mảng rỗng thành “không có bệnh, dị ứng hay thuốc”; bản xuất luôn ghi rõ sơ bộ và chưa được clinician ký/xác nhận.
-- Portal và bình luận giao diện được lưu trong Supabase project `gsllxxdewmksjbcnxgvp` qua backend; khóa không xuất hiện ở client hoặc Git.
-- Chế độ **Chú thích giao diện**: chọn vùng bằng chuột/chạm, ghim comment vào đúng bệnh nhân/lần khám và mở lại ở `/feedback`.
-- Giao diện responsive và khung thử điện thoại `/mobile` ở 360/390/430 px.
-- Demo `/medications` đối chiếu 20 nhóm thuốc giữa Việt Nam, Ấn Độ, Mỹ và Trung Quốc theo hoạt chất chuẩn, hàm lượng, dạng dùng và Rx/OTC; luôn yêu cầu pharmacist/người kê đơn xác nhận và không tuyên bố tự động tương đương điều trị.
-- `/insurance` lưu SBC PDF riêng tư để người dùng chọn lại hoặc tải xuống, trích xuất văn bản, nhận mô tả tình trạng/dịch vụ và tạo ước tính deductible, copay/coinsurance, network, prior authorization, phần plan trả và phần người dùng trả. Kết quả cùng lịch sử được lưu theo patient trong D1; PDF nằm trong R2. PDF scan/không đọc được chỉ dùng hồ sơ quyền lợi mô phỏng và được gắn nhãn rõ.
-- Chế độ Sáng/Tối dùng chung cho desktop và điện thoại; lựa chọn được lưu trong trình duyệt.
-- Mỗi lần khám là một card gồm lý do, triệu chứng, chẩn đoán/chú giải, vital signs, labs, thuốc, dịch vụ, kế hoạch và bác sĩ.
-- Chú giải y khoa hiện bao phủ 5 bệnh nền mẫu và 6 xét nghiệm chính. App chỉ ghép đúng thuật ngữ đã được kiểm duyệt, dùng khoảng tham chiếu trên chính phiếu xét nghiệm và không tự đoán thuật ngữ lạ.
-- Dashboard tổng quan theo một bệnh nhân hư cấu thống nhất.
-- 5 loại hồ sơ: Allergy, Condition, Medication, Lab Result và Encounter.
-- Thêm, đọc, sửa và soft-delete dữ liệu.
-- Tìm kiếm và lọc timeline theo loại hồ sơ.
-- Clinical summary / “Medical Passport”.
-- Upload PDF, JPEG, PNG tối đa 8 MB vào private object storage và mở lại qua API có ownership check.
-- Dữ liệu tồn tại sau khi refresh.
-- Seed dữ liệu giả tự động cho mỗi tài khoản demo mới.
-- Ownership check phía server và audit log cho read/write/upload/download.
-- Responsive cho desktop/mobile, keyboard shortcut `Cmd/Ctrl + K`, loading/error/empty states.
-
-Wound Lab có AI cục bộ học từ ảnh giả lập, Patient/Developer Mode, lớp phân vùng U-Net nghiên cứu và luồng lưu ảnh/lịch sử riêng. Computer Vision đã xác nhận lâm sàng, pose model, insurance eligibility/EDI thời gian thực và catalog thuốc thời gian thực vẫn là roadmap; Motion Lab hiện có camera preview, `/insurance` dùng bộ phân tích điều khoản có quy tắc và `/medications` dùng bộ dữ liệu demo có tuyển chọn.
-
-Hướng dẫn để tự đưa các commit lên GitHub: [`docs/GITHUB_PUSH_GUIDE_VI.md`](docs/GITHUB_PUSH_GUIDE_VI.md).
-
-## Kiến trúc bản demo
-
-```text
-Browser / mobile PWA
-        |
-        | HTTPS + authenticated user headers
-        v
-Vinext / React UI
-        |
-        | /api/records             /api/files
-        v                              v
-Cloudflare D1 (SQLite)          Cloudflare R2 (private files)
-        |
-        +-- app_users
-        +-- patients
-        +-- patient_memberships
-        +-- health_records
-        +-- storage_objects
-        +-- audit_events
-```
-
-Frontend không được truy cập database trực tiếp. Mỗi request resolve người dùng → membership → patient, rồi mọi query đều kèm `patient_id`. Đây là lớp thay thế RLS ở bản D1 demo.
-
-### API hiện tại
-
-| Endpoint | Method | Chức năng |
-| --- | --- | --- |
-| `/api/records` | GET | Lấy patient + toàn bộ hồ sơ chưa bị xóa |
-| `/api/records` | POST | Tạo bản ghi mới |
-| `/api/records` | PATCH | Sửa bản ghi thuộc patient hiện tại |
-| `/api/records` | DELETE | Soft-delete bản ghi |
-| `/api/files` | POST | Upload tệp vào R2 và lưu metadata vào D1 |
-| `/api/files?id=...` | GET | Mở tệp sau khi kiểm tra quyền sở hữu |
-| `/api/files` | DELETE | Xóa object và soft-delete metadata |
-| `/api/portal/ips?patient_id=...&format=pdf` | GET | Xuất PDF IPS sau ownership check; PDF chứa FHIR JSON attachment |
-| `/api/portal/ips?patient_id=...&format=json` | GET | Xuất riêng FHIR R4 document Bundle |
-
-Migration Drizzle nằm trong `drizzle/`. Schema nguồn nằm trong `db/schema.ts`; runtime initialization idempotent nằm trong `db/runtime.ts` để local demo có thể chạy ngay.
-
-## Trạng thái Supabase
-
-Portal hiện đã kết nối Supabase project `gsllxxdewmksjbcnxgvp`. Các bảng `mp_*` lưu bệnh nhân, bệnh nền, dị ứng, bác sĩ, lần khám, labs, thuốc, dịch vụ, audit và comment giao diện. Backend dùng server secret; client không nhận key. Dữ liệu `/records`, Wound Lab và file riêng tư vẫn có phần dùng D1/R2 như mô tả trong tài liệu audit.
-
-Các bước production còn lại cho Supabase:
-
-1. Đổi D1 thành PostgreSQL và giữ các bảng quan hệ hiện có.
-2. Dùng Supabase Auth; tạo `patient_memberships` cho owner/patient/caregiver.
-3. Bật RLS trên **mọi** bảng có patient data; policy phải kiểm tra active membership hoặc access grant.
-4. Chuyển R2 sang private Supabase Storage; chỉ backend tạo signed URL ngắn hạn.
-5. Thêm `access_grants`, `consents`, `share_links` với token hash, expiry, scope và revoke.
-6. Tách bảng lâm sàng thành `conditions`, `allergy_intolerances`, `observations`, `diagnostic_reports`, `encounters`, `procedures`, `medication_statements`, `document_references`.
-7. Giữ trường chuẩn hóa để query nhanh và `source_fhir_json JSONB` để import/export; không biến toàn bộ database thành một bảng JSONB lớn.
-8. Thêm `pgvector` cho insurance RAG sau khi upload/search hồ sơ đã ổn định.
-
-Supabase yêu cầu signed BAA và cấu hình HIPAA/High Compliance nếu xử lý PHI; dùng Supabase **không tự động** làm app compliant. Xem [Supabase HIPAA guidance](https://supabase.com/docs/guides/security/hipaa-compliance), [HIPAA projects](https://supabase.com/docs/guides/platform/hipaa-projects) và [Row-Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security).
-
-## Data model production nên có
-
-### Identity, consent và chia sẻ
-
-- `app_users`, `patients`, `patient_memberships`
-- `organizations`, `practitioners`, `practitioner_roles`
-- `access_grants`, `share_links`, `consents`
-- `resource_provenance`, append-only `audit_events`
-
-QR share chỉ chứa opaque one-time token; database chỉ lưu token hash. Token phải read-only theo scope, hết hạn nhanh và revoke được. Không nhúng tên, patient ID hay PHI vào QR.
-
-### Hồ sơ lâm sàng
-
-- `encounters`
-- `conditions`
-- `allergy_intolerances`
-- `observations` + `observation_components`
-- `diagnostic_reports` + links tới observations
-- `procedures`
-- `medication_statements`
-- `storage_objects` + `document_references`
-- `insurance_coverages` + `insurance_benefits`
-
-Mã y khoa lưu bộ ba `code_system`, `code`, `display`: ICD-10-CM, SNOMED CT, LOINC, RxNorm và UCUM. UI không bắt người dùng phổ thông nhập code; code nằm trong Advanced details hoặc được map khi import.
-
-FHIR là chuẩn trao đổi, không phải security protocol. Demo đã có export sơ bộ theo [International Patient Summary 2.0.1](https://hl7.org/fhir/uv/ips/en/): Bundle dạng `document`, Composition đứng đầu, Patient và ba section bắt buộc Problem List, Allergies/Intolerances, Medication Summary; section trống dùng `emptyReason=unavailable`. Tám fixture tổng hợp đã đạt 0 error/0 warning với HL7 FHIR Validator 6.9.12, FHIR R4 4.0.1, package IPS 2.0.1 và `tx.fhir.org`; đây là kiểm định profile của fixture, không phải chứng nhận sản phẩm hay clinician attestation. Import, kiểm thử với hệ thống nhận độc lập và đồng bộ bệnh viện thật vẫn cần SMART/OAuth, consent, patient matching, terminology mapping và thỏa thuận tích hợp. Tham khảo [FHIR overview](https://hl7.org/fhir/overview.html), [US Core](https://www.hl7.org/fhir/us/core/) và [FHIR security](https://hl7.org/fhir/R4/security.html).
-
-## Roadmap bốn nhóm tính năng
-
-### 1. Medical Passport và đồng bộ hồ sơ
-
-**MVP kế tiếp**
-
-- Patient profile, caregiver membership, consent và time-limited share link.
-- **Đã có bản demo:** FHIR IPS document Bundle export + PDF có JSON đính kèm; tám fixture bất lợi đã qua HL7 Validator. Bước production tiếp theo là release gate tự động, kiểm thử với consumer độc lập, clinician attestation/signature, import và provenance chi tiết.
-- Provenance hiển thị rõ: self-reported, provider document, imported, verified.
-- Medication reconciliation và clinician view riêng.
-- Không tự kết luận bệnh; mọi alert quan trọng cần clinical rules engine đã được thẩm định.
-
-### 2. Insurance Policy Checker
-
-**Đã có bản demo:** `/insurance` tải SBC PDF vào R2, lưu metadata/phân tích trong D1, cho chọn lại và tải xuống tài liệu, trích xuất văn bản bằng PDF parser chạy trong Worker, rồi ước tính cost sharing theo dịch vụ mô tả và network. Kết quả giữ citation theo trang khi trích xuất được; nếu không đọc được bảng PDF, giao diện bắt buộc ghi rõ đang dùng dữ liệu mô phỏng. Số deductible đã dùng, allowed amount thực, mã CPT/HCPCS, eligibility và claim chưa được kết nối thời gian thực.
-
-Pipeline nên là:
-
-```text
-Private PDF upload
-  -> malware/file validation
-  -> PDF text + table extraction
-  -> section-aware chunking
-  -> embedding
-  -> vector retrieval
-  -> answer with page/section citation + uncertainty
-```
-
-MVP tập trung deductible, out-of-pocket maximum, copay, coinsurance, network, formulary, visit limit và prior authorization. Câu trả lời phải luôn trích page/section và nói rõ đây không phải quyết định coverage hay cost estimate cuối cùng. CMS giải thích tài liệu SBC tại [Summary of Benefits and Coverage](https://www.cms.gov/marketplace/health-plans-issuers/summary-benefits-coverage).
-
-### 3A. Wound monitoring / UB research
-
-Để khớp hướng Precision Wound Care tại UB, đừng bắt đầu bằng claim “chẩn đoán nhiễm trùng”. Hãy xây **longitudinal capture + annotation pipeline**:
-
-```text
-wound_case
-  -> wound_visit / assessment at t0, t1, t2...
-  -> media asset (RGB first; modality + device + capture protocol + calibration)
-  -> clinician annotation / segmentation mask
-  -> area and tissue measurements
-  -> healing trajectory for research review
-```
-
-AI milestone đầu: segment vết thương và đo area trend; sau đó mới tissue classification, multimodal fusion và forecasting. Kết quả model nằm trong `ai_inferences`, không ghi đè hồ sơ clinician đã xác nhận. Mọi ảnh train cần consent nghiên cứu riêng, patient-level split, versioned dataset và external validation.
-
-Đề tài UB nhấn mạnh multimodal sensing, objective metrics, early deterioration và predictive/preventive healing: [Precision Wound Care opportunity](https://www.buffalo.edu/undergrad-research/opportunities.host.html/content/shared/www/undergrad-research/research-opportunities/precision-wound-care-collaborative-ai-powered-multimodal-monitoring-for-predictive-preventive-healing.detail.html).
-
-### 3B. Physical therapy pose tracking
-
-- MediaPipe Pose/TensorFlow.js chạy on-device trong browser.
-- Tính joint angle từ hip–knee–ankle hoặc shoulder–elbow–wrist.
-- Finite-state machine đếm rep; exercise-specific rules đánh dấu deviation.
-- Lưu reps, range of motion, session summary và detected issues; **không lưu raw video mặc định**.
-- Nếu lưu video, cần consent riêng, retention policy, private storage và clinician review.
-
-### 4. Thuốc tương ứng xuyên quốc gia
-
-Pipeline:
-
-```text
-OCR nhãn / đơn thuốc
-  -> extract ingredient + strength + dose form + route
-  -> WHO INN normalization
-  -> country-specific regulatory catalog
-  -> U.S. RxNorm/NDC mapping
-  -> candidate match
-  -> pharmacist verification
-```
-
-UI nên ghi “candidate matching ingredients/strength/form — pharmacist verification required”, không gọi là “thuốc thay thế tương đương” chỉ vì cùng hoạt chất. [WHO INN](https://www.who.int/teams/health-product-and-policy-standards/inn/) là anchor toàn cầu; [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/overview.html) phù hợp để chuẩn hóa thuốc tại Mỹ.
-
-Lưu ý: RxNav đã dừng drug–drug interaction feature từ 02/01/2024; không nên thiết kế DDI mới dựa vào endpoint đó. Xem [RxNav FAQ](https://lhncbc.nlm.nih.gov/RxNav/information/FAQs.html).
-
-## Hạ tầng production tối thiểu
-
-| Lớp | Lựa chọn khuyến nghị |
-| --- | --- |
-| Web/PWA | Next.js/React, TypeScript, Tailwind |
-| Auth + relational DB | Supabase Auth + PostgreSQL + RLS |
-| Files | Private Supabase Storage hoặc R2 |
-| FHIR | FHIR R4/US Core mapping + IPS export; HAPI FHIR khi integration phức tạp |
-| AI API | Python FastAPI, container riêng, async job queue |
-| Insurance RAG | PDF parser, structured chunks, embeddings, pgvector/Vectorize, cited answers |
-| CV research | PyTorch, experiment tracking, dataset/model versioning, human review |
-| Pose | MediaPipe Pose/TensorFlow.js on-device |
-| Observability | Structured logs không chứa PHI, error tracking, metrics, immutable audit trail |
-| Security | TLS, secrets manager, MFA, least privilege, encryption, backup/PITR, incident response |
-| Delivery | Dev/staging/prod tách riêng, migrations, CI tests, IaC, dependency scanning |
-
-Không dùng database vận hành chứa định danh làm thẳng training dataset. Tạo pipeline de-identification + consent + dataset snapshot riêng. HHS mô tả hai phương pháp HIPAA de-identification tại [HHS De-identification Guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html). Consumer health apps ngoài HIPAA vẫn có thể chịu [FTC Health Breach Notification Rule](https://www.ftc.gov/business-guidance/resources/health-breach-notification-rule-basics-business).
-
-## Thứ tự build thực tế
-
-1. **Đã hoàn thành:** responsive frontend, database, private files, per-user ownership, CRUD, timeline, search/filter, demo seed.
-2. Supabase production schema + RLS tests + consent/share/audit.
-3. Nâng bản FHIR/IPS export demo thành luồng đã validate/ký; thêm import và clinician read-only share flow.
-4. **Đã có demo:** Insurance PDF ingestion + trích điều khoản/citation + lịch sử ước tính; bước production tiếp theo là retrieval theo section, EDI 270/271, CPT/HCPCS và xác minh claim/eligibility.
-5. Wound longitudinal data collection/annotation; IRB/consent trước khi lấy dữ liệu người thật.
-6. Segmentation model + research validation; không gắn diagnostic claim.
-7. On-device physical-therapy proof of concept.
-8. Ingredient normalization và country catalogs; pharmacist review workflow.
-9. Clinical, privacy, security và regulatory review trước pilot thật.
-
-## Chạy local
-
-Yêu cầu Node.js `>=22.13` và pnpm.
+**Chạy nhanh trên máy:**
 
 ```powershell
 corepack enable
@@ -254,64 +23,572 @@ pnpm install --frozen-lockfile
 pnpm run demo
 ```
 
-Mở `http://localhost:3001/editor`. Có thể dùng Chrome, Edge, Safari hoặc trình duyệt điện thoại; server không phụ thuộc trình duyệt. Xem hướng dẫn đầy đủ tại [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
+Sau đó mở [http://localhost:3001](http://localhost:3001) hoặc đi thẳng tới
+[http://localhost:3001/editor](http://localhost:3001/editor).
 
-Để chạy AI Wound Lab trên macOS, chuẩn bị weights gốc một lần ở thư mục dự án:
+Trạng thái triển khai trong README này được đối chiếu với audit ngày
+12/09/2026. Tầm nhìn dài hạn được lưu riêng và không được xem là bằng chứng một
+tính năng đã hoàn thành.
 
-```bash
+## Mục lục
+
+- [Tổng quan sản phẩm](#tổng-quan-sản-phẩm)
+- [Trạng thái tính năng](#trạng-thái-tính-năng)
+- [Các đường dẫn chính](#các-đường-dẫn-chính)
+- [Kiến trúc và lưu trữ](#kiến-trúc-và-lưu-trữ)
+- [Công nghệ sử dụng](#công-nghệ-sử-dụng)
+- [Cài đặt và chạy local](#cài-đặt-và-chạy-local)
+- [Chạy Wound Lab AI](#chạy-wound-lab-ai)
+- [Biến môi trường](#biến-môi-trường)
+- [Kiểm thử và xác minh](#kiểm-thử-và-xác-minh)
+- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
+- [Giới hạn hiện tại](#giới-hạn-hiện-tại)
+- [Nguyên tắc phát triển](#nguyên-tắc-phát-triển)
+- [Tài liệu liên quan](#tài-liệu-liên-quan)
+
+## Tổng quan sản phẩm
+
+MediPass thử nghiệm cách gom thông tin sức khỏe đang bị phân mảnh thành một hồ
+sơ có cấu trúc, dễ đọc và có thể mang sang lần khám tiếp theo. Hai góc nhìn chính
+dùng cùng dữ liệu portal:
+
+- **Cổng bệnh viện:** nhân viên mô phỏng có thể chọn bệnh nhân, cập nhật hồ sơ
+  chung và tạo hoặc sửa toàn bộ một lần khám.
+- **Góc nhìn bệnh nhân:** cùng hồ sơ đó ở chế độ chỉ đọc, bổ sung giải thích bệnh
+  nền và xét nghiệm bằng ngôn ngữ dễ hiểu.
+
+Các mô-đun nghiên cứu mở rộng giải quyết bốn bài toán liên quan:
+
+1. Xuất bản tóm tắt y tế sơ bộ theo FHIR R4 IPS 2.0.1.
+2. Đọc tài liệu Summary of Benefits and Coverage (SBC) và ước tính chia sẻ chi
+   phí theo các điều khoản trích xuất được.
+3. Đối chiếu sản phẩm thuốc giữa Việt Nam, Ấn Độ, Mỹ và Trung Quốc theo hoạt
+   chất, hàm lượng và dạng dùng.
+4. Theo dõi ảnh vết thương theo thời gian bằng pipeline PyTorch/FastAPI nghiên
+   cứu, tách biệt khỏi hồ sơ lâm sàng đã xác nhận.
+
+## Trạng thái tính năng
+
+| Khu vực | Trạng thái | Nội dung hiện có |
+| --- | --- | --- |
+| Hospital Portal | Hoạt động trong demo | 5 bệnh nhân tổng hợp, 10 lần khám, hồ sơ chung, bệnh nền, dị ứng, sinh hiệu, xét nghiệm, thuốc, dịch vụ, kế hoạch và bác sĩ |
+| Patient View | Hoạt động trong demo | Chỉ đọc, giữ bệnh nhân qua `?patient=`, có giải thích đã biên soạn cho các bệnh và xét nghiệm mẫu |
+| Xuất IPS | Sơ bộ, đã kiểm tra fixture | FHIR R4 document Bundle theo IPS 2.0.1 và PDF song ngữ có JSON Bundle đính kèm; chưa ký số hoặc được clinician xác nhận |
+| Chú thích giao diện | Hoạt động trong demo | Chọn vùng thật trên UI, lưu comment có neo và mở lại ở danh sách feedback |
+| Mobile Preview | Hoạt động trong demo | Khung web responsive 360/390/430 px; không phải ứng dụng iOS/Android native |
+| Insurance Checker | Demo có quy tắc | Lưu SBC PDF riêng tư, trích văn bản/citation và ước tính cost sharing; không phải live eligibility, coverage determination, claim hoặc hóa đơn cuối cùng |
+| Medication Exchange | Demo có tuyển chọn | 20 nhóm thuốc tại 4 quốc gia; so hoạt chất, hàm lượng, dạng dùng, Rx/OTC và nhu cầu kiểm tra tá dược; không tự kết luận tương đương điều trị |
+| Wound Lab | Research demo chạy local | Phiên ảnh SQLite bền vững, một/nhiều lần chụp, U-Net, tissue overlay, Clinical Brief, giải thích VI/EN và trajectory rules |
+| Wound History | Luồng lưu trữ độc lập | Ảnh riêng tư trong R2, metadata trong D1 và safety review chỉ dựa trên dữ liệu khai báo |
+| Motion Lab | Scaffold | Camera preview cục bộ, không ghi/upload video; chưa nối pose estimation hoặc rep counting |
+| Legacy Records | Hoạt động, dữ liệu riêng | Module hồ sơ cũ tại `/records`; không tự gộp danh tính/dữ liệu với portal mới |
+
+### Hospital Portal và Patient View
+
+- `/` là sảnh vào ứng dụng, không mở hồ sơ bệnh nhân ngay lập tức.
+- `/editor` cho phép thêm/sửa 5 bệnh nhân mẫu và các thẻ lần khám hoàn chỉnh.
+- Bệnh nền và dị ứng thuộc bệnh nhân; xét nghiệm, thuốc, thủ thuật, kế hoạch và
+  snapshot bác sĩ thuộc từng lần khám.
+- `/patient` hiển thị cùng dữ liệu ở chế độ chỉ đọc.
+- Portal làm mới sau khi lưu trong cùng trình duyệt và kiểm tra thay đổi từ thiết
+  bị khác mỗi 5 giây khi trang đang hiển thị. Đây không phải Supabase Realtime
+  hoặc WebSocket subscription.
+- Chế độ sáng/tối xuất hiện trên mọi route, lưu bằng khóa `medipass-theme` trong
+  local storage và đồng bộ giữa trang chính với khung mobile cùng origin.
+
+### FHIR IPS và PDF song ngữ
+
+Từ `/editor` hoặc `/patient`, người dùng có thể xuất bệnh nhân đang chọn dưới hai
+định dạng:
+
+- FHIR R4 document Bundle theo International Patient Summary 2.0.1.
+- PDF song ngữ chứa chính JSON Bundle dưới dạng attachment.
+
+Tám fixture tổng hợp đã đạt 0 error/0 warning trong cổng kiểm tra HL7 được ghi ở
+[`docs/PORTAL_AUDIT.md`](docs/PORTAL_AUDIT.md). Kết quả này xác minh cấu trúc
+fixture, không phải chứng nhận sản phẩm, kiểm thử tương tác với mọi hệ thống nhận,
+chữ ký số hoặc clinician attestation. Dữ liệu thiếu được biểu diễn bằng Data
+Absent Reason hoặc `unavailable`, không tự suy diễn thành “không có”.
+
+### Insurance Policy Checker
+
+`/insurance` cho phép tải SBC PDF tối đa 8 MiB, dùng lại hoặc tải xuống tài liệu
+đã lưu, nhập mô tả dịch vụ và xem ước tính deductible, copay/coinsurance, network,
+prior authorization và phần dự kiến do plan/người dùng trả. Khi trích xuất văn
+bản thành công, kết quả giữ citation theo trang. PDF scan hoặc không đọc được
+phải hiển thị rõ đang dùng hồ sơ mô phỏng dự phòng.
+
+Mô-đun chưa kết nối số deductible đã sử dụng thực tế, allowed amount, CPT/HCPCS,
+EDI 270/271, eligibility hoặc claim thời gian thực.
+
+### Medication Exchange
+
+`/medications` dùng catalog demo 20 mục để tìm ứng viên theo hoạt chất. Giao diện
+luôn phân biệt hàm lượng, dạng dùng, Rx/OTC và nhu cầu xác minh tá dược. Mọi thay
+đổi thuốc phải được pharmacist hoặc người kê đơn xác nhận; cùng hoạt chất không
+đồng nghĩa tự động thay thế điều trị.
+
+### Legacy Records và private files
+
+`/records` giữ module hồ sơ y tế được xây dựng trước portal hiện tại. Module này
+có 5 loại bản ghi—Allergy, Condition, Medication, Lab Result và Encounter—cùng
+CRUD, soft-delete, tìm kiếm, lọc timeline và clinical summary. PDF, JPEG hoặc PNG
+tối đa 8 MiB được lưu trong private object storage và chỉ mở lại qua API có
+ownership check. Các thao tác đọc, ghi, upload và download có audit event; dữ liệu
+tồn tại sau khi refresh và tài khoản demo mới được seed bằng fixture tổng hợp.
+
+Dữ liệu của module cũ không tự ghép với 5 bệnh nhân portal. Khi Supabase được cấu
+hình, nhóm này có thể mirror vào các bảng `medipass_*`; giao diện vẫn phải hiển thị
+đúng storage provider đang hoạt động.
+
+### Wound Lab
+
+`/wounds` và `/wound-analyzer` dùng chung `WoundVisitWorkflow`:
+
+- Tạo và mở lại phiên theo dõi được liệt kê từ FastAPI server.
+- Lưu một hoặc nhiều PNG/JPEG cùng thời điểm chụp vào SQLite cục bộ.
+- Thêm ảnh ở lần quay lại, xem timeline thumbnail và mở kết quả lịch sử.
+- Xóa một lần chụp hoặc cả phiên sau bước xác nhận.
+- Giữ ảnh ở trạng thái `pending_model` với số đo `null` khi model không sẵn sàng,
+  rồi phân tích lại từ đúng byte ảnh đã lưu.
+- Patient Mode cố định một danh tính mô phỏng và hiển thị bốn bước giáo dục VI/EN.
+- Developer Mode chọn 5 hồ sơ tổng hợp, mở ảnh đầu vào, U-Net isolation, tissue
+  overlay và Clinical Brief cho từng lần chụp.
+- 20 lần khám tổng hợp được giữ nguyên trong accordion bốn nhóm, tách khỏi phép đo
+  của ảnh mới tải lên.
+
+Các checkpoint hiện có được theo dõi bằng Git LFS. Pipeline phân vùng dùng U-Net
+ResNet34 trên CPU; tissue inference chỉ nhận vùng crop đã mask và tỷ lệ mô được
+tính trên toàn bộ pixel trong wound mask, gồm phần chưa phân loại. Các risk score,
+uncertainty và ngưỡng trajectory là output nghiên cứu chưa hiệu chuẩn, không phải
+xác suất lâm sàng hoặc hướng dẫn chờ điều trị.
+
+`/wounds/history` là luồng khác: ảnh được tái mã hóa trong trình duyệt để loại EXIF,
+lưu vào R2 và được rà soát an toàn bằng triệu chứng khai báo. AI brief và SQLite
+session không tự ghi sang Supabase, D1 hoặc hồ sơ clinician.
+
+## Các đường dẫn chính
+
+| Route | Mục đích |
+| --- | --- |
+| `/` | Sảnh chọn khu vực sử dụng |
+| `/editor` | Cổng bệnh viện có quyền chỉnh sửa trong demo |
+| `/patient` | Góc nhìn bệnh nhân chỉ đọc |
+| `/visit/[id]` | Chi tiết một lần khám |
+| `/mobile` | Khung thử giao diện điện thoại 360/390/430 px |
+| `/data` | Explorer dữ liệu portal và mô tả cấu trúc Supabase |
+| `/feedback` | Danh sách chú thích và yêu cầu chỉnh sửa giao diện |
+| `/records` | Module hồ sơ y tế cũ, có kho dữ liệu riêng |
+| `/insurance` | Insurance SBC policy checker |
+| `/medications` | Đối chiếu tên thuốc xuyên quốc gia |
+| `/wounds` | Wound Lab chính |
+| `/wound-analyzer` | Lối vào tương thích tới cùng wound workflow |
+| `/wounds/history` | Lịch sử ảnh R2/D1 và review từ dữ liệu khai báo |
+| `/therapy` | Motion Lab camera scaffold |
+
+Patient selection được giữ bằng query `?patient=` giữa hospital, patient và mobile
+view. Với `/records`, tham số này chỉ giữ ngữ cảnh điều hướng quay về; nó không đổi
+danh tính hoặc ghép dữ liệu của module cũ.
+
+## Kiến trúc và lưu trữ
+
+MediPass hiện có ba data plane tách biệt:
+
+```text
+Browser / responsive web UI
+          |
+          v
+Vinext + React + server routes
+          |
+          +-- Portal / Patient / Feedback / Data
+          |      -> server-only Supabase RPC
+          |      -> PostgreSQL mp_* tables
+          |
+          +-- Legacy Records / Insurance / Wound History
+          |      -> Cloudflare D1 metadata
+          |      -> private Cloudflare R2 objects
+          |
+          +-- /api/wound-sessions
+                 -> same-origin proxy
+                 -> local FastAPI on 127.0.0.1:8000
+                 -> local SQLite + Git LFS model checkpoints
+```
+
+| Dữ liệu | Nơi lưu hiện tại | Ghi chú |
+| --- | --- | --- |
+| Portal, encounters, patient notes, visual feedback | Supabase `mp_*` qua RPC phía server | Secret không được gửi xuống client |
+| Legacy `/records` | D1; được mirror vào nhóm `medipass_*` khi cấu hình | Không tự hợp nhất với portal mới |
+| Insurance PDF | Private R2 | Metadata và phân tích theo patient ở D1 |
+| Wound history | Private R2 + D1 | Safety review từ reported data, độc lập với AI inference |
+| Wound AI sessions | `outputs/wound-sessions.sqlite3` | Cục bộ, không tự hết hạn hoặc backup lên cloud |
+| Theme | Browser local storage | Khóa `medipass-theme` |
+
+Frontend không truy cập trực tiếp Supabase secret, D1 hoặc R2. Các API có dữ liệu
+bệnh nhân phải resolve danh tính/membership và scope truy vấn theo patient. Bản
+demo local và Wound Lab vẫn chưa thay thế cho authentication, authorization, RLS,
+consent và audit được thẩm định cho production.
+
+### Nhóm API chính
+
+| Endpoint | Chức năng |
+| --- | --- |
+| `/api/portal`, `/api/portal/patients`, `/api/portal/encounters` | Đọc/ghi dữ liệu portal |
+| `/api/portal/ips` | Xuất PDF hoặc FHIR JSON cho bệnh nhân được phép truy cập |
+| `/api/portal/data` | Cấp dữ liệu cho explorer |
+| `/api/portal/schema` | Trả gói migration Supabase của portal |
+| `/api/feedback` | Đọc và lưu chú thích giao diện |
+| `/api/records` | CRUD và soft-delete cho module hồ sơ cũ |
+| `/api/files` | Upload, mở và xóa private file sau ownership check |
+| `/api/insurance/documents` | Lưu, liệt kê và tải tài liệu SBC |
+| `/api/insurance/analyze` | Phân tích chính sách và lưu estimate |
+| `/api/wounds` | Luồng wound history R2/D1 |
+| `/api/wound-sessions` | Proxy phiên ảnh cục bộ sang FastAPI |
+
+Schema D1 nguồn nằm ở `db/schema.ts`, migration Drizzle nằm trong `drizzle/` và
+khởi tạo runtime idempotent nằm ở `db/runtime.ts`. Migration Supabase nằm trong
+`supabase/migrations/`.
+
+## Công nghệ sử dụng
+
+| Lớp | Công nghệ |
+| --- | --- |
+| Web | Vinext, React 19, TypeScript, Vite |
+| UI | Tailwind CSS 4, Base UI, shadcn, Lucide, Recharts |
+| Cloud runtime | OpenAI Sites, Cloudflare Workers, D1 và R2 |
+| Portal database | Supabase PostgreSQL qua server-only RPC |
+| Schema/migration | Drizzle ORM và SQL migrations |
+| PDF/FHIR | `pdf-lib`, fontkit, FHIR R4 IPS 2.0.1 |
+| Insurance extraction | `unpdf` và bộ quy tắc TypeScript |
+| Wound research | Python, FastAPI, PyTorch, segmentation-models-pytorch, SQLite |
+| Kiểm thử | Node test runner, Python `unittest`, Playwright browser QA |
+
+## Cài đặt và chạy local
+
+### Yêu cầu
+
+- Node.js `>=22.13.0`.
+- pnpm qua Corepack.
+- Git LFS nếu cần chạy Wound Lab với checkpoint.
+- Python và các wheel tương thích nếu chạy backend `aimedic/`.
+
+### 1. Lấy mã nguồn và cài dependency
+
+```powershell
+git clone https://github.com/Myklede/medipass-medical-assistant-demo.git
+Set-Location medipass-medical-assistant-demo
+corepack enable
+pnpm install --frozen-lockfile
+```
+
+Nếu đã có repository, chỉ cần chạy hai lệnh cuối tại thư mục gốc.
+
+### 2. Cấu hình Supabase khi cần
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Điền `SUPABASE_URL` và `SUPABASE_SECRET_KEY` vào `.env.local`. Khóa secret chỉ
+dành cho server; không đổi tên thành biến có tiền tố `NEXT_PUBLIC_` hoặc `VITE_`,
+không commit và không gửi qua chat/log.
+
+Portal đã dùng bốn migration theo thứ tự:
+
+1. `supabase/migrations/20260905000000_medipass_core.sql`
+2. `supabase/migrations/20260909000000_medipass_portal.sql`
+3. `supabase/migrations/20260909010000_preserve_portal_demo.sql`
+4. `supabase/migrations/20260909020000_visual_annotations.sql`
+
+Không sửa migration đã áp dụng; tạo migration mới cho thay đổi schema tiếp theo.
+
+### 3. Chạy web server
+
+```powershell
+pnpm run demo
+```
+
+Script này bind `0.0.0.0:3001`. Các địa chỉ thường dùng:
+
+- Sảnh: [http://localhost:3001](http://localhost:3001)
+- Hospital Portal: [http://localhost:3001/editor](http://localhost:3001/editor)
+- Patient View: [http://localhost:3001/patient](http://localhost:3001/patient)
+- Wound Lab: [http://localhost:3001/wounds](http://localhost:3001/wounds)
+
+Dừng server bằng `Ctrl+C`. Nếu Node mặc định quá cũ, có thể chạy Vinext bằng Node
+24 mà không thay phiên bản Node toàn hệ thống:
+
+```powershell
+npx --yes node@24 node_modules/vinext/dist/cli.js dev --hostname 0.0.0.0 --port 3001
+```
+
+### 4. Mở từ điện thoại cùng Wi-Fi
+
+Lấy IPv4 của máy chạy server bằng `ipconfig` trên Windows hoặc phần thông tin Wi-Fi
+trên macOS, sau đó mở:
+
+```text
+http://DIA-CHI-IP-CUA-MAY:3001/patient
+```
+
+Chỉ cho phép Node.js trên mạng Private đáng tin cậy. Điện thoại dùng web server ở
+cổng 3001; với Wound Lab, web server tự proxy tới Python loopback nên không cần mở
+cổng 8000 ra LAN.
+
+Hướng dẫn chi tiết cho Chrome, firewall và truy cập điện thoại nằm tại
+[`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md).
+
+## Chạy Wound Lab AI
+
+Web app và Python API phải chạy trong hai terminal. Hosted demo hiện không có
+dịch vụ Python tương ứng và không thể gọi backend đang chạy trên laptop của bạn.
+
+### 1. Materialize model qua Git LFS
+
+```powershell
 git lfs install --local
 git lfs pull
-shasum -a 256 -c aimedic/checkpoints.sha256
+git lfs ls-files
+```
+
+Ba checkpoint mặc định:
+
+| Model | Đường dẫn |
+| --- | --- |
+| Late-fusion model | `outputs/pwc-run/best.pt` |
+| Binary U-Net | `outputs/wound_unet_fusd.pt` |
+| Tissue model | `outputs/pwc-visual-run/best.pt` |
+
+Digest chuẩn nằm trong `aimedic/checkpoints.sha256`. Nếu chưa chạy `git lfs pull`,
+file `.pt` có thể chỉ là LFS pointer và Python sẽ không tải được model.
+
+### 2. Tạo môi trường Python trên Windows
+
+```powershell
+python -m venv outputs/pwc-venv
+outputs/pwc-venv/Scripts/python.exe -m pip install -r aimedic/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+outputs/pwc-venv/Scripts/python.exe -B scripts/verify-wound-models.py
+```
+
+Trên macOS/Linux, thay executable bằng môi trường `bin/python` tương ứng:
+
+```bash
+python3 -m venv outputs/wound-venv
+outputs/wound-venv/bin/python -m pip install -r aimedic/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
 ```
 
-Giữ `pnpm run demo` chạy và mở Terminal thứ hai với
-`outputs/wound-venv/bin/python -B aimedic/main.py`, rồi vào
-`http://localhost:3001/wounds`. Script xác minh dùng SQLite tạm và ảnh giả lập;
-không đọc hoặc sửa database người dùng, không huấn luyện lại hay thay đổi weights.
+Script xác minh dùng ảnh tổng hợp và SQLite tạm, kiểm tra cả ba checkpoint và không
+đọc/sửa database phiên người dùng hoặc huấn luyện lại model.
 
-Kiểm tra build và schema:
+### 3. Chạy hai service
+
+Terminal 1:
+
+```powershell
+pnpm run demo
+```
+
+Terminal 2 trên Windows:
+
+```powershell
+outputs/pwc-venv/Scripts/python.exe -B aimedic/main.py
+```
+
+Hoặc trên macOS/Linux:
 
 ```bash
-pnpm run db:generate
-pnpm run build
-pnpm run lint
+outputs/wound-venv/bin/python -B aimedic/main.py
 ```
+
+Mở [http://localhost:3001/wounds](http://localhost:3001/wounds). Swagger của API
+local có tại [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+SQLite mặc định là `outputs/wound-sessions.sqlite3`, không tự hết hạn và không tự
+backup lên cloud. FastAPI bind loopback, không có user authentication production;
+CORS không phải cơ chế phân quyền.
+
+Xem contract API, chronology, retry và model boundaries tại
+[`docs/WOUND_AI_INTEGRATION.md`](docs/WOUND_AI_INTEGRATION.md) và
+[`docs/WOUND_TRAJECTORY_ENGINE.md`](docs/WOUND_TRAJECTORY_ENGINE.md).
+
+## Biến môi trường
+
+### Web/portal
+
+| Biến | Bắt buộc | Mục đích |
+| --- | --- | --- |
+| `SUPABASE_URL` | Khi dùng Supabase | Project URL dùng ở server |
+| `SUPABASE_SECRET_KEY` | Khi dùng Supabase | Secret key server-only; tuyệt đối không đưa xuống client hoặc Git |
+
+### Wound API
+
+| Biến | Mặc định | Mục đích |
+| --- | --- | --- |
+| `MEDIPASS_MODEL_PATH` | `outputs/pwc-run/best.pt` | Override late-fusion checkpoint |
+| `MEDIPASS_VISUAL_MODEL_PATH` | `outputs/wound_unet_fusd.pt` | Override binary U-Net checkpoint |
+| `MEDIPASS_TISSUE_MODEL_PATH` | `outputs/pwc-visual-run/best.pt` | Override tissue checkpoint |
+| `MEDIPASS_WOUND_SESSION_DB` | `outputs/wound-sessions.sqlite3` | Override SQLite session database |
+| `MEDIPASS_CORS_ORIGINS` | Local frontend origins | Danh sách origin cho stateless FastAPI routes |
+
+Đường dẫn tương đối của model được resolve từ repository root. Không commit môi
+trường Python, dataset sinh ra, SQLite người dùng hoặc file secret trong `outputs/`.
+
+## Kiểm thử và xác minh
+
+### Cổng kiểm tra trước khi push
+
+Yêu cầu Node.js 22.13 trở lên:
+
+```powershell
+npx --yes node@24 scripts/pre-push-check.mjs
+```
+
+Script kiểm tra remote Git dự kiến, Git LFS pointer, secret có thể bị commit,
+whitespace, TypeScript, toàn bộ nhóm unit test chính và production build.
+
+### Kiểm tra web riêng lẻ
+
+```powershell
+pnpm run lint
+pnpm run test:portal
+pnpm run test:wound
+pnpm run build
+```
+
+Toàn bộ unit test chính có thể chạy trực tiếp bằng Node 24:
+
+```powershell
+npx --yes node@24 --test tests/portal.test.ts tests/ips-export.test.ts tests/medication-exchange.test.ts tests/wound-safety.test.ts tests/wound-api.test.ts tests/wound-sessions-api.test.ts tests/wound-presentation.test.ts tests/wound-schema.test.ts
+```
+
+### Kiểm tra Python
+
+Windows:
+
+```powershell
+outputs/pwc-venv/Scripts/python.exe -B scripts/verify-wound-models.py
+outputs/pwc-venv/Scripts/python.exe -B -m unittest discover -s aimedic -p 'test_*.py' -v
+```
+
+macOS/Linux:
+
+```bash
+outputs/wound-venv/bin/python -B scripts/verify-wound-models.py
+outputs/wound-venv/bin/python -B -m unittest discover -s aimedic -p 'test_*.py' -v
+```
+
+Lần audit được ghi trong tài liệu dự án đã đạt 62 unit tests TypeScript, 77 Python
+tests, TypeScript, lint và production build; model verification cũng chạy thành
+công với checkpoint gốc. Đây là bằng chứng tích hợp phần mềm trên fixture tổng
+hợp, không phải clinical validation.
+
+Browser QA đầy đủ cần Playwright local trong `outputs/qa/node_modules`. Các script
+browser và phạm vi từng lượt kiểm tra được mô tả trong
+[`docs/PORTAL_AUDIT.md`](docs/PORTAL_AUDIT.md) và
+[`docs/WOUND_AI_INTEGRATION.md`](docs/WOUND_AI_INTEGRATION.md). Chỉ bật
+`MEDIPASS_VERIFY_SUPABASE=1` với danh tính QA cô lập; không trỏ helper vào workspace
+của chủ dự án.
+
+## Cấu trúc thư mục
+
+```text
+medipass-demo/
+├── app/                    # Routes, pages và server API
+│   ├── portal/             # Hospital/patient shared UI
+│   ├── insurance/          # SBC policy checker
+│   ├── medications/        # Medication exchange demo
+│   ├── wounds/             # Wound Lab và wound history
+│   └── api/                # Server route handlers
+├── components/             # Shared UI, branding và wound workflow
+├── lib/                    # Domain logic, validation, FHIR/PDF và API clients
+├── db/                     # D1 schema, runtime và data stores
+├── drizzle/                # D1 migrations
+├── supabase/migrations/    # Portal PostgreSQL/RPC migrations
+├── aimedic/                # Python wound research pipeline và tests
+├── public/                 # Static assets và synthetic wound fixture
+├── scripts/                # Pre-push và model verification helpers
+├── tests/                  # TypeScript/API/browser QA
+├── docs/                   # Audit, architecture, startup và product context
+├── outputs/                # Git-LFS checkpoints; local/generated files ignored
+└── .openai/hosting.json    # Sites D1/R2 binding configuration
+```
+
+## Giới hạn hiện tại
+
+- Không có đăng nhập/phân quyền production cho từng bệnh viện, bệnh nhân hoặc hồ
+  sơ Wound Lab; các profile wound hiện là simulated sign-in.
+- Chưa có SMART on FHIR/OAuth import hoặc đồng bộ hai chiều với bệnh viện thật.
+- IPS export chưa có chữ ký số, clinician attestation hoặc chứng nhận sản phẩm.
+- Supabase polling 5 giây không phải Realtime/WebSocket.
+- Insurance result là estimate từ tài liệu và quy tắc demo, không phải xác nhận
+  quyền lợi, prior authorization, claim hoặc final bill.
+- Medication catalog là bộ 20 mục có tuyển chọn, không phải dữ liệu lưu hành theo
+  thời gian thực hoặc công cụ tự thay thuốc.
+- Wound model học/kiểm tra bằng dữ liệu tổng hợp, chưa được external validation
+  trên ảnh lâm sàng, chưa có area calibration lâm sàng, OOD detector hoặc risk
+  probability đã hiệu chuẩn.
+- Wound trajectory rules là ngưỡng nghiên cứu minh họa. Ảnh và checklist có thể
+  bỏ sót nguy cơ; kết quả không được dùng để trì hoãn đánh giá trực tiếp.
+- `/wounds/history` review reported data, không phân tích pixel ảnh.
+- Motion Lab chưa có pose model hoặc đếm lần tập.
+- `/mobile` là responsive web preview, không phải native mobile app.
+- Chưa có tuyên bố FDA clearance, HIPAA compliance hoặc tư vấn pháp lý đã được xác
+  minh cho pilot thực tế.
+
+Roadmap đầy đủ—medical passport, consent/share, insurance EDI, wound research,
+physical therapy và medication normalization—nằm trong
+[`docs/PROJECT_VISION_WHITEPAPER_VI.md`](docs/PROJECT_VISION_WHITEPAPER_VI.md).
+Tài liệu đó là product context, không phải danh sách chức năng đã triển khai.
+
+## Nguyên tắc phát triển
+
+- Đọc [`AGENTS.md`](AGENTS.md), README này, portal audit, vision whitepaper và wound
+  architecture trước khi thay đổi dự án.
+- Chỉ dùng dữ liệu tổng hợp hoặc đã khử định danh. Không commit PHI, ảnh vết thương
+  thật, `.env*`, model credential, exported production data hoặc SQLite người dùng.
+- Dùng `@/components/app-link` cho điều hướng trong app; `next/link` từng gây hỏng
+  client navigation trong Vinext build đã triển khai.
+- Giữ `data-annotate`, `data-annotation-label` và `data-encounter-id` ổn định cho
+  visual comments.
+- Không tự tạo giải thích cho thuật ngữ y khoa lạ. Condition education dùng exact
+  alias lookup trong `lib/patient-education.ts`; lab education dùng
+  `lib/lab-interpretation.ts` và khoảng tham chiếu của chính phiếu xét nghiệm.
+- Không âm thầm đổi storage provider hoặc báo đã lưu Supabase khi thực tế không
+  thành công. UI phải cho biết provider đang hoạt động.
+- Không sửa migration đã áp dụng. Thêm migration mới và kiểm tra rollback/ownership.
+- Không hiển thị confidence như certainty. Wound result phải đi kèm data quality,
+  uncertainty, model version, provenance và trạng thái human review.
+- Không tự động đẩy GitHub hoặc deploy Sites. Hai thao tác này độc lập và chỉ được
+  thực hiện khi có yêu cầu rõ ràng.
+
+## Tài liệu liên quan
+
+| Tài liệu | Nội dung |
+| --- | --- |
+| [`AGENTS.md`](AGENTS.md) | Ngữ cảnh và quy tắc làm việc cho coding agents |
+| [`docs/PORTAL_AUDIT.md`](docs/PORTAL_AUDIT.md) | Hành vi portal đã triển khai và bằng chứng QA |
+| [`docs/PROJECT_VISION_WHITEPAPER_VI.md`](docs/PROJECT_VISION_WHITEPAPER_VI.md) | Tầm nhìn, roadmap và due-diligence context do founder cung cấp |
+| [`docs/RUN_APP_VI.md`](docs/RUN_APP_VI.md) | Chrome, local port 3001 và truy cập cùng Wi-Fi |
+| [`docs/IPS_CONFORMANCE_AUDIT.md`](docs/IPS_CONFORMANCE_AUDIT.md) | Phạm vi kiểm tra FHIR IPS |
+| [`docs/WOUND_RESEARCH_ARCHITECTURE.md`](docs/WOUND_RESEARCH_ARCHITECTURE.md) | Ranh giới nghiên cứu wound và rehabilitation |
+| [`docs/WOUND_AI_INTEGRATION.md`](docs/WOUND_AI_INTEGRATION.md) | Khởi động và tích hợp Wound AI |
+| [`docs/WOUND_TRAJECTORY_ENGINE.md`](docs/WOUND_TRAJECTORY_ENGINE.md) | Contract trajectory, persistence và retry |
+| [`aimedic/README.md`](aimedic/README.md) | Pipeline Python, API, training và model boundaries |
+| [`docs/GITHUB_PUSH_GUIDE_VI.md`](docs/GITHUB_PUSH_GUIDE_VI.md) | Quy trình kiểm tra và tự đẩy GitHub |
 
 ## Demo pitch 90 giây
 
-1. Mở Overview; chỉ ngay Penicillin allergy và active conditions.
-2. Mở Medical Passport để cho thấy cross-provider summary.
-3. Vào Medical records; search `Hemoglobin`, filter Lab results.
-4. Thêm một lab record hư cấu và đính kèm PDF/ảnh giả.
-5. Refresh: dữ liệu vẫn còn; mở lại attachment.
-6. Sửa record rồi soft-delete; giải thích audit trail và ownership check.
-7. Mở `/insurance`, chọn SBC đã lưu, nhập tình huống MRI trong network và chỉ rõ phần plan/người dùng dự kiến trả cùng prior authorization và citation.
+1. Mở `/` để cho thấy app không để lộ hồ sơ trước khi chọn góc nhìn.
+2. Vào `/editor`, chọn bệnh nhân và mở bệnh nền, dị ứng cùng một lần khám.
+3. Chuyển sang `/patient` để xem giải thích bệnh/xét nghiệm ở chế độ chỉ đọc.
+4. Xuất IPS PDF hoặc FHIR JSON và nói rõ đây là bản sơ bộ chưa ký.
+5. Mở `/insurance`, chọn SBC đã lưu, nhập một dịch vụ và chỉ ra estimate, prior
+   authorization cùng citation.
+6. Mở `/medications` để minh họa đối chiếu ứng viên và yêu cầu pharmacist xác nhận.
+7. Nếu FastAPI đang chạy, mở `/wounds`, chọn phiên nhiều ngày và so Patient Mode
+   với Developer Mode; kết thúc bằng giới hạn research-only.
 
-## Wound Lab và Motion Lab hiện tại
+---
 
-- `/wounds` và `/wound-analyzer` dùng `WoundVisitWorkflow`: lưu một hoặc nhiều ảnh vào đợt theo dõi SQLite, mở lại đợt từ danh sách máy chủ, thêm ảnh ở ngày sau và xóa ảnh/đợt qua xác nhận. Một ảnh đã được ghép hồ sơ nền để phân tích khi model sẵn sàng; từ hai lần đo có thể so sánh thì hiện thay đổi diện tích/mô và trạng thái nghiên cứu. Mỗi đợt tối đa 1.000 ảnh, ngày tương đối được tính từ thời điểm chụp. Thumbnail và kết quả từng lần đều mở lại được.
-- **Patient Mode** khóa một hồ sơ mẫu, hiện giải thích bốn bước VI/EN cùng bệnh nền; **Developer Mode** chọn 5 hồ sơ giả lập và mở lưới ảnh gốc/U-Net/lớp phủ mô/Clinical Brief cho lần chụp đang chọn. 20 lần khám giả lập được giữ đầy đủ trong accordion bốn nhóm. FPG, trạng thái tưới máu và cảm giác ngoại vi bổ sung ngữ cảnh của baseline cố định, không thay đổi kiến trúc model.
-- Trình duyệt dùng `/api/wound-sessions`; web server chuyển tiếp tới Python `127.0.0.1:8000`. Điện thoại cùng Wi-Fi mở địa chỉ LAN của web server ở cổng 3001 và dùng cùng SQLite. Ba checkpoint gốc đã được tải qua Git LFS từ `c269a89`, kiểm tra SHA-256 và chạy suy luận ảnh thành công trong QA API riêng. Nếu weights bị thiếu hoặc không tương thích ở lần chạy khác, ảnh vẫn được lưu với trạng thái chờ và các phép đo `null`; nút phân tích lại dùng chính ảnh đã lưu.
-- Phân vùng dùng checkpoint U-Net/ResNet34 được cung cấp ở `outputs/wound_unet_fusd.pt` (CPU, ImageNet, 256×256, sigmoid >0.35). Mô hình mô giả lập riêng chỉ tô màu bên trong mask; kết quả trả về đúng kích thước ảnh gốc. Các hình này không phải giải thích đặc trưng hay bước trung gian của mô hình late fusion. Thiếu checkpoint phụ không làm hỏng Clinical Brief; xem `aimedic/README.md` để phân biệt hai checkpoint.
-- `/wounds/history` giữ luồng chụp/chọn ảnh cũ, xóa EXIF bằng cách tái mã hóa trong trình duyệt, lưu ảnh riêng tư vào R2 và nhóm các lần đánh giá theo `wound_case`. Liên kết **Lịch sử & ghi nhận** nằm ngay trên màn hình AI.
-- Safety review trong luồng lịch sử R2/D1 chỉ dùng triệu chứng khai báo và bệnh lý/thuốc đã lưu. Ảnh, phép đo và dữ liệu phiên AI được lưu riêng trong SQLite cục bộ; không tự ghi thành hồ sơ lâm sàng đã xác nhận hay Supabase.
-- Ba bảng D1 mới là `wound_cases`, `wound_assessments` và `ai_inferences`. Bảng `ai_inferences` được dành sẵn cho model thật và mặc định bắt buộc human review.
-- `/therapy` là scaffold camera chạy tại thiết bị; video không được ghi hoặc upload. Rep count, range of motion và form deviation để trống cho tới khi pose model thật được nối.
-- Code huấn luyện/preprocessing nằm trong `aimedic/`; ba checkpoint gốc trong `outputs/` được theo dõi bằng Git LFS. Bộ dữ liệu sinh ra, môi trường Python và SQLite người dùng vẫn bị Git bỏ qua. Trình duyệt gọi inference, không huấn luyện model. Contract lưu trữ cũ trong `lib/vision/` vẫn tách khỏi Clinical Brief của API Python.
-
-Chi tiết kiến trúc, nguyên tắc an toàn và workflow cộng tác GitHub nằm tại [`docs/WOUND_RESEARCH_ARCHITECTURE.md`](docs/WOUND_RESEARCH_ARCHITECTURE.md).
-
-Bản nghiên cứu Python chạy riêng trong [`aimedic/`](aimedic/README.md) có các script
-tạo dữ liệu giả lập, mô hình ảnh + hồ sơ nền, huấn luyện, tracker và API lưu phiên.
-Các kết quả huấn luyện trước đây vẫn là lịch sử nghiên cứu trên dữ liệu giả lập.
-Ngày 12/09/2026, ba weights gốc đã được xác minh trong checkout macOS hiện tại;
-script kiểm tra API đã chạy ảnh thật qua chính các model đó với fixture giả lập,
-gồm ảnh đơn, hai lần chụp và phân tích lại ảnh từng lưu chờ. Đây là bằng chứng
-tích hợp phần mềm, không phải xác nhận lâm sàng hoặc QA trình duyệt toàn website.
-Một ảnh được lưu và phân tích cùng baseline khi model sẵn sàng; chỉ chuỗi phép đo
-có thể so sánh mới có nhận xét về tốc độ thay đổi.
-
-**Chạy tính năng mới:** xem [`docs/WOUND_AI_INTEGRATION.md`](docs/WOUND_AI_INTEGRATION.md).
-Cần giữ frontend cổng **3001** và Python cổng **8000** chạy trên cùng máy chủ local;
-trình duyệt có thể ở máy đó hoặc điện thoại cùng mạng nội bộ.
+MediPass ưu tiên tính minh bạch: dữ liệu đến từ đâu, được lưu ở đâu, mức bất định
+ra sao và phần nào chưa được xác minh phải luôn được trình bày rõ ràng.
