@@ -1,23 +1,3 @@
-<<<<<<< HEAD
-# MediPass
-
-**Medical Passport & Precision Wound Care Research Demo**
-
-MediPass là nguyên mẫu HealthTech tập trung vào một hồ sơ y tế di động do bệnh
-nhân kiểm soát. Bản demo kết hợp cổng bệnh viện, góc nhìn bệnh nhân, bản tóm tắt
-FHIR International Patient Summary (IPS), công cụ đọc quyền lợi bảo hiểm, đối
-chiếu tên thuốc xuyên quốc gia và một Wound Lab nghiên cứu chạy cục bộ.
-
-> **Phạm vi sử dụng:** MediPass hiện là research/startup prototype. Sản phẩm
-> không phải thiết bị y tế, không chẩn đoán, không chỉ định điều trị, chưa được
-> chứng nhận lâm sàng và chưa được xác lập là HIPAA compliant. Chỉ sử dụng dữ
-> liệu tổng hợp hoặc đã khử định danh.
-
-**Bản demo riêng tư:**
-[medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
-
-**Chạy nhanh trên máy:**
-=======
 # MediPass — Medical Assistant Demo
 
 MediPass is a Patient-Controlled Medical Record platform functioning as a digital "Medical Passport." It allows individuals to maintain, understand, and securely share their health data with clinicians across different healthcare systems. Rather than focusing purely on technical infrastructure, the system is designed to solve medical record fragmentation, translate complex clinical jargon into plain language, and offer practical, at-home AI monitoring tools.
