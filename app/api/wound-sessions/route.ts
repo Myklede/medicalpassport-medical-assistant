@@ -1,1 +1,1 @@
-export { proxyWoundSession as GET, proxyWoundSession as POST } from '@/lib/wound-session-proxy';
+export { cloudWoundSession as GET, cloudWoundSession as POST } from '@/lib/cloud-wound-sessions';

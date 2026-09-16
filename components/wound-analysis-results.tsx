@@ -181,11 +181,11 @@ function PatientEducation({ brief, language }: { brief: ClinicalBrief; language:
       </EducationStep>
     </div>
     <div data-testid="patient-safety-note" className="flex items-start gap-3 rounded-xl bg-slate-100 p-4 dark:bg-slate-800"><ShieldAlert aria-hidden="true" className="mt-1 size-4 shrink-0 text-slate-500 dark:text-slate-400" /><Copy value={content.safety_note} fallback="Research models are not clinically validated. Do not self-diagnose or change treatment from these results; clinical assessment is needed." /></div>
-    <EvidenceSources brief={brief} language={language} />
+    <EvidenceSources brief={brief} />
   </section>;
 }
 
-function EvidenceSources({ brief, language }: { brief: ClinicalBrief; language: WoundLanguage }) {
+function EvidenceSources({ brief }: { brief: ClinicalBrief }) {
   const assessment = woundRecord(brief.trajectory_risk_assessment);
   const provenance = woundRecord(assessment.rule_provenance);
   const evidence = woundRecord(provenance.evidence);

@@ -1,0 +1,748 @@
+{
+  "brief_schema_version": "pwc-research-brief-v2",
+  "patient_id": "SYN000014",
+  "research_only": true,
+  "clinical_use_allowed": false,
+  "requires_clinician_review": true,
+  "objective_measurements": {
+    "measurement_status": "model_estimates_not_confirmed_measurements",
+    "tissue_units": "percent_of_binary_wound_mask_including_unclassified",
+    "delta_units": "percentage_points",
+    "risk_score_horizon_days": 7,
+    "visits": [
+      {
+        "day": 0.0,
+        "image_name": "capture.png",
+        "image_sha256": "fcbbae5f676e0160560eaf7ef7f993e8346a4c4cc647836f7467531ff7872764",
+        "quality": {
+          "usable_for_demo": true,
+          "reasons": [],
+          "mean_intensity": 139.317,
+          "contrast_std": 71.691,
+          "laplacian_variance": 4420.337,
+          "thresholds_are_engineering_heuristics": true,
+          "clinical_capture_quality_validated": false
+        },
+        "tissue_percentages": {
+          "necrotic": 14.313880126182966,
+          "slough": 20.386435331230285,
+          "granulation": 65.29968454258675
+        },
+        "risk_deterioration_score": 0.46970415115356445,
+        "clinical_observations": {},
+        "measurement_source": "binary_wound_mask_v2",
+        "measurement_status": "available",
+        "unclassified_percentage": 0.0,
+        "wound_area_pixels": 2536,
+        "tissue_pixel_counts": {
+          "background": 0,
+          "necrotic": 363,
+          "slough": 517,
+          "granulation": 1656
+        },
+        "area_cm2": null,
+        "calibration": {
+          "pixels_per_cm": null,
+          "method": null
+        },
+        "segmentation_provenance": {
+          "binary": {
+            "version": "pwc-fusd-resnet34-unet-v1",
+            "architecture": "smp.Unet",
+            "encoder": "resnet34",
+            "classes": 1,
+            "device": "cpu",
+            "input_size": [
+              256,
+              256
+            ],
+            "normalization": {
+              "mean": [
+                0.48500001430511475,
+                0.4560000002384186,
+                0.4059999883174896
+              ],
+              "std": [
+                0.2290000021457672,
+                0.2240000069141388,
+                0.22499999403953552
+              ]
+            },
+            "sigmoid_threshold": 0.35,
+            "threshold_operator": ">",
+            "source": "user_supplied_checkpoint",
+            "clinical_validation": false,
+            "checkpoint_sha256": "bb655391bc2c13e9a58458e58d1e76fd837e5cd166b1c6e47fb6f85d35fe9ff4"
+          },
+          "tissue": {
+            "version": "pwc-synthetic-unet-v1",
+            "epoch": 5,
+            "synthetic_only": true,
+            "checkpoint_sha256": "c540516f1d95be2e49b033d028bb91f6455771d7d2eff440530be1741c69903f"
+          },
+          "processing_version": "masked_crop_counts_v2"
+        }
+      }
+    ],
+    "interval_changes": [],
+    "overall_change": null,
+    "trajectory_available": false,
+    "area_cm2": null,
+    "area_calibration_available": false,
+    "measurement_source": "binary_wound_mask_v2",
+    "longitudinal_intervals": [],
+    "latest_change": null,
+    "latest_trajectory_available": false
+  },
+  "multimodal_context_analysis": "This first photo has been analyzed together with your recorded health history. The current wound estimates can be reviewed now; a later photo is needed to measure the healing rate. Type 2 diabetes is recorded. Recorded HbA1c: 9.6%. HbA1c reflects average blood sugar over about three months, not today's reading or blood flow at the wound. Recorded fasting plasma glucose: 218 mg/dL; this is a historical measurement. Recorded peripheral vascular status: impaired; neuropathy: present. Lighting, camera distance, unclear images or missing visits can change the measurements. A missing score means the system could not judge the trend, not that the risk is zero. Over time, high blood sugar can damage blood vessels, including small vessels, and reduce blood flow. Less oxygen and fewer nutrients may reach the skin to help it repair. High blood sugar can also make infection-fighting cells work less well. These are possible effects of diabetes, not proof that they are happening in this wound. Your history records neuropathy. Reduced sensation can make pressure or a new injury harder to notice; it is useful to review protection from repeated pressure alongside the measured changes. Your history records impaired peripheral circulation. Your clinician can assess whether oxygen delivery is limiting repair; a photo cannot measure blood flow or establish the cause. Unclear information can hide a real change or make a harmless difference look worse. Waiting for a better app result should not delay care if the wound or your symptoms are worsening.",
+  "system_recommendation": "Check and record blood sugar as agreed with your diabetes care team. Discuss readings outside your personal targets; do not change insulin or other medicine based on this result. Check for new redness, warmth, swelling, pain or drainage. Record changes and share them with your care team; for a foot wound, check the rest of the foot too. Follow the wound-care and dressing plan your clinician gave you. Do not cut away dark or yellow tissue yourself. If the wound is on the foot, follow the pressure-relief plan already prescribed by your clinician (offloading). Ask the team how to avoid pressure safely; do not start a new device or treatment on your own. If your care team requests photos, use similar lighting, angle and distance. Share the dates and originals; a better photo does not replace an examination. If a foot sore has not started healing after a few days, call your doctor or foot specialist right away. Do not wait for day seven. Seek prompt care for spreading redness, increasing pain, pus or fever, regardless of the app score. This research decision-support tool does not diagnose infection, replace a doctor's visit or choose treatment. Scores are not proven probabilities. A clinician needs to assess the wound and your overall health.",
+  "research_review_priority": "insufficient_data",
+  "risk_alerts": [],
+  "rule_provenance": {
+    "version": "pwc-illustrative-review-v1",
+    "rules": {
+      "baseline_hba1c_gt": 8.0,
+      "diabetes_hba1c_gt_8": {
+        "necrotic_pp": 2.0,
+        "slough_pp": 5.0,
+        "score": 0.65
+      },
+      "other_baselines": {
+        "necrotic_pp": 5.0,
+        "slough_pp": 10.0,
+        "score": 0.8
+      }
+    },
+    "clinical_validation": false,
+    "trajectory_engine": {
+      "version": "pwc-trajectory-cds-v2",
+      "parameters": {
+        "high_hba1c_gt": 8.0,
+        "age_context_ge": 65,
+        "standard_necrotic_increase_pp": 5.0,
+        "standard_slough_increase_pp": 10.0,
+        "stall_reduction_lt_percent_per_interval": 5.0,
+        "stall_min_intervals": 2,
+        "stall_elapsed_days_gt": 7.0,
+        "scab_granulation_le": 15.0,
+        "scab_slough_le": 5.0,
+        "max_unclassified_percent": 20.0,
+        "non_healing_elapsed_days_ge": 7.0,
+        "unchanged_tissue_tolerance_pp": 0.5,
+        "unchanged_area_tolerance_percent": 5.0,
+        "fpg_context_gt_mg_dl": 130.0
+      },
+      "thresholds_are_illustrative": true,
+      "score_formula": "clip(sum(score_contributions), 0, 1); null when not evaluable",
+      "score_contributions": [
+        {
+          "term": "research_intercept",
+          "value": 0.1
+        },
+        {
+          "term": "diabetes_or_high_hba1c",
+          "value": 0.15
+        },
+        {
+          "term": "diabetes_with_hba1c_gt_8",
+          "value": 0.1
+        },
+        {
+          "term": "recorded_fasting_glucose_context",
+          "value": 0.03
+        },
+        {
+          "term": "recorded_impaired_peripheral_circulation",
+          "value": 0.05
+        },
+        {
+          "term": "recorded_neuropathy_context",
+          "value": 0.03
+        }
+      ],
+      "uncertainty_contributions": [
+        {
+          "reason": "unvalidated_models_and_rules",
+          "value": 0.35
+        },
+        {
+          "reason": "latest_tissue_comparison_unavailable",
+          "value": 0.65
+        },
+        {
+          "reason": "capture_consistency_unconfirmed",
+          "value": 0.1
+        }
+      ],
+      "fired_rules": [],
+      "evidence": {
+        "infection_review": {
+          "url": "https://www.idsociety.org/practice-guideline/diabetic-foot-infections/",
+          "section": "IWGDF/IDSA 2023, recommendations 1 and 5",
+          "scope": "Diabetes-related foot infection requires clinical assessment; color cannot identify anaerobic organisms."
+        },
+        "perfusion_review": {
+          "url": "https://iwgdfguidelines.org/wp-content/uploads/2023/07/IWGDF-2023-05-PAD-Guideline.pdf",
+          "section": "IWGDF 2023 intersocietal PAD guideline",
+          "scope": "Diabetes-related foot ulcer perfusion assessment; hypertension/HbA1c do not diagnose microvascular compromise."
+        },
+        "offloading_review": {
+          "url": "https://iwgdfguidelines.org/wp-content/uploads/2023/07/IWGDF-2023-06-Offloading-Guideline.pdf",
+          "section": "IWGDF 2023 offloading, recommendations 1-2",
+          "scope": "Neuropathic plantar diabetic foot ulcers; not a universal instruction for every wound site."
+        },
+        "cds_boundary": {
+          "url": "https://www.fda.gov/media/109618/download",
+          "section": "FDA Clinical Decision Support Software, criterion 1",
+          "scope": "CDS phrasing does not establish a non-device exemption for medical-image analysis."
+        },
+        "diabetes_circulation": {
+          "url": "https://www.niddk.nih.gov/health-information/professionals/diabetes-discoveries-practice/diabetes-peripheral-arterial-disease-and-foot-ulcers",
+          "scope": "General links between diabetes, reduced circulation, oxygen/nutrient delivery and wound healing; not individual perfusion assessment."
+        },
+        "diabetes_immunity": {
+          "url": "https://www.cdc.gov/diabetes/diabetes-complications/diabetes-immune-system.html",
+          "scope": "High blood sugar can impair the body's ability to fight infection and heal wounds."
+        },
+        "diabetes_foot_care": {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/foot-problems",
+          "scope": "Foot checks, existing care plans, and promptly contacting a clinician for a nonhealing diabetic foot sore."
+        },
+        "a1c_meaning": {
+          "url": "https://www.cdc.gov/diabetes/diabetes-testing/prediabetes-a1c-test.html",
+          "scope": "HbA1c reflects average blood sugar over about three months; targets depend on the individual."
+        },
+        "glucose_monitoring": {
+          "url": "https://www.cdc.gov/diabetes/diabetes-testing/monitoring-blood-sugar.html",
+          "scope": "Blood sugar monitoring according to the individual's care plan."
+        }
+      },
+      "evidence_does_not_validate_scores_or_scab_thresholds": true,
+      "patient_explanation_version": "pwc-patient-explanation-v2"
+    }
+  },
+  "uncertainty": {
+    "calibrated": false,
+    "confidence_interval": null,
+    "out_of_distribution_detection": "not_implemented",
+    "note": "Synthetic validation error is not patient-level uncertainty; no safety conclusion from absent flags.",
+    "score": 1.0,
+    "score_is_calibrated": false
+  },
+  "limitations": [
+    "Trained only on synthetic colored masks, not clinical wound photographs.",
+    "Tissue estimates count only segmented wound pixels; unclassified pixels remain in the denominator. Area is projected area from caller-supplied same-plane scale, not a 3D surface measurement.",
+    "Fixed baseline across visits; cannot infer treatment response or causal effects.",
+    "No diagnosis, treatment directive, FDA clearance, or established FDA compliance."
+  ],
+  "provenance": {
+    "model_version": "pwc-late-fusion-v1",
+    "checkpoint_epoch": 5,
+    "checkpoint_sha256": "6c3924375101add6d2b50dc66d85ec300f79109f3db7a45faac33f931ce41c0e",
+    "profile_sha256": "2149fb0968bd75e997788d4ddd4caa23328b6f7bcbc027c564931823aa717bd4",
+    "dataset_manifest_sha256": "47cf0850d4d845cefc75454ecbe299c5960a8cf65bb8b84494fef96856dc85e7",
+    "input_profile_marked_synthetic": false,
+    "synthetic_validation_metrics": {
+      "visits": 450,
+      "loss": 0.2747311767128607,
+      "tissue_mse_fraction": 0.00035689439357762846,
+      "tissue_mae_pp": {
+        "necrotic": 1.0492576360702515,
+        "slough": 1.6178865432739258,
+        "granulation": 1.864149808883667
+      },
+      "risk_bce": 0.27116223335266115,
+      "risk_brier": 0.09193708282173803,
+      "risk_confusion_at_0_5": {
+        "tp": 64,
+        "tn": 325,
+        "fp": 19,
+        "fn": 42
+      },
+      "clinical_validation": false
+    },
+    "patient_and_wound_identity": "caller_asserted_not_verified_from_pixels"
+  },
+  "trajectory_risk_assessment": {
+    "engine_version": "pwc-trajectory-cds-v2",
+    "score_status": "withheld_insufficient_data",
+    "Deterioration_Risk_Score": null,
+    "Uncertainty_Score": 1.0,
+    "score_is_probability": false,
+    "prediction_horizon_days": null,
+    "clinical_validation": false,
+    "latest_comparison": null,
+    "intervals": [],
+    "review_priority": "insufficient_data",
+    "risk_alerts": [],
+    "complication_considerations": [],
+    "scab_context": {
+      "compatible_with_reported_scab": false,
+      "confirmed_normal_healing": false,
+      "image_only_scab_detection": false
+    },
+    "stagnation": {
+      "flagged": false,
+      "trailing_intervals": 0,
+      "elapsed_days": 0
+    },
+    "non_healing_trajectory": {
+      "flagged": false,
+      "persistent_unchanged": false,
+      "elapsed_days": 0,
+      "from_day": null,
+      "to_day": 0.0,
+      "baseline_vulnerability": true,
+      "area_unchanged": null,
+      "tissue_unchanged": false,
+      "thresholds_are_illustrative": true
+    },
+    "healing_status": "insufficient_data",
+    "latest_analysis_status": "completed",
+    "single_visit_analysis": {
+      "available": true,
+      "baseline_fused": true,
+      "baseline_evaluated": true,
+      "trajectory_available": false
+    },
+    "baseline_risk_context": {
+      "has_diabetes_type_2": true,
+      "hba1c_level": 9.6,
+      "fpg_mg_dl": 218,
+      "peripheral_vascular_status": "impaired",
+      "neuropathy_status": "present",
+      "source": "locked_recorded_patient_profile",
+      "individual_diagnosis_inferred": false
+    },
+    "summary": "Latest trajectory withheld: two adjacent, usable, consistent visits are required.",
+    "multimodal_context": "Recorded baseline: age 20, type 2 diabetes present, HbA1c 9.6%, hypertension not recorded. Recorded fasting plasma glucose: 218 mg/dL; this historical measurement is not a current glucose reading. Recorded peripheral vascular status: impaired. Recorded neuropathy status: present. Diabetes and/or HbA1c >8% increases the illustrative review sensitivity for tissue changes and stalled area reduction. The dark-tissue class cannot distinguish a dry healing scab from devitalized tissue; examination is required. Age and hypertension are context modifiers, not proof of impaired perfusion. Blood type has no rule-based causal effect.",
+    "recommendations": [
+      {
+        "text": "Compare original images, capture conditions and the wound examination before interpreting these research estimates.",
+        "evidence_ids": [
+          "cds_boundary"
+        ]
+      },
+      {
+        "text": "If this is a neuropathic plantar diabetic foot ulcer, review the existing offloading plan and adherence with the treating clinician.",
+        "evidence_ids": [
+          "offloading_review"
+        ]
+      },
+      {
+        "text": "Verify or reacquire the latest measurements; risk scoring is withheld, not set to zero.",
+        "evidence_ids": []
+      }
+    ],
+    "rule_provenance": {
+      "version": "pwc-trajectory-cds-v2",
+      "parameters": {
+        "high_hba1c_gt": 8.0,
+        "age_context_ge": 65,
+        "standard_necrotic_increase_pp": 5.0,
+        "standard_slough_increase_pp": 10.0,
+        "stall_reduction_lt_percent_per_interval": 5.0,
+        "stall_min_intervals": 2,
+        "stall_elapsed_days_gt": 7.0,
+        "scab_granulation_le": 15.0,
+        "scab_slough_le": 5.0,
+        "max_unclassified_percent": 20.0,
+        "non_healing_elapsed_days_ge": 7.0,
+        "unchanged_tissue_tolerance_pp": 0.5,
+        "unchanged_area_tolerance_percent": 5.0,
+        "fpg_context_gt_mg_dl": 130.0
+      },
+      "thresholds_are_illustrative": true,
+      "score_formula": "clip(sum(score_contributions), 0, 1); null when not evaluable",
+      "score_contributions": [
+        {
+          "term": "research_intercept",
+          "value": 0.1
+        },
+        {
+          "term": "diabetes_or_high_hba1c",
+          "value": 0.15
+        },
+        {
+          "term": "diabetes_with_hba1c_gt_8",
+          "value": 0.1
+        },
+        {
+          "term": "recorded_fasting_glucose_context",
+          "value": 0.03
+        },
+        {
+          "term": "recorded_impaired_peripheral_circulation",
+          "value": 0.05
+        },
+        {
+          "term": "recorded_neuropathy_context",
+          "value": 0.03
+        }
+      ],
+      "uncertainty_contributions": [
+        {
+          "reason": "unvalidated_models_and_rules",
+          "value": 0.35
+        },
+        {
+          "reason": "latest_tissue_comparison_unavailable",
+          "value": 0.65
+        },
+        {
+          "reason": "capture_consistency_unconfirmed",
+          "value": 0.1
+        }
+      ],
+      "fired_rules": [],
+      "evidence": {
+        "infection_review": {
+          "url": "https://www.idsociety.org/practice-guideline/diabetic-foot-infections/",
+          "section": "IWGDF/IDSA 2023, recommendations 1 and 5",
+          "scope": "Diabetes-related foot infection requires clinical assessment; color cannot identify anaerobic organisms."
+        },
+        "perfusion_review": {
+          "url": "https://iwgdfguidelines.org/wp-content/uploads/2023/07/IWGDF-2023-05-PAD-Guideline.pdf",
+          "section": "IWGDF 2023 intersocietal PAD guideline",
+          "scope": "Diabetes-related foot ulcer perfusion assessment; hypertension/HbA1c do not diagnose microvascular compromise."
+        },
+        "offloading_review": {
+          "url": "https://iwgdfguidelines.org/wp-content/uploads/2023/07/IWGDF-2023-06-Offloading-Guideline.pdf",
+          "section": "IWGDF 2023 offloading, recommendations 1-2",
+          "scope": "Neuropathic plantar diabetic foot ulcers; not a universal instruction for every wound site."
+        },
+        "cds_boundary": {
+          "url": "https://www.fda.gov/media/109618/download",
+          "section": "FDA Clinical Decision Support Software, criterion 1",
+          "scope": "CDS phrasing does not establish a non-device exemption for medical-image analysis."
+        },
+        "diabetes_circulation": {
+          "url": "https://www.niddk.nih.gov/health-information/professionals/diabetes-discoveries-practice/diabetes-peripheral-arterial-disease-and-foot-ulcers",
+          "scope": "General links between diabetes, reduced circulation, oxygen/nutrient delivery and wound healing; not individual perfusion assessment."
+        },
+        "diabetes_immunity": {
+          "url": "https://www.cdc.gov/diabetes/diabetes-complications/diabetes-immune-system.html",
+          "scope": "High blood sugar can impair the body's ability to fight infection and heal wounds."
+        },
+        "diabetes_foot_care": {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/foot-problems",
+          "scope": "Foot checks, existing care plans, and promptly contacting a clinician for a nonhealing diabetic foot sore."
+        },
+        "a1c_meaning": {
+          "url": "https://www.cdc.gov/diabetes/diabetes-testing/prediabetes-a1c-test.html",
+          "scope": "HbA1c reflects average blood sugar over about three months; targets depend on the individual."
+        },
+        "glucose_monitoring": {
+          "url": "https://www.cdc.gov/diabetes/diabetes-testing/monitoring-blood-sugar.html",
+          "scope": "Blood sugar monitoring according to the individual's care plan."
+        }
+      },
+      "evidence_does_not_validate_scores_or_scab_thresholds": true,
+      "patient_explanation_version": "pwc-patient-explanation-v2"
+    },
+    "learned_model_score_used_in_rule_score": false,
+    "patient_explanation": {
+      "version": "pwc-patient-explanation-v2",
+      "scenario": "single_image",
+      "default_language": "en",
+      "locales": {
+        "en": {
+          "simple_explanation": "This first photo has been analyzed together with your recorded health history. The current wound estimates can be reviewed now; a later photo is needed to measure the healing rate.",
+          "baseline_context": "Type 2 diabetes is recorded. Recorded HbA1c: 9.6%. HbA1c reflects average blood sugar over about three months, not today's reading or blood flow at the wound. Recorded fasting plasma glucose: 218 mg/dL; this is a historical measurement. Recorded peripheral vascular status: impaired; neuropathy: present.",
+          "why_this_matters": "Lighting, camera distance, unclear images or missing visits can change the measurements. A missing score means the system could not judge the trend, not that the risk is zero. Over time, high blood sugar can damage blood vessels, including small vessels, and reduce blood flow. Less oxygen and fewer nutrients may reach the skin to help it repair. High blood sugar can also make infection-fighting cells work less well. These are possible effects of diabetes, not proof that they are happening in this wound. Your history records neuropathy. Reduced sensation can make pressure or a new injury harder to notice; it is useful to review protection from repeated pressure alongside the measured changes. Your history records impaired peripheral circulation. Your clinician can assess whether oxygen delivery is limiting repair; a photo cannot measure blood flow or establish the cause.",
+          "possible_consequences": "Unclear information can hide a real change or make a harmless difference look worse. Waiting for a better app result should not delay care if the wound or your symptoms are worsening.",
+          "what_to_do": [
+            {
+              "action_id": "glucose",
+              "text": "Check and record blood sugar as agreed with your diabetes care team. Discuss readings outside your personal targets; do not change insulin or other medicine based on this result.",
+              "evidence_ids": [
+                "glucose_monitoring"
+              ]
+            },
+            {
+              "action_id": "check",
+              "text": "Check for new redness, warmth, swelling, pain or drainage. Record changes and share them with your care team; for a foot wound, check the rest of the foot too.",
+              "evidence_ids": [
+                "diabetes_foot_care"
+              ]
+            },
+            {
+              "action_id": "existing_plan",
+              "text": "Follow the wound-care and dressing plan your clinician gave you. Do not cut away dark or yellow tissue yourself.",
+              "evidence_ids": [
+                "diabetes_foot_care"
+              ]
+            },
+            {
+              "action_id": "pressure",
+              "text": "If the wound is on the foot, follow the pressure-relief plan already prescribed by your clinician (offloading). Ask the team how to avoid pressure safely; do not start a new device or treatment on your own.",
+              "evidence_ids": [
+                "offloading_review"
+              ]
+            },
+            {
+              "action_id": "capture",
+              "text": "If your care team requests photos, use similar lighting, angle and distance. Share the dates and originals; a better photo does not replace an examination.",
+              "evidence_ids": []
+            }
+          ],
+          "when_to_seek_care": "If a foot sore has not started healing after a few days, call your doctor or foot specialist right away. Do not wait for day seven. Seek prompt care for spreading redness, increasing pain, pus or fever, regardless of the app score.",
+          "measurement_note": "Color labels are image estimates, not confirmed tissue findings. Yellow material (slough) is not automatically pus; dark material is not automatically dead tissue (necrosis). New repair tissue is called granulation tissue, but color alone cannot confirm it.",
+          "rule_note": "",
+          "safety_note": "This research decision-support tool does not diagnose infection, replace a doctor's visit or choose treatment. Scores are not proven probabilities. A clinician needs to assess the wound and your overall health."
+        },
+        "vi": {
+          "simple_explanation": "Ảnh đầu tiên đã được phân tích cùng tiền sử sức khỏe đã ghi nhận của bạn. Bạn có thể xem ước tính vết thương hiện tại; cần ảnh ở lần tiếp theo để đo tốc độ hồi phục.",
+          "baseline_context": "Hồ sơ có ghi nhận đái tháo đường típ 2. HbA1c đã ghi nhận: 9.6%. HbA1c phản ánh đường huyết trung bình khoảng ba tháng, không phải đường huyết hôm nay hay lượng máu đến vết thương. Đường huyết lúc đói (FPG) đã ghi nhận: 218 mg/dL; đây là kết quả trong hồ sơ trước đó. Tuần hoàn ngoại biên: ghi nhận suy giảm; bệnh lý thần kinh ngoại biên: có ghi nhận.",
+          "why_this_matters": "Ánh sáng, khoảng cách chụp, ảnh không rõ hoặc thiếu lần theo dõi có thể làm số đo thay đổi. Không có điểm đánh giá nghĩa là hệ thống chưa đánh giá được, không phải nguy cơ bằng không. Đường huyết cao kéo dài có thể làm tổn thương mạch máu, kể cả các vi mạch nhỏ, và giảm lượng máu lưu thông. Da có thể nhận ít oxy và chất dinh dưỡng hơn để hồi phục. Đường huyết cao cũng có thể khiến các tế bào chống nhiễm trùng hoạt động kém hơn. Đây là những ảnh hưởng có thể có của đái tháo đường, không phải kết luận chúng đang xảy ra ở vết thương này. Hồ sơ ghi nhận bệnh lý thần kinh ngoại biên. Giảm cảm giác có thể khiến bạn khó nhận ra chỗ tì đè hoặc tổn thương mới; cần xem lại việc bảo vệ vết thương khỏi áp lực lặp lại cùng với các số đo theo dõi. Hồ sơ ghi nhận tuần hoàn ngoại biên suy giảm. Bác sĩ có thể đánh giá liệu việc đưa oxy đến mô có đang hạn chế hồi phục hay không; ảnh không đo được dòng máu hoặc xác định nguyên nhân.",
+          "possible_consequences": "Thông tin không rõ có thể che khuất thay đổi thật hoặc khiến khác biệt không đáng lo trông nghiêm trọng hơn. Đừng trì hoãn đi khám để chờ ứng dụng đánh giá tốt hơn nếu vết thương hoặc triệu chứng đang xấu đi.",
+          "what_to_do": [
+            {
+              "action_id": "glucose",
+              "text": "Đo và ghi lại đường huyết theo kế hoạch đã thống nhất với nhóm điều trị đái tháo đường. Trao đổi khi kết quả ngoài mục tiêu riêng của bạn; không tự đổi liều insulin hoặc thuốc khác dựa trên kết quả này.",
+              "evidence_ids": [
+                "glucose_monitoring"
+              ]
+            },
+            {
+              "action_id": "check",
+              "text": "Theo dõi xem có đỏ, nóng, sưng, đau hoặc chảy dịch mới xuất hiện không. Ghi lại để báo cho nhóm chăm sóc; nếu vết thương ở bàn chân, kiểm tra cả những vùng còn lại của bàn chân.",
+              "evidence_ids": [
+                "diabetes_foot_care"
+              ]
+            },
+            {
+              "action_id": "existing_plan",
+              "text": "Làm theo hướng dẫn chăm sóc và thay băng của bác sĩ. Không tự cắt bỏ phần mô sẫm màu hoặc màu vàng.",
+              "evidence_ids": [
+                "diabetes_foot_care"
+              ]
+            },
+            {
+              "action_id": "pressure",
+              "text": "Nếu vết thương ở bàn chân, làm theo kế hoạch giảm tì đè đã được bác sĩ chỉ định (offloading). Hỏi nhóm chăm sóc cách tránh đè lên vết thương an toàn; không tự dùng thiết bị hay bắt đầu cách điều trị mới.",
+              "evidence_ids": [
+                "offloading_review"
+              ]
+            },
+            {
+              "action_id": "capture",
+              "text": "Nếu nhóm chăm sóc yêu cầu chụp ảnh, giữ ánh sáng, góc và khoảng cách tương tự. Gửi kèm ngày chụp và ảnh gốc; ảnh rõ hơn không thay thế việc khám trực tiếp.",
+              "evidence_ids": []
+            }
+          ],
+          "when_to_seek_care": "Nếu vết loét bàn chân chưa bắt đầu lành sau vài ngày, gọi bác sĩ hoặc chuyên gia bàn chân ngay. Đừng chờ đến ngày thứ bảy. Đi khám sớm khi đỏ lan rộng, đau tăng, có mủ hoặc sốt, bất kể điểm trên ứng dụng.",
+          "measurement_note": "Các nhãn màu là ước tính từ ảnh, không phải kết luận về mô. Phần màu vàng (slough, mô vàng) không mặc nhiên là mủ; phần sẫm màu không mặc nhiên là mô chết (necrosis, hoại tử). Mô mới giúp vết thương hồi phục gọi là mô hạt (granulation), nhưng màu sắc không đủ để xác nhận.",
+          "rule_note": "",
+          "safety_note": "Công cụ hỗ trợ quyết định nghiên cứu này không chẩn đoán nhiễm trùng, không thay thế buổi khám và không chọn phương pháp điều trị. Điểm số không phải xác suất đã được kiểm chứng. Bác sĩ cần đánh giá vết thương cùng tình trạng sức khỏe của bạn."
+        }
+      },
+      "trigger_rule_ids": [],
+      "historical_findings_retained": false,
+      "evidence_ids": [
+        "a1c_meaning",
+        "cds_boundary",
+        "diabetes_circulation",
+        "diabetes_foot_care",
+        "diabetes_immunity",
+        "glucose_monitoring",
+        "infection_review",
+        "offloading_review"
+      ],
+      "clinical_validation": false,
+      "mechanism_is_general_education": true
+    }
+  },
+  "summary": "Latest trajectory withheld: two adjacent, usable, consistent visits are required.",
+  "Deterioration_Risk_Score": null,
+  "Uncertainty_Score": 1.0,
+  "patient_explanation": {
+    "version": "pwc-patient-explanation-v2",
+    "scenario": "single_image",
+    "default_language": "en",
+    "locales": {
+      "en": {
+        "simple_explanation": "This first photo has been analyzed together with your recorded health history. The current wound estimates can be reviewed now; a later photo is needed to measure the healing rate.",
+        "baseline_context": "Type 2 diabetes is recorded. Recorded HbA1c: 9.6%. HbA1c reflects average blood sugar over about three months, not today's reading or blood flow at the wound. Recorded fasting plasma glucose: 218 mg/dL; this is a historical measurement. Recorded peripheral vascular status: impaired; neuropathy: present.",
+        "why_this_matters": "Lighting, camera distance, unclear images or missing visits can change the measurements. A missing score means the system could not judge the trend, not that the risk is zero. Over time, high blood sugar can damage blood vessels, including small vessels, and reduce blood flow. Less oxygen and fewer nutrients may reach the skin to help it repair. High blood sugar can also make infection-fighting cells work less well. These are possible effects of diabetes, not proof that they are happening in this wound. Your history records neuropathy. Reduced sensation can make pressure or a new injury harder to notice; it is useful to review protection from repeated pressure alongside the measured changes. Your history records impaired peripheral circulation. Your clinician can assess whether oxygen delivery is limiting repair; a photo cannot measure blood flow or establish the cause.",
+        "possible_consequences": "Unclear information can hide a real change or make a harmless difference look worse. Waiting for a better app result should not delay care if the wound or your symptoms are worsening.",
+        "what_to_do": [
+          {
+            "action_id": "glucose",
+            "text": "Check and record blood sugar as agreed with your diabetes care team. Discuss readings outside your personal targets; do not change insulin or other medicine based on this result.",
+            "evidence_ids": [
+              "glucose_monitoring"
+            ]
+          },
+          {
+            "action_id": "check",
+            "text": "Check for new redness, warmth, swelling, pain or drainage. Record changes and share them with your care team; for a foot wound, check the rest of the foot too.",
+            "evidence_ids": [
+              "diabetes_foot_care"
+            ]
+          },
+          {
+            "action_id": "existing_plan",
+            "text": "Follow the wound-care and dressing plan your clinician gave you. Do not cut away dark or yellow tissue yourself.",
+            "evidence_ids": [
+              "diabetes_foot_care"
+            ]
+          },
+          {
+            "action_id": "pressure",
+            "text": "If the wound is on the foot, follow the pressure-relief plan already prescribed by your clinician (offloading). Ask the team how to avoid pressure safely; do not start a new device or treatment on your own.",
+            "evidence_ids": [
+              "offloading_review"
+            ]
+          },
+          {
+            "action_id": "capture",
+            "text": "If your care team requests photos, use similar lighting, angle and distance. Share the dates and originals; a better photo does not replace an examination.",
+            "evidence_ids": []
+          }
+        ],
+        "when_to_seek_care": "If a foot sore has not started healing after a few days, call your doctor or foot specialist right away. Do not wait for day seven. Seek prompt care for spreading redness, increasing pain, pus or fever, regardless of the app score.",
+        "measurement_note": "Color labels are image estimates, not confirmed tissue findings. Yellow material (slough) is not automatically pus; dark material is not automatically dead tissue (necrosis). New repair tissue is called granulation tissue, but color alone cannot confirm it.",
+        "rule_note": "",
+        "safety_note": "This research decision-support tool does not diagnose infection, replace a doctor's visit or choose treatment. Scores are not proven probabilities. A clinician needs to assess the wound and your overall health."
+      },
+      "vi": {
+        "simple_explanation": "Ảnh đầu tiên đã được phân tích cùng tiền sử sức khỏe đã ghi nhận của bạn. Bạn có thể xem ước tính vết thương hiện tại; cần ảnh ở lần tiếp theo để đo tốc độ hồi phục.",
+        "baseline_context": "Hồ sơ có ghi nhận đái tháo đường típ 2. HbA1c đã ghi nhận: 9.6%. HbA1c phản ánh đường huyết trung bình khoảng ba tháng, không phải đường huyết hôm nay hay lượng máu đến vết thương. Đường huyết lúc đói (FPG) đã ghi nhận: 218 mg/dL; đây là kết quả trong hồ sơ trước đó. Tuần hoàn ngoại biên: ghi nhận suy giảm; bệnh lý thần kinh ngoại biên: có ghi nhận.",
+        "why_this_matters": "Ánh sáng, khoảng cách chụp, ảnh không rõ hoặc thiếu lần theo dõi có thể làm số đo thay đổi. Không có điểm đánh giá nghĩa là hệ thống chưa đánh giá được, không phải nguy cơ bằng không. Đường huyết cao kéo dài có thể làm tổn thương mạch máu, kể cả các vi mạch nhỏ, và giảm lượng máu lưu thông. Da có thể nhận ít oxy và chất dinh dưỡng hơn để hồi phục. Đường huyết cao cũng có thể khiến các tế bào chống nhiễm trùng hoạt động kém hơn. Đây là những ảnh hưởng có thể có của đái tháo đường, không phải kết luận chúng đang xảy ra ở vết thương này. Hồ sơ ghi nhận bệnh lý thần kinh ngoại biên. Giảm cảm giác có thể khiến bạn khó nhận ra chỗ tì đè hoặc tổn thương mới; cần xem lại việc bảo vệ vết thương khỏi áp lực lặp lại cùng với các số đo theo dõi. Hồ sơ ghi nhận tuần hoàn ngoại biên suy giảm. Bác sĩ có thể đánh giá liệu việc đưa oxy đến mô có đang hạn chế hồi phục hay không; ảnh không đo được dòng máu hoặc xác định nguyên nhân.",
+        "possible_consequences": "Thông tin không rõ có thể che khuất thay đổi thật hoặc khiến khác biệt không đáng lo trông nghiêm trọng hơn. Đừng trì hoãn đi khám để chờ ứng dụng đánh giá tốt hơn nếu vết thương hoặc triệu chứng đang xấu đi.",
+        "what_to_do": [
+          {
+            "action_id": "glucose",
+            "text": "Đo và ghi lại đường huyết theo kế hoạch đã thống nhất với nhóm điều trị đái tháo đường. Trao đổi khi kết quả ngoài mục tiêu riêng của bạn; không tự đổi liều insulin hoặc thuốc khác dựa trên kết quả này.",
+            "evidence_ids": [
+              "glucose_monitoring"
+            ]
+          },
+          {
+            "action_id": "check",
+            "text": "Theo dõi xem có đỏ, nóng, sưng, đau hoặc chảy dịch mới xuất hiện không. Ghi lại để báo cho nhóm chăm sóc; nếu vết thương ở bàn chân, kiểm tra cả những vùng còn lại của bàn chân.",
+            "evidence_ids": [
+              "diabetes_foot_care"
+            ]
+          },
+          {
+            "action_id": "existing_plan",
+            "text": "Làm theo hướng dẫn chăm sóc và thay băng của bác sĩ. Không tự cắt bỏ phần mô sẫm màu hoặc màu vàng.",
+            "evidence_ids": [
+              "diabetes_foot_care"
+            ]
+          },
+          {
+            "action_id": "pressure",
+            "text": "Nếu vết thương ở bàn chân, làm theo kế hoạch giảm tì đè đã được bác sĩ chỉ định (offloading). Hỏi nhóm chăm sóc cách tránh đè lên vết thương an toàn; không tự dùng thiết bị hay bắt đầu cách điều trị mới.",
+            "evidence_ids": [
+              "offloading_review"
+            ]
+          },
+          {
+            "action_id": "capture",
+            "text": "Nếu nhóm chăm sóc yêu cầu chụp ảnh, giữ ánh sáng, góc và khoảng cách tương tự. Gửi kèm ngày chụp và ảnh gốc; ảnh rõ hơn không thay thế việc khám trực tiếp.",
+            "evidence_ids": []
+          }
+        ],
+        "when_to_seek_care": "Nếu vết loét bàn chân chưa bắt đầu lành sau vài ngày, gọi bác sĩ hoặc chuyên gia bàn chân ngay. Đừng chờ đến ngày thứ bảy. Đi khám sớm khi đỏ lan rộng, đau tăng, có mủ hoặc sốt, bất kể điểm trên ứng dụng.",
+        "measurement_note": "Các nhãn màu là ước tính từ ảnh, không phải kết luận về mô. Phần màu vàng (slough, mô vàng) không mặc nhiên là mủ; phần sẫm màu không mặc nhiên là mô chết (necrosis, hoại tử). Mô mới giúp vết thương hồi phục gọi là mô hạt (granulation), nhưng màu sắc không đủ để xác nhận.",
+        "rule_note": "",
+        "safety_note": "Công cụ hỗ trợ quyết định nghiên cứu này không chẩn đoán nhiễm trùng, không thay thế buổi khám và không chọn phương pháp điều trị. Điểm số không phải xác suất đã được kiểm chứng. Bác sĩ cần đánh giá vết thương cùng tình trạng sức khỏe của bạn."
+      }
+    },
+    "trigger_rule_ids": [],
+    "historical_findings_retained": false,
+    "evidence_ids": [
+      "a1c_meaning",
+      "cds_boundary",
+      "diabetes_circulation",
+      "diabetes_foot_care",
+      "diabetes_immunity",
+      "glucose_monitoring",
+      "infection_review",
+      "offloading_review"
+    ],
+    "clinical_validation": false,
+    "mechanism_is_general_education": true
+  },
+  "clinician_context_analysis": "Latest trajectory withheld: two adjacent, usable, consistent visits are required. Recorded baseline: age 20, type 2 diabetes present, HbA1c 9.6%, hypertension not recorded. Recorded fasting plasma glucose: 218 mg/dL; this historical measurement is not a current glucose reading. Recorded peripheral vascular status: impaired. Recorded neuropathy status: present. Diabetes and/or HbA1c >8% increases the illustrative review sensitivity for tissue changes and stalled area reduction. The dark-tissue class cannot distinguish a dry healing scab from devitalized tissue; examination is required. Age and hypertension are context modifiers, not proof of impaired perfusion. Blood type has no rule-based causal effect.",
+  "clinician_recommendation": "Compare original images, capture conditions and the wound examination before interpreting these research estimates. If this is a neuropathic plantar diabetic foot ulcer, review the existing offloading plan and adherence with the treating clinician. Verify or reacquire the latest measurements; risk scoring is withheld, not set to zero.",
+  "pipeline_visuals": {
+    "schema_version": "pwc-pipeline-visuals-v1",
+    "original_image": "/wound-demo/day_007_rgb.png",
+    "original_mime_type": "image/png",
+    "unet_segmentation_mask": "/wound-demo/day_007_mask.png",
+    "tissue_analysis_overlay": "/wound-demo/day_007_overlay.png",
+    "derived_mime_type": "image/png",
+    "status": "available",
+    "day": 0.0,
+    "class_names": [
+      "background",
+      "necrotic",
+      "slough",
+      "granulation"
+    ],
+    "relationship": "auxiliary_segmentation_not_late_fusion_attribution",
+    "note": "Tissue estimates count pixels inside the binary wound mask, including an explicit unclassified fraction. The tissue model sees only an isolated wound crop. The separate late-fusion risk model uses that crop plus baseline data; these panels are not feature attribution.",
+    "wound_measurements": {
+      "measurement_source": "binary_wound_mask_v2",
+      "measurement_status": "available",
+      "tissue_percentages": {
+        "necrotic": 14.313880126182966,
+        "slough": 20.386435331230285,
+        "granulation": 65.29968454258675
+      },
+      "unclassified_percentage": 0.0,
+      "wound_area_pixels": 2536,
+      "tissue_pixel_counts": {
+        "background": 0,
+        "necrotic": 363,
+        "slough": 517,
+        "granulation": 1656
+      }
+    },
+    "clinical_validation": false,
+    "processed_size": {
+      "width": 128,
+      "height": 128
+    },
+    "foreground_fraction": 0.15478515625,
+    "model": {
+      "version": "pwc-fusd-resnet34-unet-v1",
+      "architecture": "smp.Unet",
+      "encoder": "resnet34",
+      "classes": 1,
+      "device": "cpu",
+      "input_size": [
+        256,
+        256
+      ],
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ]
+      },
+      "sigmoid_threshold": 0.35,
+      "threshold_operator": ">",
+      "source": "user_supplied_checkpoint",
+      "clinical_validation": false,
+      "checkpoint_sha256": "bb655391bc2c13e9a58458e58d1e76fd837e5cd166b1c6e47fb6f85d35fe9ff4"
+    },
+    "tissue_status": "available",
+    "tissue_model": {
+      "version": "pwc-synthetic-unet-v1",
+      "epoch": 5,
+      "synthetic_only": true,
+      "checkpoint_sha256": "c540516f1d95be2e49b033d028bb91f6455771d7d2eff440530be1741c69903f"
+    }
+  }
+}

@@ -50,7 +50,7 @@ Wound backend update (2026-09-11): masked tissue counts, persistent local image 
 
 MediPass is a working demo of a **patient-controlled medical record**: users can view, search, add, edit, and soft-delete medical history; upload private images/PDFs; and generate a concise "Medical Passport" for their next visit.
 
-Private demo: [medipass-medical-assistant-demo.thnguyen7807.chatgpt.site](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
+Private demo: [https://medipass-medical-assistant-demo](https://medipass-medical-assistant-demo.thnguyen7807.chatgpt.site)
 
 How to open with Chrome, run locally on a fixed port `3001`, and access from a mobile phone: [`docs/RUN_APP_VI.md`](https://www.google.com/search?q=docs/RUN_APP_VI.md).
 

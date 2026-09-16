@@ -280,7 +280,7 @@ export default function WoundVisitWorkflow({ patient, developerMode, onBusyChang
         <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => void loadSessions(selected)}><RefreshCw className="size-4" />Reload session</Button>
         {session && <Button type="button" variant="outline" className="min-h-11 border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300" disabled={busy} onClick={() => setDeleteTarget('session')}><Trash2 className="size-4" />Delete session</Button>}
       </div>
-      <p className="mt-4 flex items-start gap-2 text-sm leading-6 text-muted-foreground"><CheckCircle2 className="mt-1 size-4 shrink-0 text-emerald-600" /><span>Storage: SQLite on the MediPass server. Images and captures remain after closing the page, changing devices, or restarting, until you delete them. Continue the selected session for the same wound.</span></p>
+      <p className="mt-4 flex items-start gap-2 text-sm leading-6 text-muted-foreground"><CheckCircle2 className="mt-1 size-4 shrink-0 text-emerald-600" /><span>Hosted Wound Lab: sessions and private image objects are stored with this site—no port 8000 or local Python server is required. This browser can reopen its saved sessions for 30 days unless its site data is cleared; delete a session to remove it immediately.</span></p>
       {session && <p className="mt-2 break-all text-xs text-muted-foreground">Session ID: {session.session_id} · Baseline locked at session start · HbA1c {String(session.patient_profile.hba1c_level)}%</p>}
     </section>
 
@@ -298,7 +298,7 @@ export default function WoundVisitWorkflow({ patient, developerMode, onBusyChang
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={() => camera.current?.click()}><Camera className="size-4" />Take photo</Button>
             <input ref={camera} aria-label="Take a photo with the camera" type="file" accept="image/jpeg,image/png" capture="environment" className="sr-only" onChange={e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; }} />
-            {developerMode && <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={() => void loadSample()}><FlaskConical className="size-4" />Use sample image</Button>}
+            <Button type="button" variant="outline" className="min-h-11 flex-1 border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-200" onClick={() => void loadSample()}><FlaskConical className="size-4" />Load hosted AI sample</Button>
           </div>
           <label className="block text-sm font-medium">Choose one or more images<input aria-label="Choose one or more images" type="file" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" className={input + ' text-sm file:mr-2'} onChange={e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; }} /></label>
           {rows.map((row, index) => <article key={row.id} className="space-y-3 rounded-xl border border-border p-3" data-testid="visit-draft">
@@ -310,7 +310,7 @@ export default function WoundVisitWorkflow({ patient, developerMode, onBusyChang
             <label className="flex min-h-11 items-start gap-2 text-sm leading-6"><input type="checkbox" checked={row.consistent} className="mt-1 size-4 shrink-0 accent-blue-600" onChange={e => update(row.id, { consistent: e.target.checked })} /><span>The same distance, angle, and image dimensions were used across captures.</span></label>
           </article>)}
           <Button type="button" variant="outline" disabled={count + rows.length >= 1000} className="min-h-11 w-full" onClick={() => setRows(previous => [...previous, blank('draft-' + ++serial.current, previous.length ? '' : localTime())])}><Plus className="size-4" />Add another image</Button>
-          <p className="text-xs leading-5 text-muted-foreground">PNG/JPEG ≤ 8 MiB per image · up to 1,000 images per session. Enter the correct capture date for each image. Enter pixels/cm only from a scale in the same plane as the wound; without a scale, the system does not infer cm².</p>
+          <p className="text-xs leading-5 text-muted-foreground">For an immediate public-link demo, choose “Load hosted AI sample,” then “Save & analyze.” The bundled synthetic image uses a checkpoint-generated result. Other PNG/JPEG uploads (≤ 8 MiB) are saved, but no AI estimate is fabricated when hosted inference is unavailable. Enter pixels/cm only from a scale in the wound plane.</p>
         </fieldset>
         <Button type="submit" disabled={busy || mustReload || !rows.some(row => row.file) || count >= 1000} className={primary + ' w-full'}>{busy && <Loader2 className="size-4 animate-spin" />}{busy ? 'Processing…' : 'Save & analyze'}</Button>
         <output aria-live="polite" className="block text-sm leading-6 text-muted-foreground">{progress || (busy ? 'Reading saved data…' : 'Sample profile · synthetic or de-identified data only.')}</output>

@@ -67,10 +67,11 @@ export function trajectoryPresentation(brief: ClinicalBrief) {
   };
 }
 
-/** Only bounded raster bytes are renderable; never backend-supplied SVG/HTML/remote URLs. */
+/** Only bounded raster bytes or the three exact bundled demo rasters are renderable. */
 export function woundRasterSource(value: unknown, mime: unknown): string | undefined {
-  if (typeof value !== 'string' || !value.length || value.length > 12_000_000
-      || !/^[A-Za-z0-9+/]+={0,2}$/.test(value) || !['image/png', 'image/jpeg'].includes(String(mime))) return;
+  if (typeof value !== 'string' || !value.length || value.length > 12_000_000) return;
+  if (/^\/wound-demo\/day_007_(?:rgb|mask|overlay)\.png$/.test(value)) return value;
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(value) || !['image/png', 'image/jpeg'].includes(String(mime))) return;
   return `data:${String(mime)};base64,${value}`;
 }
 

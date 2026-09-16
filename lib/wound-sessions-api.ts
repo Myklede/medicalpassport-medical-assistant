@@ -5,12 +5,12 @@ export const WOUND_SESSION_API = '/api/wound-sessions';
 export type SavedWoundVisit = { visit_id: string; day: number; timestamp: string; image_path: string; analysis_status?: string; analysis_message?: string };
 export type WoundSession = {
   session_id: string; patient_id: string; patient_profile: Record<string, unknown>;
-  created_at: string; storage_provider: 'local_sqlite'; baseline_locked: boolean;
+  created_at: string; storage_provider: 'local_sqlite' | 'cloud_d1_r2'; baseline_locked: boolean;
   visits: SavedWoundVisit[]; brief: ClinicalBrief | null;
 };
 export type WoundSessionSummary = {
   session_id: string; patient_id: string; created_at: string; updated_at: string;
-  visit_count: number; latest_day: number | null; storage_provider: 'local_sqlite'; baseline_locked: boolean;
+  visit_count: number; latest_day: number | null; storage_provider: 'local_sqlite' | 'cloud_d1_r2'; baseline_locked: boolean;
 };
 const idPattern = /^[0-9a-f]{32}$/;
 function validId(id: string) {
@@ -36,7 +36,7 @@ async function request(path: string, method = 'GET', form?: FormData): Promise<u
     if (error instanceof WoundApiError) throw error;
     throw new WoundApiError(controller.signal.aborted
       ? 'The request timed out. Reload the session to check saved images before trying again.'
-      : 'Cannot connect to the tracking service. Check the MediPass and Python servers; saved images are retained.');
+      : 'Cannot connect to the hosted Wound Lab. Reload the page; previously saved cloud data is retained.');
   } finally { clearTimeout(timer); }
 }
 
@@ -44,7 +44,7 @@ function sessionPayload(payload: unknown, patientId: string, sessionId?: string)
   if (!record(payload) || typeof payload.session_id !== 'string' || !idPattern.test(payload.session_id)
       || (sessionId && payload.session_id !== sessionId) || payload.patient_id !== patientId
       || typeof payload.created_at !== 'string' || !Number.isFinite(Date.parse(payload.created_at))
-      || payload.storage_provider !== 'local_sqlite' || payload.baseline_locked !== true
+      || !['local_sqlite', 'cloud_d1_r2'].includes(String(payload.storage_provider)) || payload.baseline_locked !== true
       || !record(payload.patient_profile) || payload.patient_profile.patient_id !== patientId
       || !Array.isArray(payload.visits) || (payload.brief !== null && !isClinicalBrief(payload.brief))) {
     throw new WoundApiError('The tracking session does not match the patient or contains invalid data.');
@@ -72,11 +72,11 @@ function sessionPayload(payload: unknown, patientId: string, sessionId?: string)
 
 export async function listWoundSessions(patientId: string): Promise<WoundSessionSummary[]> {
   const payload = await request(patientQuery(patientId));
-  if (!record(payload) || payload.storage_provider !== 'local_sqlite' || !Array.isArray(payload.sessions)
+  if (!record(payload) || !['local_sqlite', 'cloud_d1_r2'].includes(String(payload.storage_provider)) || !Array.isArray(payload.sessions)
       || !payload.sessions.every(s => record(s) && typeof s.session_id === 'string' && idPattern.test(s.session_id)
         && s.patient_id === patientId && typeof s.created_at === 'string' && Number.isFinite(Date.parse(s.created_at))
         && typeof s.visit_count === 'number' && Number.isInteger(s.visit_count) && s.visit_count >= 0
-        && s.storage_provider === 'local_sqlite' && s.baseline_locked === true)) {
+        && ['local_sqlite', 'cloud_d1_r2'].includes(String(s.storage_provider)) && s.baseline_locked === true)) {
     throw new WoundApiError('The tracking-session list does not match the patient.');
   }
   return payload.sessions as WoundSessionSummary[];

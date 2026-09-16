@@ -1,7 +1,7 @@
 import { sites } from '@openai/sites-vite-plugin';
 import tailwindcss from '@tailwindcss/postcss';
 import vinext from 'vinext';
-import { defineConfig, loadEnv, type ViteDevServer } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import hostingConfig from './.openai/hosting.json';
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
@@ -57,34 +57,8 @@ export default defineConfig(async ({ command, mode }) => {
     server: {
       host: '0.0.0.0',
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
-      // Local inference runs outside the Worker sandbox. Keep browser/phone
-      // requests same-origin and let the Node dev server reach Python loopback.
-      proxy: {
-        '/api/wound-sessions': {
-          target: 'http://127.0.0.1:8000', changeOrigin: false,
-          timeout: 65_000, proxyTimeout: 65_000,
-        },
-      },
     },
     plugins: [
-      {
-        name: 'medipass-local-wound-origin',
-        configureServer(server: ViteDevServer) {
-          server.middlewares.use((request, response, next) => {
-            if (request.url?.startsWith('/api/wound-sessions') && ['POST', 'DELETE'].includes(request.method || '')) {
-              const origin = request.headers.origin;
-              let originHost: string | undefined;
-              try { originHost = origin ? new URL(origin).host : undefined; } catch { originHost = 'invalid'; }
-              if (originHost && originHost !== request.headers.host) {
-                response.writeHead(403, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ detail: 'Yêu cầu phải đến từ cùng trang MediPass.' }));
-                return;
-              }
-            }
-            next();
-          });
-        },
-      },
       vinext(),
       sites(),
       cloudflare({

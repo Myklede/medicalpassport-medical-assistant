@@ -2,6 +2,7 @@ import {
   index,
   integer,
   primaryKey,
+  real,
   sqliteTable,
   text,
 } from 'drizzle-orm/sqlite-core';
@@ -297,3 +298,52 @@ export const portalChanges = sqliteTable('portal_changes', {
   action: text('action').notNull(),
   createdAt: text('created_at').notNull(),
 }, table => [index('idx_portal_changes_workspace_date').on(table.workspaceId, table.createdAt)]);
+
+// Public Wound Lab demo sessions are isolated by a random HttpOnly visitor
+// cookie. They intentionally do not become patient records or ai_inferences.
+export const woundLabSessions = sqliteTable(
+  'wound_lab_sessions',
+  {
+    id: text('id').primaryKey(),
+    visitorId: text('visitor_id').notNull(),
+    patientId: text('patient_id').notNull(),
+    profileJson: text('profile_json').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_wound_lab_sessions_visitor_patient').on(
+      table.visitorId,
+      table.patientId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const woundLabVisits = sqliteTable(
+  'wound_lab_visits',
+  {
+    id: text('id').primaryKey(),
+    sessionId: text('session_id')
+      .notNull()
+      .references(() => woundLabSessions.id, { onDelete: 'cascade' }),
+    day: real('day').notNull(),
+    capturedAt: text('captured_at').notNull(),
+    imageObjectKey: text('image_object_key').notNull().unique(),
+    mimeType: text('mime_type').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    imageSha256: text('image_sha256').notNull(),
+    measurementJson: text('measurement_json').notNull(),
+    provenanceJson: text('provenance_json').notNull(),
+    pipelineVisualsJson: text('pipeline_visuals_json'),
+    analysisStatus: text('analysis_status').notNull(),
+    analysisMessage: text('analysis_message'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_wound_lab_visits_session_day').on(table.sessionId, table.day),
+    index('idx_wound_lab_visits_session_capture').on(
+      table.sessionId,
+      table.capturedAt,
+    ),
+  ],
+);
