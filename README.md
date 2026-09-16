@@ -67,7 +67,7 @@ Safety Over Brand Names: Normalizes commercial brand names to standard active mo
 Joint Tracking: Leverages the user's camera to identify skeletal landmark coordinates (shoulders, elbows, hips, knees).
 Repetition Counting & Alignment Feedback: Supports guided home exercises by counting completed reps and flagging posture deviations.
 On-Device Processing: Analyzes motion entirely within the local browser session without recording, streaming, or saving raw video feeds.
-Wound backend update (2026-09-11): masked tissue counts, persistent local image sessions, multi-day baseline-aware trajectory rules, risk/uncertainty, and evidence provenance are implemented. Bilingual patient explanations now explain the mechanism, possible consequences, and safe next steps; **77 Python tests passed.** See [trajectory API, runnable example and handoff](https://www.google.com/search?q=docs/WOUND_TRAJECTORY_ENGINE.md). The website uploader supports multi-day wound sessions and renders chronological changes in the research dashboard. Scores are uncalibrated research outputs.
+Wound backend update (2026-09-16): masked tissue counts, dominant-region mask cleanup, persistent local image sessions, multi-day baseline-aware trajectory rules, risk/uncertainty, and evidence provenance are implemented. Bilingual patient explanations now explain the mechanism, possible consequences, and safe next steps; **79 Python tests passed.** See [trajectory API, runnable example and handoff](https://www.google.com/search?q=docs/WOUND_TRAJECTORY_ENGINE.md). The website uploader supports multi-day wound sessions and renders chronological changes in the research dashboard. Scores are uncalibrated research outputs.
 
 > Quickstart for new AIs/contributors: read [`AGENTS.md`](AGENTS.md), [feature-to-Supabase alignment](https://www.google.com/search?q=docs/PORTAL_AUDIT.md), then [the project vision/whitepaper provided by the project owner](https://www.google.com/search?q=docs/PROJECT_VISION_WHITEPAPER_VI.md).
 
@@ -443,7 +443,8 @@ hình, nhóm này có thể mirror vào các bảng `medipass_*`; giao diện v�
   của ảnh mới tải lên.
 
 Các checkpoint hiện có được theo dõi bằng Git LFS. Pipeline phân vùng dùng U-Net
-ResNet34 trên CPU; tissue inference chỉ nhận vùng crop đã mask và tỷ lệ mô được
+ResNet34 trên CPU; hậu xử lý cho luồng một vết thương nối khe ngắn, giữ component
+chính, lấp lỗ và loại mask quá nhỏ; tissue inference chỉ nhận vùng crop đã mask và tỷ lệ mô được
 tính trên toàn bộ pixel trong wound mask, gồm phần chưa phân loại. Các risk score,
 uncertainty và ngưỡng trajectory là output nghiên cứu chưa hiệu chuẩn, không phải
 xác suất lâm sàng hoặc hướng dẫn chờ điều trị.

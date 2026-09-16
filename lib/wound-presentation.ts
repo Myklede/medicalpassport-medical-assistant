@@ -80,3 +80,26 @@ export function selectedPipelineVisuals(brief: ClinicalBrief, day?: number, supp
   if (supplied) return supplied;
   return day === undefined || day === brief.objective_measurements.visits.at(-1)?.day ? brief.pipeline_visuals ?? {} : {};
 }
+
+/** Recover same-capture measurements when an older visit projection omitted them. */
+export function reconciledWoundVisit(visit: WoundVisit | undefined, visuals: PipelineVisuals): WoundVisit | undefined {
+  if (!visit || visit.analysis_status === 'pending_model' || visuals.status !== 'available') return visit;
+  if (woundNumber(visuals.day) !== undefined && visuals.day !== visit.day) return visit;
+  const measurements = woundRecord(visuals.wound_measurements);
+  if (measurements.measurement_status !== 'available') return visit;
+  const tissue = woundRecord(measurements.tissue_percentages);
+  const granulation = woundNumber(tissue.granulation);
+  const slough = woundNumber(tissue.slough);
+  const necrotic = woundNumber(tissue.necrotic);
+  const unclassified = woundNumber(measurements.unclassified_percentage);
+  if ([granulation, slough, necrotic, unclassified].some(value => value === undefined || value < 0 || value > 100)) return visit;
+  if (Math.abs(granulation! + slough! + necrotic! + unclassified! - 100) >= 0.1) return visit;
+  return {
+    ...visit,
+    measurement_status: 'available',
+    measurement_source: typeof measurements.measurement_source === 'string' ? measurements.measurement_source : visit.measurement_source,
+    tissue_percentages: visit.tissue_percentages ?? { granulation: granulation!, slough: slough!, necrotic: necrotic! },
+    unclassified_percentage: woundNumber(visit.unclassified_percentage) ?? unclassified!,
+    wound_area_pixels: woundNumber(visit.wound_area_pixels) ?? woundNumber(measurements.wound_area_pixels) ?? null,
+  };
+}

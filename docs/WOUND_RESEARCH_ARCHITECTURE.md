@@ -27,8 +27,11 @@ thresholds, not validated medical triage criteria.
 - Optional `pipeline_visuals` contains Base64 raw input, U-Net isolated foreground
   and tissue overlay. `aimedic/visual_pipeline.py` loads the supplied binary
   `outputs/wound_unet_fusd.pt` via SMP U-Net/ResNet34 on CPU (ImageNet, 256×256,
-  sigmoid >0.35). Masks return at original dimensions; the separate synthetic
-  tissue classifier colors only inside them. Binary training provenance/clinical
+  sigmoid >0.35). Masks return at original dimensions. The single-wound workflow
+  closes short gaps, keeps the dominant connected component, fills internal holes,
+  and withholds implausibly tiny foreground; the Developer panel draws the retained
+  contour explicitly. The separate synthetic tissue classifier colors only inside
+  that cleaned mask. Binary training provenance/clinical
   performance have not been verified here. The tissue classifier and learned risk
   head now receive a masked crop. Tissue percentages count only mask pixels;
   unclassified mask pixels remain in the denominator. This is not feature attribution.
@@ -46,7 +49,7 @@ thresholds, not validated medical triage criteria.
   Git LFS, SHA-256 verified and compatible with this macOS runtime. The isolated
   `scripts/verify-wound-models.py` API check passed actual single/two-visit inference,
   pending retry, historical visuals and exact-byte SQLite persistence. The unchanged
-  77 Python tests also passed. These tests use synthetic fixtures and do not establish
+  79 Python tests also passed. These tests use synthetic fixtures and do not establish
   clinical performance or all-pages browser coverage. Opt-in missing-model handling
   still preserves an image as `pending_model` with null metrics if models become
   unavailable; retry analyzes the saved bytes once they are restored. No fabricated

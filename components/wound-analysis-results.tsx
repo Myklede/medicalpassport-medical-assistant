@@ -5,7 +5,7 @@ import { Activity, ArrowDownRight, ArrowUpRight, CircleHelp, FileText, HeartPuls
 import type { ClinicalBrief, PipelineVisuals, WoundVisit } from '@/lib/wound-api';
 import type { WoundPatient } from '@/lib/wound-patients';
 import {
-  measuredNumber, patientEducation, selectedPipelineVisuals, selectedWoundVisit,
+  measuredNumber, patientEducation, reconciledWoundVisit, selectedPipelineVisuals, selectedWoundVisit,
   trajectoryPresentation, woundNumber, woundRasterSource, woundRecord, woundText,
   type HealingStatus, type WoundLanguage,
 } from '@/lib/wound-presentation';
@@ -43,7 +43,8 @@ export default function WoundAnalysisResults({ brief, patient, developerMode, se
   pipelineVisuals?: PipelineVisuals;
 }) {
   const language: WoundLanguage = 'en';
-  const visit = selectedWoundVisit(brief, selectedDay);
+  const visuals = selectedPipelineVisuals(brief, selectedDay, pipelineVisuals);
+  const visit = reconciledWoundVisit(selectedWoundVisit(brief, selectedDay), visuals);
   const education = patientEducation(brief, language);
   const trajectory = trajectoryPresentation(brief);
   return <div data-testid={developerMode ? 'developer-outcome' : 'patient-brief'} className="min-w-0 space-y-5 text-slate-900 dark:text-slate-100">
@@ -138,15 +139,15 @@ function CurrentMeasurements({ visit, language, measurementNote }: { visit?: Wou
       const amount = usable ? visit.tissue_percentages?.[tissue.key] : undefined;
       return <article key={tissue.key} className="min-w-0 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
         <div className="flex items-center gap-2"><span aria-hidden="true" className={`size-2.5 rounded-full ${tissue.color}`} /><h4 className="text-sm font-semibold">{tissue[language]}</h4></div>
-        <p className={`my-3 break-all text-3xl font-semibold tabular-nums ${tissue.textColor}`}>{amount === undefined ? '—' : `${amount.toFixed(1)}%`}</p>
+        <p className={`my-3 break-all text-3xl font-semibold tabular-nums ${tissue.textColor}`}>{amount === undefined ? 'Not available' : `${amount.toFixed(1)}%`}</p>
         <div aria-hidden="true" className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div className={`h-full rounded-full ${tissue.color}`} style={{ width: `${Math.min(100, Math.max(0, amount ?? 0))}%` }} /></div>
         <p className={`mt-3 text-xs leading-6 ${muted}`}>{tissue.englishNote}</p>
       </article>;
     })}</div>
     <dl className="mt-4 grid gap-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/70 sm:grid-cols-3">
       <Metric label="Projected area" value={area === undefined ? !usable ? 'Not available' : 'No image scale' : `${measuredNumber(area)} cm²`} />
-      <Metric label="U-Net wound area" value={pixels === undefined ? '—' : `${measuredNumber(pixels)} pixels`} />
-      <Metric label="Unclassified wound fraction" value={metricsAvailable && woundNumber(visit.unclassified_percentage) !== undefined ? `${measuredNumber(visit.unclassified_percentage)}%` : '—'} />
+      <Metric label="U-Net wound area" value={pixels === undefined ? 'Not available' : `${measuredNumber(pixels)} pixels`} />
+      <Metric label="Unclassified wound fraction" value={metricsAvailable && woundNumber(visit.unclassified_percentage) !== undefined ? `${measuredNumber(visit.unclassified_percentage)}%` : 'Not available'} />
     </dl>
     <div className="mt-4"><Copy value={measurementNote} fallback="Color labels are image estimates and require direct clinical tissue assessment." /></div>
   </section>;
@@ -214,7 +215,7 @@ function VisualPipeline({ brief, patient, selectedDay, selectedImageUrl, pipelin
     : 'Pipeline visuals are unavailable for this selected capture.';
   const panels = [
     { title: 'Input', label: 'Selected original capture', source: selectedImageUrl || woundRasterSource(visuals.original_image, visuals.original_mime_type), note: 'Original image for the selected visit.' },
-    { title: 'U-Net Mask', label: 'Isolated wound region', source: available ? woundRasterSource(visuals.unet_segmentation_mask, 'image/png') : undefined, note: 'U-Net estimates the wound boundary and isolates it from the background.' },
+    { title: 'U-Net Boundary', label: 'Dominant wound region with boundary', source: available ? woundRasterSource(visuals.unet_segmentation_mask, 'image/png') : undefined, note: 'The cyan edge marks the dominant connected region after short-gap closing, noise removal, and hole filling. This single-wound post-processing improves readability but is not clinical validation.' },
     { title: 'Tissue Overlay', label: 'Tissue classification overlay', source: available ? woundRasterSource(visuals.tissue_analysis_overlay, 'image/png') : undefined, note: 'Model overlay: red = granulation; yellow = slough; gray = dark-tissue class. Percentages use mask pixels, including unclassified tissue.' },
   ];
   const education = patientEducation(brief, language);

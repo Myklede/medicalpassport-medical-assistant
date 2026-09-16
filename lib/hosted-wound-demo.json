@@ -24,21 +24,21 @@
           "clinical_capture_quality_validated": false
         },
         "tissue_percentages": {
-          "necrotic": 14.313880126182966,
-          "slough": 20.386435331230285,
-          "granulation": 65.29968454258675
+          "necrotic": 7.230343737653102,
+          "slough": 18.135124456736467,
+          "granulation": 74.63453180561044
         },
-        "risk_deterioration_score": 0.46970415115356445,
+        "risk_deterioration_score": 0.4895237982273102,
         "clinical_observations": {},
         "measurement_source": "binary_wound_mask_v2",
         "measurement_status": "available",
         "unclassified_percentage": 0.0,
-        "wound_area_pixels": 2536,
+        "wound_area_pixels": 2531,
         "tissue_pixel_counts": {
           "background": 0,
-          "necrotic": 363,
-          "slough": 517,
-          "granulation": 1656
+          "necrotic": 183,
+          "slough": 459,
+          "granulation": 1889
         },
         "area_cm2": null,
         "calibration": {
@@ -690,17 +690,17 @@
       "measurement_source": "binary_wound_mask_v2",
       "measurement_status": "available",
       "tissue_percentages": {
-        "necrotic": 14.313880126182966,
-        "slough": 20.386435331230285,
-        "granulation": 65.29968454258675
+        "necrotic": 7.230343737653102,
+        "slough": 18.135124456736467,
+        "granulation": 74.63453180561044
       },
       "unclassified_percentage": 0.0,
-      "wound_area_pixels": 2536,
+      "wound_area_pixels": 2531,
       "tissue_pixel_counts": {
         "background": 0,
-        "necrotic": 363,
-        "slough": 517,
-        "granulation": 1656
+        "necrotic": 183,
+        "slough": 459,
+        "granulation": 1889
       }
     },
     "clinical_validation": false,
@@ -708,7 +708,13 @@
       "width": 128,
       "height": 128
     },
-    "foreground_fraction": 0.15478515625,
+    "foreground_fraction": 0.15447998046875,
+    "mask_postprocessing": {
+      "method": "close_dominant_component_fill_v1",
+      "single_wound_assumption": true,
+      "closing_radius_fraction": 0.03,
+      "minimum_foreground_fraction": 0.0025
+    },
     "model": {
       "version": "pwc-fusd-resnet34-unet-v1",
       "architecture": "smp.Unet",

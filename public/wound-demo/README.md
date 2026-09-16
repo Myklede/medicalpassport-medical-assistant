@@ -7,7 +7,10 @@ They contain no real patient information. The image is a colored simulator mask,
 not a clinical photograph, and demonstrates only the model's synthetic domain.
 
 This pair is available for explicit manual uploads and isolated model verification
-against the running local API. No canned Clinical Brief is shipped here.
+against the running local API. The public hosted demo also ships a checkpoint-generated
+Clinical Brief in `lib/hosted-wound-demo.json`; it is accepted only for the exact
+bundled image and SYN000014 profile. Its cleaned mask is one dominant connected
+region, and the UI clearly labels the source as a synthetic wound-only crop.
 The remaining generated dataset stays in ignored `outputs/`. The three original
 checkpoints are tracked through Git LFS: run `git lfs install --local` and
 `git lfs pull`, then verify `aimedic/checkpoints.sha256`. See `aimedic/README.md`

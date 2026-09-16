@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import type { ClinicalBrief, WoundVisit } from '../lib/wound-api.ts';
 import {
   measuredNumber, patientEducation, selectedPipelineVisuals, selectedWoundVisit,
-  trajectoryPresentation, woundRasterSource,
+  reconciledWoundVisit, trajectoryPresentation, woundRasterSource,
 } from '../lib/wound-presentation.ts';
 
 const visit = (day: number): WoundVisit => ({
@@ -117,4 +117,20 @@ void test('pipeline sources accept bounded raster bytes only, never SVG or a rem
   assert.equal(woundRasterSource('dGVzdA==', 'image/svg+xml'), undefined);
   assert.equal(woundRasterSource('https://example.com/a.png', 'image/png'), undefined);
   assert.equal(woundRasterSource('a'.repeat(12_000_001), 'image/png'), undefined);
+});
+
+void test('same-capture pipeline measurements restore tissue cards omitted by an older visit projection', () => {
+  const source = visit(7);
+  source.tissue_percentages = null;
+  source.wound_area_pixels = null;
+  const restored = reconciledWoundVisit(source, {
+    day: 7, status: 'available', wound_measurements: {
+      measurement_status: 'available', measurement_source: 'binary_wound_mask_v2',
+      tissue_percentages: { granulation: 61, slough: 24, necrotic: 15 },
+      unclassified_percentage: 0, wound_area_pixels: 2345,
+    },
+  });
+  assert.deepEqual(restored?.tissue_percentages, { granulation: 61, slough: 24, necrotic: 15 });
+  assert.equal(restored?.wound_area_pixels, 2345);
+  assert.equal(reconciledWoundVisit(source, { day: 0, status: 'available', wound_measurements: {} }), source);
 });

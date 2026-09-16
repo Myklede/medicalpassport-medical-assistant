@@ -369,7 +369,7 @@ try {
   await page.getByRole('button', { name: 'Reload session', exact: true }).click(); await ready(); await assertSavedCount(3);
   failure = { method: 'GET', matches: parts => parts.length === 0, abort: true };
   await page.getByRole('button', { name: 'Reload session', exact: true }).click();
-  await page.getByRole('alert').filter({ hasText: 'Cannot connect to the tracking service' }).waitFor();
+  await page.getByRole('alert').filter({ hasText: 'Cannot connect to the hosted Wound Lab' }).waitFor();
   assert.equal(patientSession.captures.length, 3, 'A network failure preserves saved captures');
   await page.getByRole('button', { name: 'Reload session', exact: true }).click(); await ready();
   await page.getByRole('button', { name: 'Delete session', exact: true }).click(); await page.getByRole('alertdialog').waitFor();

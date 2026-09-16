@@ -135,7 +135,11 @@ also includes the new assessment extension; v2 API output uses the new rules thr
 ## Measurement and rule boundaries
 
 Binary U-Net preprocessing stays ImageNet/256×256/sigmoid >0.35 on CPU. Before
-tissue inference, pixels outside the binary mask are zeroed, the wound bounding
+downstream inference, the single-wound cleanup closes short gaps, retains the
+dominant connected component, fills holes, and rejects implausibly tiny foreground.
+This deterministic cleanup removes detached false-positive islands; it does not
+establish clinical segmentation accuracy. Pixels outside the cleaned binary mask
+are zeroed, the wound bounding
 box is cropped and resized, and the resized mask is applied again. Tissue counts
 divide by **all mask pixels**; tissue class zero inside the mask is unclassified.
 The API uses these counts, not the whole-image tissue head, in the brief. The
@@ -273,14 +277,14 @@ also accepted the example above and returned the exact latest deltas, score 0.61
 uncertainty 0.60, and the illustrative stagnation flag. That is software evidence,
 not an estimate of clinical performance. Nothing was committed, pushed or deployed.
 
-Current post-`c269a89` verification: all **77 existing Python tests passed**, and
+Current 2026-09-16 verification: all **79 Python tests passed**, including dominant
+component/hole-fill/tiny-mask cleanup, and
 `outputs/wound-venv/bin/python -B scripts/verify-wound-models.py` passed against the
 three original Git LFS checkpoints. The latter checks actual first-image baseline
 fusion, exact two-visit deltas, a stored pending capture retried with the real models,
 historical pipeline readback, mask/overlay boundaries, unchanged original image
 bytes, app restart and scoped deletion in temporary SQLite. Checkpoint digests
-match the manifest before and after. Existing test files and original model bytes
-were not modified or replaced.
+match the manifest before and after. Original model bytes were not modified or replaced.
 
 The sample and mirrored second image are synthetic QA fixtures, not a real patient's
 healing sequence. The 10 pixels/cm scale supplied by that script is a test input;

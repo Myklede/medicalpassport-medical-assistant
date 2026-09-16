@@ -35,6 +35,8 @@ DEFAULT_TISSUE_CHECKPOINT = ROOT / "outputs" / "pwc-visual-run" / "best.pt"
 WOUND_MODEL_VERSION = "pwc-fusd-resnet34-unet-v1"
 WOUND_IMAGE_SIZE = 256
 WOUND_THRESHOLD = 0.35
+WOUND_MIN_FOREGROUND_FRACTION = 0.0025
+WOUND_CLOSE_FRACTION = 0.03
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 PALETTE = np.array([[0, 0, 0], [60, 65, 78], [245, 190, 35], [230, 60, 90]], np.uint8)
@@ -196,6 +198,36 @@ def prepare_wound_tensor(rgb):
     return torch.from_numpy(normalized.transpose(2, 0, 1).copy()).unsqueeze(0)
 
 
+def postprocess_wound_mask(mask):
+    """Return one coherent dominant region for the single-wound workflow.
+
+    The binary checkpoint can emit small detached islands. Close short boundary
+    gaps, keep the dominant connected region, and fill internal holes. An
+    implausibly tiny result is withheld instead of promoted to a measurement.
+    """
+    if not isinstance(mask, np.ndarray) or mask.ndim != 2:
+        raise ValueError("Expected a two-dimensional wound mask")
+    binary = np.asarray(mask, dtype=np.uint8)
+    if not binary.any():
+        return np.zeros(binary.shape, dtype=bool)
+    radius = max(1, int(round(min(binary.shape) * WOUND_CLOSE_FRACTION)))
+    kernel_size = 2 * radius + 1
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+    closed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(closed, connectivity=8)
+    if count <= 1:
+        return np.zeros(binary.shape, dtype=bool)
+    dominant = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    component = np.where(labels == dominant, 255, 0).astype(np.uint8)
+    minimum = max(16, int(np.ceil(binary.size * WOUND_MIN_FOREGROUND_FRACTION)))
+    if int(np.count_nonzero(component)) < minimum:
+        return np.zeros(binary.shape, dtype=bool)
+    contours, _ = cv2.findContours(component, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    filled = np.zeros_like(component)
+    cv2.drawContours(filled, contours, -1, 255, thickness=cv2.FILLED)
+    return filled.astype(bool)
+
+
 def predict_wound_mask(rgb, model):
     with torch.inference_mode():
         logits = model(prepare_wound_tensor(rgb))
@@ -204,7 +236,8 @@ def predict_wound_mask(rgb, model):
         # SMP returns logits. Threshold probabilities strictly > 0.35, then use
         # nearest-neighbor resizing so the original-size mask stays binary.
         mask = (torch.sigmoid(logits)[0, 0] > WOUND_THRESHOLD).cpu().numpy().astype(np.uint8)
-    return cv2.resize(mask, (rgb.shape[1], rgb.shape[0]), interpolation=cv2.INTER_NEAREST).astype(bool)
+    resized = cv2.resize(mask, (rgb.shape[1], rgb.shape[0]), interpolation=cv2.INTER_NEAREST)
+    return postprocess_wound_mask(resized)
 
 
 def masked_wound_tensor(rgb, wound_mask, size):
@@ -271,6 +304,17 @@ def isolate_wound(rgb, wound_mask):
     return encode_png(isolated)
 
 
+def render_wound_boundary(rgb, wound_mask):
+    """Show the selected region with a high-contrast contour and mask alpha."""
+    outlined = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+    contours, _ = cv2.findContours(wound_mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    thickness = max(1, int(round(min(wound_mask.shape) / 128)))
+    cv2.drawContours(outlined, contours, -1, (255, 210, 0), thickness=thickness, lineType=cv2.LINE_AA)
+    rgba = cv2.cvtColor(outlined, cv2.COLOR_BGR2BGRA)
+    rgba[..., 3] = np.where(wound_mask, 255, 0).astype(np.uint8)
+    return encode_png(rgba)
+
+
 def render_segmentation(rgb, labels, wound_mask=None):
     """Binary-mask alpha preserves dark tissue; outside pixels remain unchanged."""
     if wound_mask is None:
@@ -307,9 +351,13 @@ def build_pipeline_visuals(image_path, checkpoint_path, quality, day, tissue_che
         height, width = rgb.shape[:2]
         wound_mask = predict_wound_mask(rgb, model)
         visuals["wound_measurements"]["wound_area_pixels"] = int(wound_mask.sum())
-        visuals.update(status="available", unet_segmentation_mask=isolate_wound(rgb, wound_mask),
+        visuals.update(status="available", unet_segmentation_mask=render_wound_boundary(rgb, wound_mask),
                        processed_size={"width": width, "height": height},
                        foreground_fraction=float(wound_mask.mean()),
+                       mask_postprocessing={"method": "close_dominant_component_fill_v1",
+                                            "single_wound_assumption": True,
+                                            "closing_radius_fraction": WOUND_CLOSE_FRACTION,
+                                            "minimum_foreground_fraction": WOUND_MIN_FOREGROUND_FRACTION},
                        model={"version": WOUND_MODEL_VERSION, "architecture": "smp.Unet",
                               "encoder": "resnet34", "classes": 1, "device": "cpu",
                               "input_size": [WOUND_IMAGE_SIZE, WOUND_IMAGE_SIZE],

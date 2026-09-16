@@ -103,6 +103,22 @@ class BinaryVisualTests(unittest.TestCase):
         expected = cv2.resize((probabilities.numpy() > 0.35).astype(np.uint8), (901, 317), interpolation=cv2.INTER_NEAREST)
         np.testing.assert_array_equal(predicted, expected.astype(bool))
 
+    def test_mask_cleanup_keeps_one_dominant_filled_region(self):
+        mask = np.zeros((100, 120), np.uint8)
+        mask[20:70, 25:75] = 1
+        mask[38:47, 40:50] = 0
+        mask[5:7, 110:112] = 1
+        cleaned = visuals.postprocess_wound_mask(mask)
+        components, _ = cv2.connectedComponents(cleaned.astype(np.uint8))
+        self.assertEqual(components - 1, 1)
+        self.assertTrue(cleaned[42, 45])
+        self.assertFalse(cleaned[5, 110])
+
+    def test_mask_cleanup_withholds_tiny_false_positive(self):
+        mask = np.zeros((100, 100), np.uint8)
+        mask[5:7, 5:7] = 1
+        self.assertFalse(visuals.postprocess_wound_mask(mask).any())
+
     def test_invalid_binary_outputs_are_rejected(self):
         for output in (torch.ones(1, 4, 256, 256), torch.full((1, 1, 256, 256), float("nan"))):
             with self.subTest(shape=output.shape), self.assertRaises(ValueError):
@@ -126,6 +142,7 @@ class BinaryVisualTests(unittest.TestCase):
         self.assertTrue(np.any(overlay[mask] != self.rgb[..., ::-1][mask]))
         self.assertEqual(isolated.shape, (317, 901, 4))
         self.assertEqual(overlay.shape, self.rgb.shape)
+        self.assertEqual(result["mask_postprocessing"]["method"], "close_dominant_component_fill_v1")
 
     def test_binary_alpha_keeps_dark_and_unclassified_wound_pixels(self):
         rgb = np.array([[[0, 0, 0], [140, 160, 180], [220, 180, 80]]], np.uint8)

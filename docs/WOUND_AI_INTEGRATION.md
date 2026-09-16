@@ -149,7 +149,10 @@ Mode reopens input, U-Net isolation, tissue overlay and Clinical Brief through t
 selected capture. Raw input can always be retrieved separately from the stored image.
 
 Binary U-Net uses supplied weights, CPU/ImageNet normalization, 256×256 input,
-sigmoid >0.35 and original-size masks. Tissue inference and the learned risk head
+sigmoid >0.35 and original-size masks. Single-wound post-processing closes short
+gaps, removes detached noise by retaining the dominant component, fills holes and
+withholds tiny foreground. The mask panel draws its boundary rather than leaving
+users to infer it from transparency. Tissue inference and the learned risk head
 receive the isolated crop; tissue percentages count all mask pixels, including
 unclassified pixels. These panels are not feature attribution. Missing, malformed,
 quality-abstained or unavailable images receive honest placeholders. Current
@@ -173,7 +176,8 @@ After retrieving `c269a89`, the unchanged **77 Python tests** and
 The isolated API verification covers full single-image baseline fusion, two-visit
 exact area/tissue deltas, actual pending-image retry, persisted historical pipeline
 visuals, exact input bytes, reopening the database and patient-scoped deletion.
-The sample produced 2,536 wound-mask pixels; changing only the synthetic baseline
+The current cleaned sample produced 2,531 wound-mask pixels in one connected region
+(granulation 74.6%, slough 18.1%, necrotic 7.2%); changing only the synthetic baseline
 changed the learned score while leaving the tissue mask/counts unchanged. This
 demonstrates integration and baseline sensitivity, not calibrated risk or clinical
 accuracy. The second capture is an explicitly mirrored synthetic fixture; its

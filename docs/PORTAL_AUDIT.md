@@ -133,7 +133,8 @@ Earlier QA counts above describe previous versions.
   ảnh đơn ghép baseline, hai lần chụp có delta chính xác, retry ảnh từng lưu chờ,
   pipeline lịch sử, mask và overlay, đọc lại byte ảnh sau mở lại DB, xóa đúng patient
   đều PASS trong SQLite tạm. Database người dùng không bị đọc/sửa; fixture tạm được dọn.
-- Ảnh simulator mẫu tạo mask 2.536 pixel: mô hạt 1.656, slough 517, lớp mô sẫm 363;
+- Ảnh simulator mẫu sau hậu xử lý một vùng chính tạo mask 2.531 pixel: mô hạt 1.889,
+  slough 459, lớp mô sẫm 183; mask có một component liên thông và đường biên được vẽ rõ;
   pixel ngoài mask trong overlay được giữ nguyên. Cùng ảnh với baseline khác có
   điểm model khác nhưng không đổi tissue counts, xác nhận luồng ghép baseline.
   Ảnh thứ hai trong QA là ảnh mẫu lật ngang, không phải ảnh hồi phục ngoài thực tế;
