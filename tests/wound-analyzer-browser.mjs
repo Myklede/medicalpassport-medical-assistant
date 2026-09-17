@@ -277,12 +277,13 @@ try {
   await page.getByRole('switch', { name: 'Developer Mode' }).check(); await ready();
   await page.getByTestId('pipeline-visualization').waitFor();
   assert.equal(await page.getByTestId('pipeline-visualization').getByRole('article').count(), 4);
-  assert.equal(await page.getByTestId('pipeline-visualization').locator('img').count(), 3);
+  assert.equal(await page.getByTestId('pipeline-visualization').locator('img').count(), 4);
   await page.getByTestId('saved-visits').getByRole('button', { name: /^View capture/ }).first().click(); await ready();
   await page.getByTestId('pipeline-visualization').getByRole('heading', { name: 'Pipeline Visualization · Day 0', exact: true }).waitFor();
   assert.equal(await page.getByTestId('longitudinal-tracking').count(), 0, 'Historical selection uses the matching cumulative brief');
   assert.equal(await page.getByTestId('pipeline-visualization').locator('img').first().getAttribute('src'), `/api/wound-sessions/${patientSession.session_id}/visits/${patientSession.captures[0].visit_id}/image?patient_id=SYN000014`);
-  assert.equal(await page.getByTestId('pipeline-visualization').locator('img').nth(1).getAttribute('src'), `data:image/png;base64,${patientSession.captures[0].buffer.toString('base64')}`);
+  assert.equal(await page.getByTestId('pipeline-visualization').locator('img').nth(1).getAttribute('src'), `/api/wound-sessions/${patientSession.session_id}/visits/${patientSession.captures[0].visit_id}/image?patient_id=SYN000014`);
+  assert.equal(await page.getByTestId('pipeline-visualization').locator('img').nth(2).getAttribute('src'), `data:image/png;base64,${patientSession.captures[0].buffer.toString('base64')}`);
   await page.getByTestId('saved-visits').getByRole('button', { name: /^View capture/ }).last().click(); await ready();
 
   const profiles = page.getByRole('combobox', { name: 'Select simulated patient' });

@@ -197,11 +197,19 @@ function EvidenceSources({ brief }: { brief: ClinicalBrief }) {
   return <details className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm dark:border-slate-800 dark:bg-slate-900"><summary className="cursor-pointer font-medium">Explanation sources</summary><ul className="mt-4 space-y-3">{sources.map(source => <li key={source.id} className="min-w-0"><a href={String(source.data.url)} target="_blank" rel="noopener noreferrer" className="break-words text-blue-700 underline underline-offset-4 dark:text-blue-300">{woundText(source.data.section, source.id.replaceAll('_', ' '))}</a>{woundText(source.data.scope) && <p className={`mt-1 text-xs leading-6 ${muted}`}>{String(source.data.scope)}</p>}</li>)}</ul></details>;
 }
 
-function PipelineImage({ src, label, fallback }: { src?: string; label: string; fallback: string }) {
+function PipelineImage({ src, backgroundSrc, label, fallback }: { src?: string; backgroundSrc?: string; label: string; fallback: string }) {
   const [failedSource, setFailedSource] = useState<string>();
+  const [failedBackground, setFailedBackground] = useState<string>();
   // Private local captures and bounded raster data must not use the public image optimizer.
-  // eslint-disable-next-line next/no-img-element
-  return src && src !== failedSource ? <img src={src} alt={label} onError={() => setFailedSource(src)} className="aspect-square w-full rounded-xl bg-slate-100 object-contain dark:bg-slate-800" />
+  return src && src !== failedSource ? backgroundSrc && backgroundSrc !== failedBackground
+    ? <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+        {/* eslint-disable-next-line next/no-img-element */}
+        <img src={backgroundSrc} alt="" aria-hidden="true" onError={() => setFailedBackground(backgroundSrc)} className="absolute inset-0 size-full object-contain" />
+        {/* eslint-disable-next-line next/no-img-element */}
+        <img src={src} alt={label} onError={() => setFailedSource(src)} className="absolute inset-0 size-full object-contain" />
+      </div>
+    // eslint-disable-next-line next/no-img-element
+    : <img src={src} alt={label} onError={() => setFailedSource(src)} className="aspect-square w-full rounded-xl bg-slate-100 object-contain dark:bg-slate-800" />
     : <div className={`flex aspect-square items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm leading-7 dark:border-slate-700 dark:bg-slate-800/70 ${muted}`}>{fallback}</div>;
 }
 
@@ -213,16 +221,17 @@ function VisualPipeline({ brief, patient, selectedDay, selectedImageUrl, pipelin
   const fallback = visuals.status === 'quality_abstained'
     ? 'Segmentation was withheld because this image did not pass quality checks.'
     : 'Pipeline visuals are unavailable for this selected capture.';
+  const originalSource = selectedImageUrl || woundRasterSource(visuals.original_image, visuals.original_mime_type);
   const panels = [
-    { title: 'Input', label: 'Selected original capture', source: selectedImageUrl || woundRasterSource(visuals.original_image, visuals.original_mime_type), note: 'Original image for the selected visit.' },
-    { title: 'U-Net Boundary', label: 'Dominant wound region with boundary', source: available ? woundRasterSource(visuals.unet_segmentation_mask, 'image/png') : undefined, note: 'The cyan edge marks the dominant connected region after short-gap closing, noise removal, and hole filling. This single-wound post-processing improves readability but is not clinical validation.' },
+    { title: 'Input', label: 'Selected original capture', source: originalSource, note: 'Original image for the selected visit.' },
+    { title: 'U-Net Boundary', label: 'Dominant wound region with boundary', source: available ? woundRasterSource(visuals.unet_segmentation_mask, 'image/png') : undefined, backgroundSource: originalSource, note: 'The cyan edge is overlaid on the original image to locate the dominant region after short-gap closing, noise removal, and hole filling. This single-wound post-processing improves readability but is not clinical validation.' },
     { title: 'Tissue Overlay', label: 'Tissue classification overlay', source: available ? woundRasterSource(visuals.tissue_analysis_overlay, 'image/png') : undefined, note: 'Model overlay: red = granulation; yellow = slough; gray = dark-tissue class. Percentages use mask pixels, including unclassified tissue.' },
   ];
   const education = patientEducation(brief, language);
   return <section data-testid="pipeline-visualization" aria-label="Pipeline Visualization" className="space-y-4">
     <div><p className="text-xs font-semibold tracking-widest text-blue-600 dark:text-blue-300">DEVELOPER MODE</p><h3 className="mt-2 text-xl font-semibold">Pipeline Visualization · Day {measuredNumber(selectedDay ?? brief.objective_measurements.visits.at(-1)?.day)}</h3></div>
     <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {panels.map((panel, index) => <article key={panel.title} className={`${card} p-4!`}><div className="mb-3 flex items-center gap-2"><span className="flex size-7 items-center justify-center rounded-lg bg-slate-900 text-xs font-semibold text-white dark:bg-blue-600">{index + 1}</span><h4 className="font-semibold">{panel.title}</h4></div><PipelineImage src={panel.source} label={panel.label} fallback={fallback} /><p className={`mt-3 text-xs leading-6 ${muted}`}>{panel.note}</p></article>)}
+      {panels.map((panel, index) => <article key={panel.title} className={`${card} p-4!`}><div className="mb-3 flex items-center gap-2"><span className="flex size-7 items-center justify-center rounded-lg bg-slate-900 text-xs font-semibold text-white dark:bg-blue-600">{index + 1}</span><h4 className="font-semibold">{panel.title}</h4></div><PipelineImage src={panel.source} backgroundSrc={panel.backgroundSource} label={panel.label} fallback={fallback} /><p className={`mt-3 text-xs leading-6 ${muted}`}>{panel.note}</p></article>)}
       <article className={`${card} border-blue-200! p-4! dark:border-blue-900!`}><div className="mb-3 flex items-center gap-2"><span className="flex size-7 items-center justify-center rounded-lg bg-blue-600 text-xs font-semibold text-white">4</span><h4 className="font-semibold">Clinical Brief</h4></div><div className="rounded-xl bg-blue-50 p-4 dark:bg-blue-950/40"><FileText aria-hidden="true" className="mb-3 size-6 text-blue-600 dark:text-blue-300" /><p className="break-words text-sm font-semibold">{patient.display_name}</p><p className={`mt-2 text-xs leading-6 ${muted}`}>HbA1c {measuredNumber(patient.hba1c_level)}% · Type 2 diabetes: {patient.has_diabetes_type_2 ? 'Recorded' : 'Not recorded'}</p></div><div className="mt-3"><Copy value={education.simple_explanation} fallback={brief.multimodal_context_analysis} /></div><details className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800"><summary className="cursor-pointer text-xs font-semibold">Full clinical context</summary><div className="mt-3 space-y-3"><Copy value={brief.clinician_context_analysis} fallback={brief.multimodal_context_analysis} /><Copy value={brief.clinician_recommendation} fallback={brief.system_recommendation} /></div></details></article>
     </div>
     <p className={`text-xs leading-6 ${muted}`}>Segmentation images are not feature-attribution maps. These research tissue estimates, risk scores and interpretations require professional review.</p>
