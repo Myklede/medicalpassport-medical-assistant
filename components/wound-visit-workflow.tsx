@@ -5,12 +5,13 @@ import Image from 'next/image';
 import { Camera, CheckCircle2, Clock3, FlaskConical, ImagePlus, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_WOUND_IMAGE_BYTES, type ClinicalBrief } from '@/lib/wound-api';
+import { analyzeWoundInBrowser } from '@/lib/browser-wound-inference';
 import { appendWoundVisit, createWoundSession, deleteWoundSession, deleteWoundVisit, getWoundSession, getWoundVisit, listWoundSessions, retryWoundVisit, woundVisitImageUrl, type SavedWoundVisit, type WoundSession, type WoundSessionSummary } from '@/lib/wound-sessions-api';
 import { woundBaseline, type WoundPatient } from '@/lib/wound-patients';
 
 const input = 'mt-2 min-h-11 w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-60';
 const primary = 'min-h-12 rounded-xl bg-[#2563EB] text-white hover:bg-blue-700';
-type Draft = { id: string; file: File | null; capturedAt: string; scale: string; consistent: boolean; hash?: string };
+type Draft = { id: string; file: File | null; capturedAt: string; scale: string; consistent: boolean; hash?: string; hostedSample?: boolean };
 export type WoundWorkflowResult = { session: WoundSession; visit?: SavedWoundVisit; imageUrl?: string; lockedPatient: WoundPatient };
 const message = (error: unknown) => error instanceof Error ? error.message : 'Unable to read the tracking service.';
 function localTime(date = new Date()) {
@@ -167,7 +168,7 @@ export default function WoundVisitWorkflow({ patient, developerMode, onBusyChang
       generation.current++; visitGeneration.current++;
       setSession(null); setSelected(''); setSelectedVisitId(''); setSelectedBrief(null);
       setVisitLoading(false); setMustReload(false); setDeleteTarget(null);
-      setRows([{ ...blank('draft-' + ++serial.current, localTime()), file }]);
+      setRows([{ ...blank('draft-' + ++serial.current, localTime()), file, hostedSample: true }]);
       setProgress('Hosted AI sample loaded into a clean session. Select “Save & analyze”.');
     } catch (caught) { setError(message(caught)); }
     finally { setBusy(false); }
@@ -220,10 +221,16 @@ export default function WoundVisitWorkflow({ patient, developerMode, onBusyChang
       for (const row of pending) {
         const captureTime = new Date(row.capturedAt).getTime();
         const day = anchorDay + (captureTime - anchorTime) / 86_400_000;
-        setProgress('Saving & analyzing capture ' + (completed + 1) + '/' + pending.length + '…');
+        let browserInference;
+        if (active.storage_provider === 'cloud_d1_r2' && !row.hostedSample) {
+          setProgress('Running the U-Net and tissue models in this browser for capture ' + (completed + 1) + '/' + pending.length + '… The first run downloads the model once.');
+          browserInference = await analyzeWoundInBrowser(row.file!);
+          if (!current(token)) return;
+        }
+        setProgress('Saving analyzed capture ' + (completed + 1) + '/' + pending.length + '…');
         active = await appendWoundVisit(active.session_id, patient.patient_id, row.file!, day, {
           timestamp: new Date(captureTime).toISOString(), pixelsPerCm: row.scale.trim() ? Number(row.scale) : undefined,
-          includePipelineVisuals: developerMode, captureConditionsConsistent: row.consistent,
+          includePipelineVisuals: developerMode, captureConditionsConsistent: row.consistent, browserInference,
         });
         if (!current(token)) return;
         completed++; accept(active); setRows(previousRows => previousRows.filter(x => x.id !== row.id));
@@ -263,7 +270,16 @@ export default function WoundVisitWorkflow({ patient, developerMode, onBusyChang
     if (!session || !selectedVisit || busy || gate.current) return;
     gate.current = true; setBusy(true); setError('');
     try {
-      const saved = await retryWoundVisit(session.session_id, selectedVisit.visit_id, patient.patient_id);
+      let browserInference;
+      if (session.storage_provider === 'cloud_d1_r2') {
+        setProgress('Running the U-Net and tissue models in this browser on the saved image…');
+        const response = await fetch(woundVisitImageUrl(session.session_id, selectedVisit.visit_id, patient.patient_id), { cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to reload the saved image for browser inference.');
+        const blob = await response.blob();
+        const type = blob.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        browserInference = await analyzeWoundInBrowser(new File([blob], 'saved-wound.' + (type === 'image/png' ? 'png' : 'jpg'), { type }));
+      }
+      const saved = await retryWoundVisit(session.session_id, selectedVisit.visit_id, patient.patient_id, browserInference);
       setSession(saved); setSelectedBrief(null); setVisitLoading(true);
       setProgress('The saved image was analyzed without changing its capture time or baseline profile.');
     } catch (caught) { setError(message(caught) + ' The original image remains in the tracking session.'); }
@@ -315,7 +331,7 @@ export default function WoundVisitWorkflow({ patient, developerMode, onBusyChang
             <label className="flex min-h-11 items-start gap-2 text-sm leading-6"><input type="checkbox" checked={row.consistent} className="mt-1 size-4 shrink-0 accent-blue-600" onChange={e => update(row.id, { consistent: e.target.checked })} /><span>The same distance, angle, and image dimensions were used across captures.</span></label>
           </article>)}
           <Button type="button" variant="outline" disabled={count + rows.length >= 1000} className="min-h-11 w-full" onClick={() => setRows(previous => [...previous, blank('draft-' + ++serial.current, previous.length ? '' : localTime())])}><Plus className="size-4" />Add another image</Button>
-          <p className="text-xs leading-5 text-muted-foreground">For an immediate public-link demo, use Alex Morgan (SYN000014), choose “Load hosted AI sample,” then “Save & analyze.” Loading the sample starts a clean session so old pending uploads cannot hide its tissue results. The synthetic wound-only crop uses a checkpoint-generated result and is not a natural clinical photograph. Other PNG/JPEG uploads (≤ 8 MiB) are saved, but no AI estimate is fabricated when hosted inference is unavailable. Enter pixels/cm only from a scale in the wound plane.</p>
+          <p className="text-xs leading-5 text-muted-foreground">Any PNG/JPEG upload (≤ 8 MiB) is now processed in this browser by the deployed U-Net derivative and synthetic tissue model, then saved with its results. The first custom image downloads about 39 MB of pinned model/runtime files and may take longer; later runs use the browser cache. “Load hosted AI sample” remains the fastest checkpoint walkthrough. All outputs are unvalidated research estimates. Enter pixels/cm only from a scale in the wound plane.</p>
         </fieldset>
         <Button type="submit" disabled={busy || mustReload || !rows.some(row => row.file) || count >= 1000} className={primary + ' w-full'}>{busy && <Loader2 className="size-4 animate-spin" />}{busy ? 'Processing…' : 'Save & analyze'}</Button>
         <output aria-live="polite" className="block text-sm leading-6 text-muted-foreground">{progress || (busy ? 'Reading saved data…' : 'Sample profile · synthetic or de-identified data only.')}</output>

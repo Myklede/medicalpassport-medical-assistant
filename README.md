@@ -6,7 +6,8 @@
 MediPass là nguyên mẫu HealthTech tập trung vào một hồ sơ y tế di động do bệnh
 nhân kiểm soát. Bản demo kết hợp cổng bệnh viện, góc nhìn bệnh nhân, bản tóm tắt
 FHIR International Patient Summary (IPS), công cụ đọc quyền lợi bảo hiểm, đối
-chiếu tên thuốc xuyên quốc gia và một Wound Lab nghiên cứu chạy cục bộ.
+chiếu tên thuốc xuyên quốc gia và một Wound Lab nghiên cứu chạy local hoặc trực
+tiếp trong trình duyệt trên link hosted.
 
 > **Phạm vi sử dụng:** MediPass hiện là research/startup prototype. Sản phẩm
 > không phải thiết bị y tế, không chẩn đoán, không chỉ định điều trị, chưa được
@@ -363,7 +364,7 @@ Các mô-đun nghiên cứu mở rộng giải quyết bốn bài toán liên qu
 | Mobile Preview | Hoạt động trong demo | Khung web responsive 360/390/430 px; không phải ứng dụng iOS/Android native |
 | Insurance Checker | Demo có quy tắc | Lưu SBC PDF riêng tư, trích văn bản/citation và ước tính cost sharing; không phải live eligibility, coverage determination, claim hoặc hóa đơn cuối cùng |
 | Medication Exchange | Demo có tuyển chọn | 20 nhóm thuốc tại 4 quốc gia; so hoạt chất, hàm lượng, dạng dùng, Rx/OTC và nhu cầu kiểm tra tá dược; không tự kết luận tương đương điều trị |
-| Wound Lab | Research demo chạy local | Phiên ảnh SQLite bền vững, một/nhiều lần chụp, U-Net, tissue overlay, Clinical Brief, giải thích VI/EN và trajectory rules |
+| Wound Lab | Research demo local + hosted | Local dùng FastAPI/SQLite; link hosted chạy U-Net/tissue ONNX trong trình duyệt và lưu phiên D1/R2; có một/nhiều lần chụp, overlay, Clinical Brief và giải thích VI/EN |
 | Wound History | Luồng lưu trữ độc lập | Ảnh riêng tư trong R2, metadata trong D1 và safety review chỉ dựa trên dữ liệu khai báo |
 | Motion Lab | Scaffold | Camera preview cục bộ, không ghi/upload video; chưa nối pose estimation hoặc rep counting |
 | Legacy Records | Hoạt động, dữ liệu riêng | Module hồ sơ cũ tại `/records`; không tự gộp danh tính/dữ liệu với portal mới |
@@ -439,6 +440,10 @@ hình, nhóm này có thể mirror vào các bảng `medipass_*`; giao diện v�
 - Patient Mode cố định một danh tính mô phỏng và hiển thị bốn bước giáo dục VI/EN.
 - Developer Mode chọn 5 hồ sơ tổng hợp, mở ảnh đầu vào, U-Net isolation, tissue
   overlay và Clinical Brief cho từng lần chụp.
+- Trên link Sites công khai, ảnh PNG/JPEG tùy ý chạy cùng kiến trúc U-Net trong
+  trình duyệt qua bản ONNX int8 sinh từ checkpoint đã cung cấp; tissue ONNX nhận
+  crop đã mask. Lần chạy đầu tải khoảng 39 MB model/runtime cùng origin, không cần
+  Python port 8000. Mask, overlay và số đo được kiểm tra schema trước khi lưu D1/R2.
 - 20 lần khám tổng hợp được giữ nguyên trong accordion bốn nhóm, tách khỏi phép đo
   của ảnh mới tải lên.
 
@@ -625,8 +630,10 @@ Hướng dẫn chi tiết cho Chrome, firewall và truy cập điện thoại n�
 
 ## Chạy Wound Lab AI
 
-Web app và Python API phải chạy trong hai terminal. Hosted demo hiện không có
-dịch vụ Python tương ứng và không thể gọi backend đang chạy trên laptop của bạn.
+Link Sites công khai chạy binary U-Net và tissue model trong trình duyệt, vì vậy
+ảnh tải lên không cần Python port 8000. Luồng local đầy đủ vẫn chạy web app và
+Python API trong hai terminal để dùng checkpoint PyTorch gốc, late-fusion risk head,
+SQLite và các kiểm tra backend.
 
 ### 1. Materialize model qua Git LFS
 

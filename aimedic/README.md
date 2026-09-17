@@ -323,3 +323,23 @@ The standalone Python research codebase in [`aimedic/`](https://www.google.com/s
 
 **Running the latest updates:** refer to [`docs/WOUND_AI_INTEGRATION.md`](https://www.google.com/search?q=docs/WOUND_AI_INTEGRATION.md).
 Both the frontend server on port **3001** and the Python service on port **8000** must run concurrently on the same host machine.
+
+## Hosted browser artifacts
+
+`scripts/export-wound-browser-models.py` converts the verified binary U-Net to
+ONNX, applies dynamic int8 convolution-weight quantization, exports the synthetic
+tissue model as fp32 ONNX, and writes hashes/provenance to
+`public/wound-models/models.json`. Regenerate with the development requirements:
+
+```powershell
+outputs/pwc-venv/Scripts/python.exe -m pip install -r aimedic/requirements-dev.txt
+outputs/pwc-venv/Scripts/python.exe -B scripts/export-wound-browser-models.py
+```
+
+The export gate compares the bundled fixture mask with full-precision ONNX and
+requires IoU ≥0.9; the current artifact records 0.936779. The hosted browser uses
+pinned same-origin ONNX Runtime Web/WASM files. This removes the public link's
+port-8000 dependency for binary/tissue inference, but does not turn the synthetic
+tissue model or the quantized U-Net into clinically validated models. The local
+Python path remains the reference implementation and retains the late-fusion risk
+head and trajectory engine.

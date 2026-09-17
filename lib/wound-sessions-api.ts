@@ -1,4 +1,5 @@
 import { isClinicalBrief, validationMessage, MAX_WOUND_IMAGE_BYTES, WoundApiError, type ClinicalBrief } from './wound-api.ts';
+import type { BrowserWoundInference } from './wound-browser-contract.ts';
 
 // The phone talks to the web server, never its own loopback.
 export const WOUND_SESSION_API = '/api/wound-sessions';
@@ -90,7 +91,7 @@ export async function getWoundSession(id: string, patientId: string) {
   return sessionPayload(await request('/' + validId(id) + patientQuery(patientId)), patientId, id);
 }
 export async function appendWoundVisit(id: string, patientId: string, image: File, day: number,
-  options: { timestamp?: string; pixelsPerCm?: number; includePipelineVisuals?: boolean; captureConditionsConsistent?: boolean } = {}) {
+  options: { timestamp?: string; pixelsPerCm?: number; includePipelineVisuals?: boolean; captureConditionsConsistent?: boolean; browserInference?: BrowserWoundInference } = {}) {
   if (!['image/png', 'image/jpeg'].includes(image.type) || !image.size || image.size > MAX_WOUND_IMAGE_BYTES) throw new WoundApiError('Choose a PNG/JPEG image up to 8 MiB.');
   if (!Number.isFinite(day) || day < 0) throw new WoundApiError('The tracking day must be zero or greater.');
   const form = new FormData();
@@ -106,6 +107,7 @@ export async function appendWoundVisit(id: string, patientId: string, image: Fil
   }
   if (options.includePipelineVisuals) form.append('include_pipeline_visuals', 'true');
   if (options.captureConditionsConsistent) form.append('capture_conditions_consistent', 'true');
+  if (options.browserInference) form.append('browser_inference', JSON.stringify(options.browserInference));
   return sessionPayload(await request('/' + validId(id) + '/visits', 'POST', form), patientId, id);
 }
 export async function getWoundVisit(id: string, visitId: string, patientId: string): Promise<ClinicalBrief> {
@@ -117,8 +119,10 @@ export async function getWoundVisit(id: string, visitId: string, patientId: stri
 export function woundVisitImageUrl(sessionId: string, visitId: string, patientId: string) {
   return WOUND_SESSION_API + '/' + validId(sessionId) + '/visits/' + validId(visitId) + '/image' + patientQuery(patientId);
 }
-export async function retryWoundVisit(id: string, visitId: string, patientId: string) {
-  return sessionPayload(await request('/' + validId(id) + '/visits/' + validId(visitId) + '/analyze' + patientQuery(patientId), 'POST'), patientId, id);
+export async function retryWoundVisit(id: string, visitId: string, patientId: string, browserInference?: BrowserWoundInference) {
+  const form = new FormData();
+  if (browserInference) form.append('browser_inference', JSON.stringify(browserInference));
+  return sessionPayload(await request('/' + validId(id) + '/visits/' + validId(visitId) + '/analyze' + patientQuery(patientId), 'POST', form), patientId, id);
 }
 export async function deleteWoundVisit(id: string, visitId: string, patientId: string) {
   return sessionPayload(await request('/' + validId(id) + '/visits/' + validId(visitId) + patientQuery(patientId), 'DELETE'), patientId, id);

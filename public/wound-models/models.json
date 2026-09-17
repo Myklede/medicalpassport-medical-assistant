@@ -1,0 +1,23 @@
+{
+  "schema_version": "medipass-browser-wound-models-v1",
+  "runtime": "onnxruntime-web@1.30.0",
+  "wound_model": {
+    "file": "wound_unet_int8.onnx",
+    "sha256": "76de73e2340966dd5f37ea65a82511f8720ef0e894d596f324824d2995d30667",
+    "bytes": 24573425,
+    "source_checkpoint_sha256": "bb655391bc2c13e9a58458e58d1e76fd837e5cd166b1c6e47fb6f85d35fe9ff4",
+    "architecture": "smp.Unet/resnet34",
+    "quantization": "dynamic_int8_conv_weights",
+    "fixture_mask_iou_vs_fp32": 0.9367794719226479
+  },
+  "tissue_model": {
+    "file": "tissue_unet_fp32.onnx",
+    "sha256": "5a66a3bcd92d8941dcb5d796964fb1dc7803acc9a582b9575ab9eb82256682ea",
+    "bytes": 125174,
+    "source_checkpoint_sha256": "c540516f1d95be2e49b033d028bb91f6455771d7d2eff440530be1741c69903f",
+    "architecture": "VisualUNet",
+    "quantization": "none_fp32",
+    "synthetic_only": true
+  },
+  "clinical_validation": false
+}

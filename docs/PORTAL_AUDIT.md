@@ -116,8 +116,15 @@ Earlier QA counts above describe previous versions.
   chung biểu tượng khiên sinh trắc/nhịp tim; token Clinical Indigo `#2563EB` và
   Deep Slate `#0F172A` áp dụng cho shell và workflow. Đây là mô tả implementation;
   Developer Mode mở pipeline lịch sử, phạm vi QA trình duyệt được ghi riêng.
-- Web gọi `/api/wound-sessions` cùng origin rồi proxy tới Python loopback; điện
-  thoại mở LAN URL cổng 3001. Không triển khai dịch vụ inference hosted hay auth thật.
+- Web local gọi `/api/wound-sessions` cùng origin rồi proxy tới Python loopback;
+  điện thoại mở LAN URL cổng 3001. Trên Sites công khai, ảnh tùy ý chạy U-Net/tissue
+  ONNX trong trình duyệt rồi lưu original vào R2 và kết quả vào D1; không cần port
+  8000. Auth bệnh nhân production vẫn chưa được triển khai.
+- Chrome đã chạy inference thật trên ảnh vết loét CDC/Wikimedia 700×466, khác mẫu
+  tích hợp: model/runtime/model files đều HTTP 200, U-Net khoanh vùng cyan, tissue
+  overlay tải được và cả Granulation/Slough/Necrosis có số. Test hợp đồng trình
+  duyệt, 79 Python tests và `scripts/verify-wound-models.py` đều PASS; đây vẫn không
+  phải xác nhận độ chính xác lâm sàng.
 - Trước khi tải checkpoint qua Git LFS, 77 Python tests có sẵn và 60 unit tests frontend PASS; TypeScript, toàn bộ
   `pnpm run lint` và `pnpm build` PASS. Chrome QA dùng session fixture tách biệt
   đã kiểm tra đủ luồng một/nhiều ảnh, phục hồi không cần localStorage, pipeline

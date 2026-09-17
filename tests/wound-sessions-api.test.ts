@@ -68,7 +68,8 @@ void test('retry analyzes stored bytes by ID and deletion requires explicit serv
   globalThis.fetch = async (url, init) => {
     assert.equal(url, `/api/wound-sessions/${sid}/visits/${vid}/analyze?patient_id=${patient}`);
     assert.equal(init?.method, 'POST');
-    assert.equal(init?.body, undefined, 'retry must not upload or fabricate another capture');
+    assert.ok(init?.body instanceof FormData, 'retry sends only an optional inference result, never another capture');
+    assert.equal((init!.body as FormData).has('image'), false);
     return Response.json(snapshot());
   };
   await retryWoundVisit(sid, vid, patient);

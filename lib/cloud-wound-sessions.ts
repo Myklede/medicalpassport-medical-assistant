@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 
 import hostedDemo from '@/lib/hosted-wound-demo.json';
 import type { ClinicalBrief, PipelineVisuals, WoundVisit } from '@/lib/wound-api';
+import { BROWSER_TISSUE_MODEL_SHA256, BROWSER_WOUND_MODEL_SHA256, BROWSER_WOUND_MODEL_VERSION, browserWoundInference, type BrowserWoundInference } from '@/lib/wound-browser-contract';
 
 const COOKIE_NAME = 'medipass_wound_demo';
 const ID_PATTERN = /^[0-9a-f]{32}$/;
@@ -139,6 +140,18 @@ function numberField(form: FormData, name: string, options: { optional?: boolean
   return value;
 }
 
+function browserInferenceField(form: FormData) {
+  const raw = form.get('browser_inference');
+  if (raw === null) return;
+  if (typeof raw !== 'string' || raw.length > 2_000_000) throw new ApiError(422, 'Invalid browser inference payload.');
+  let parsed: unknown;
+  try { parsed = JSON.parse(raw); }
+  catch { throw new ApiError(422, 'Invalid browser inference payload.'); }
+  const inference = browserWoundInference(parsed);
+  if (!inference) throw new ApiError(422, 'Browser inference did not match the deployed wound models.');
+  return inference;
+}
+
 function hostedMeasurement(day: number, imageHash: string, form: FormData) {
   const brief = clone(hostedDemo) as unknown as ClinicalBrief;
   const visit = brief.objective_measurements.visits[0];
@@ -217,6 +230,71 @@ function pendingMeasurement(day: number, imageHash: string, form: FormData): Wou
   };
 }
 
+function browserBrief(profile: JsonRecord, visit: WoundVisit, visuals: PipelineVisuals): ClinicalBrief {
+  const en = {
+    simple_explanation: 'The U-Net isolated one dominant image region and the companion research model estimated its visible tissue colors. These image estimates do not diagnose the wound or confirm tissue.',
+    baseline_context: `The locked synthetic profile records HbA1c ${String(profile.hba1c_level)}% and type 2 diabetes ${profile.has_diabetes_type_2 === true ? 'present' : 'not recorded as present'}. These facts were not used to change the image segmentation.`,
+    why_this_matters: 'A photo cannot establish depth, circulation, infection, bleeding severity, or whether the outlined region is clinically correct.',
+    possible_consequences: 'An incorrect boundary changes every tissue percentage, so a clinician must review the original image and outline before using the result.',
+    what_to_do: [{ action_id: 'review_boundary', text: 'Compare the cyan U-Net boundary with the original image and seek professional wound assessment.' }],
+    when_to_seek_care: 'Active or severe bleeding, rapidly spreading redness, fever, loss of feeling or function, visible deep structures, or other concerning symptoms require prompt in-person medical assessment.',
+    measurement_note: 'Percentages count model labels only inside the cyan boundary; unclassified pixels remain in the denominator.',
+    safety_note: 'Research prototype only. Do not use this result to diagnose, delay care, or change treatment.',
+  };
+  const vi = {
+    simple_explanation: 'U-Net đã tách một vùng ảnh trội và mô hình nghiên cứu đi kèm ước tính màu mô nhìn thấy trong vùng đó. Kết quả ảnh này không chẩn đoán vết thương hoặc xác nhận loại mô.',
+    baseline_context: `Hồ sơ mô phỏng cố định ghi HbA1c ${String(profile.hba1c_level)}% và đái tháo đường type 2 ${profile.has_diabetes_type_2 === true ? 'đã ghi nhận' : 'chưa ghi nhận'}. Các dữ liệu này không được dùng để thay đổi vùng ảnh U-Net.`,
+    why_this_matters: 'Một ảnh không thể xác định độ sâu, tuần hoàn, nhiễm trùng, mức độ chảy máu hoặc xác nhận đường biên là đúng về lâm sàng.',
+    possible_consequences: 'Đường biên sai sẽ làm thay đổi mọi tỷ lệ mô, vì vậy cần nhân viên y tế đối chiếu ảnh gốc và vùng khoanh.',
+    what_to_do: [{ action_id: 'review_boundary', text: 'Đối chiếu đường biên U-Net màu cyan với ảnh gốc và yêu cầu chuyên môn đánh giá vết thương.' }],
+    when_to_seek_care: 'Chảy máu đang diễn ra hoặc nhiều, đỏ lan nhanh, sốt, mất cảm giác/chức năng, thấy cấu trúc sâu hoặc dấu hiệu đáng lo khác cần được đánh giá y tế trực tiếp sớm.',
+    measurement_note: 'Tỷ lệ chỉ đếm nhãn mô hình bên trong đường biên cyan; pixel chưa phân loại vẫn nằm trong mẫu số.',
+    safety_note: 'Chỉ là nguyên mẫu nghiên cứu. Không dùng kết quả để chẩn đoán, trì hoãn khám hoặc thay đổi điều trị.',
+  };
+  return {
+    brief_schema_version: 'pwc-research-brief-v2', patient_id: profile.patient_id,
+    research_only: true, clinical_use_allowed: false, requires_clinician_review: true,
+    objective_measurements: { visits: [visit], trajectory_available: false, interval_changes: [], overall_change: null },
+    multimodal_context_analysis: 'The supplied FUSd U-Net checkpoint ran in this browser through its verified quantized ONNX derivative. The tissue model then received only the isolated mask crop.',
+    system_recommendation: 'Review the boundary against the original image. Treat all tissue percentages as unvalidated research estimates.',
+    research_review_priority: 'clinician_review_required', risk_alerts: [],
+    uncertainty: { calibrated: false, confidence_interval: null, note: 'The browser models are not calibrated or clinically validated.' },
+    limitations: ['The binary U-Net is a quantized browser derivative of the supplied checkpoint.', 'The tissue model was trained on synthetic data only.', 'No diagnosis or bleeding-severity estimate is produced.'],
+    provenance: { model_version: BROWSER_WOUND_MODEL_VERSION, model_inference_completed: true, execution: 'same_origin_browser_onnx_wasm', attestation: 'client_asserted_not_server_verified', wound_model_sha256: BROWSER_WOUND_MODEL_SHA256, tissue_model_sha256: BROWSER_TISSUE_MODEL_SHA256 },
+    patient_explanation: { schema_version: 'pwc-patient-explanation-v1', locales: { en, vi }, evidence_ids: [] },
+    pipeline_visuals: visuals,
+  } as ClinicalBrief;
+}
+
+function browserMeasurement(profile: JsonRecord, day: number, imageHash: string, form: FormData, inference: BrowserWoundInference) {
+  const pixelsPerCm = numberField(form, 'pixels_per_cm', { optional: true, max: 100_000 }) ?? null;
+  const visit: WoundVisit = {
+    day, image_name: 'uploaded-capture', image_sha256: imageHash, analysis_status: 'completed',
+    measurement_source: 'binary_wound_mask_v2', measurement_status: 'available',
+    tissue_percentages: inference.tissue_percentages, unclassified_percentage: inference.unclassified_percentage,
+    wound_area_pixels: inference.wound_area_pixels,
+    area_cm2: pixelsPerCm ? inference.wound_area_pixels / (pixelsPerCm * pixelsPerCm) : null,
+    pixels_per_cm: pixelsPerCm, risk_deterioration_score: null,
+    capture_conditions_consistent: form.get('capture_conditions_consistent') === 'true',
+    clinical_observations: {}, quality: { assessment_status: 'browser_checked', usable_for_demo: true, reasons: [] },
+  };
+  const visuals: PipelineVisuals = {
+    schema_version: 'pwc-pipeline-visuals-v1', day, original_image: null, original_mime_type: null,
+    unet_segmentation_mask: inference.unet_segmentation_mask,
+    tissue_analysis_overlay: inference.tissue_analysis_overlay,
+    derived_mime_type: 'image/png', status: 'available', class_names: ['background', 'necrotic', 'slough', 'granulation'],
+    relationship: 'auxiliary_segmentation_not_late_fusion_attribution', clinical_validation: false,
+    processed_size: { width: inference.visual_width, height: inference.visual_height },
+    foreground_fraction: inference.foreground_fraction,
+    mask_postprocessing: { method: 'close_dominant_component_fill_v1', single_wound_assumption: true, closing_radius_fraction: 0.03, minimum_foreground_fraction: 0.0025 },
+    model: { version: BROWSER_WOUND_MODEL_VERSION, architecture: 'smp.Unet', encoder: 'resnet34', classes: 1, device: 'browser_wasm', input_size: [256, 256], sigmoid_threshold: 0.35, source: 'verified_quantized_derivative_of_user_supplied_checkpoint', checkpoint_sha256: BROWSER_WOUND_MODEL_SHA256, clinical_validation: false },
+    tissue_model: { version: 'pwc-synthetic-unet-v1', device: 'browser_wasm', synthetic_only: true, checkpoint_sha256: BROWSER_TISSUE_MODEL_SHA256 },
+    wound_measurements: { measurement_source: 'binary_wound_mask_v2', measurement_status: 'available', tissue_percentages: inference.tissue_percentages, unclassified_percentage: inference.unclassified_percentage, wound_area_pixels: inference.wound_area_pixels },
+    note: 'The U-Net ran locally in this browser. Tissue estimates count every pixel inside the post-processed dominant mask, including unclassified pixels.',
+  };
+  return { brief: browserBrief(profile, visit, visuals), visit, visuals };
+}
+
 async function getSession(sessionId: string, visitorId: string, patientId?: string) {
   if (!ID_PATTERN.test(sessionId)) throw new ApiError(404, 'Wound session not found.');
   const row = await env.DB.prepare(
@@ -249,8 +327,14 @@ function briefFor(profile: JsonRecord, rows: VisitRow[]) {
   const visits = rows.map(row => parseJson<WoundVisit>(row.measurement_json, {
     day: row.day, tissue_percentages: null, risk_deterioration_score: null,
   }));
+  const visuals = selected.pipeline_visuals_json
+    ? parseJson<PipelineVisuals | null>(selected.pipeline_visuals_json, null)
+    : null;
+  const provenance = parseJson<JsonRecord>(selected.provenance_json, {});
   let brief: ClinicalBrief;
-  if (selected.analysis_status === 'completed') {
+  if (selected.analysis_status === 'completed' && provenance.model_version === BROWSER_WOUND_MODEL_VERSION && visuals) {
+    brief = browserBrief(profile, visits.at(-1)!, visuals);
+  } else if (selected.analysis_status === 'completed') {
     brief = clone(hostedDemo) as unknown as ClinicalBrief;
   } else {
     brief = pendingBrief(profile, visits.at(-1)!);
@@ -261,9 +345,6 @@ function briefFor(profile: JsonRecord, rows: VisitRow[]) {
   brief.objective_measurements.interval_changes = [];
   brief.objective_measurements.overall_change = null;
   brief.objective_measurements.latest_change = null;
-  const visuals = selected.pipeline_visuals_json
-    ? parseJson<PipelineVisuals | null>(selected.pipeline_visuals_json, null)
-    : null;
   if (visuals) brief.pipeline_visuals = visuals;
   else delete brief.pipeline_visuals;
   return brief;
@@ -364,9 +445,12 @@ async function addVisit(request: Request, visitorState: { id: string; created: b
 
   const visitId = randomId();
   const isHostedDemo = imageHash === SAMPLE_HASH && exactHostedSampleProfile(profile);
+  const browserInference = browserInferenceField(form);
   const analyzed = isHostedDemo
     ? hostedMeasurement(day, imageHash, form)
-    : (() => {
+    : browserInference
+      ? browserMeasurement(profile, day, imageHash, form, browserInference)
+      : (() => {
         const visit = pendingMeasurement(day, imageHash, form);
         const brief = pendingBrief(profile, visit);
         return { brief, visit, visuals: brief.pipeline_visuals ?? null };
@@ -374,7 +458,7 @@ async function addVisit(request: Request, visitorState: { id: string; created: b
   analyzed.visit.timestamp = capturedIso;
   analyzed.visit.timestamp_source = timestampRaw ? 'caller_capture' : 'server_received';
   analyzed.visit.visit_id = visitId;
-  const status = isHostedDemo ? 'completed' : 'pending_model';
+  const status = isHostedDemo || browserInference ? 'completed' : 'pending_model';
   const analysisMessage = typeof analyzed.visit.analysis_message === 'string' ? analyzed.visit.analysis_message : null;
   const extension = mime === 'image/png' ? 'png' : 'jpg';
   const objectKey = `wound-lab/${visitorState.id}/${sessionId}/${visitId}.${extension}`;
@@ -439,16 +523,19 @@ async function retryVisit(request: Request, visitorState: { id: string; created:
   const row = await selectedVisit(session, visitId);
   if (row.analysis_status !== 'pending_model') throw new ApiError(409, 'This capture already has a completed analysis.');
   const profile = parseJson<JsonRecord>(session.profile_json, {});
-  if (row.image_sha256 !== SAMPLE_HASH || !exactHostedSampleProfile(profile)) {
-    throw new ApiError(409, 'Hosted inference is available only for “Load hosted AI sample”. The saved image remains unchanged.');
+  const form = await request.formData();
+  const inference = browserInferenceField(form);
+  if (!inference && (row.image_sha256 !== SAMPLE_HASH || !exactHostedSampleProfile(profile))) {
+    throw new ApiError(409, 'Run browser inference before retrying this saved image. The image remains unchanged.');
   }
-  const form = new FormData();
   const previous = parseJson<WoundVisit>(row.measurement_json, { day: row.day, tissue_percentages: null, risk_deterioration_score: null });
   if (typeof previous.pixels_per_cm === 'number' && Number.isFinite(previous.pixels_per_cm)) {
     form.set('pixels_per_cm', String(previous.pixels_per_cm));
   }
   if (previous.capture_conditions_consistent === true) form.set('capture_conditions_consistent', 'true');
-  const analyzed = hostedMeasurement(row.day, row.image_sha256, form);
+  const analyzed = inference
+    ? browserMeasurement(profile, row.day, row.image_sha256, form, inference)
+    : hostedMeasurement(row.day, row.image_sha256, form);
   analyzed.visit.timestamp = row.captured_at;
   analyzed.visit.timestamp_source = previous.timestamp_source ?? 'caller_capture';
   analyzed.visit.visit_id = row.id;

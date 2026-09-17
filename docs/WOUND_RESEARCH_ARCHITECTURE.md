@@ -18,6 +18,12 @@ thresholds, not validated medical triage criteria.
 - Shared `components/wound-analyzer.tsx` embeds `WoundVisitWorkflow`. The browser
   calls same-origin `/api/wound-sessions`; the web server proxies to local Python
   on `127.0.0.1:8000`. Same-LAN phones use the laptop's web URL, not phone loopback.
+- On the public Sites deployment, custom PNG/JPEG images run same-origin browser
+  inference instead: pinned ONNX Runtime Web/WASM loads a verified int8 derivative
+  of the supplied FUSd U-Net plus the fp32 synthetic tissue model. The browser
+  applies the mask cleanup and inside-mask denominator, renders bounded 256 px
+  pipeline rasters, and submits a hash/schema-pinned result with the original
+  image to D1/R2. No port 8000 is needed for this hosted path.
 - Patient Mode fixes one simulated profile and shows full VI/EN four-step education.
   Developer Mode selects five mock profiles and historical captures for structured
   tissue estimates, quality, pipeline panels, context and provenance. Recorded
@@ -107,6 +113,13 @@ Current local analyzer (separate from R2/D1 capture storage):
   -> inference_tracker -> supplied checkpoints, if available
   -> atomic SQLite: image bytes + measured or explicitly pending visit
   -> one-image brief / multi-day trajectory + historical pipeline + delete/retry
+
+Current hosted analyzer:
+  -> browser decodes PNG/JPEG -> same-origin ONNX Runtime Web/WASM
+  -> quantized derivative of supplied binary U-Net -> dominant filled mask
+  -> fp32 synthetic tissue U-Net sees only the isolated crop
+  -> bounded result contract -> original in private R2, result/session in D1
+  -> browser retry can analyze a previously saved pending cloud image
 
 Future clinician-record integration:
   -> asynchronous call to model service implemented from aimedic/
